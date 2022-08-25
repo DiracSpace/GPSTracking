@@ -4,11 +4,11 @@ import { ValidationErrorMessage } from 'src/app/core/components/form-control-err
 import { Navigation } from 'src/app/core/navigation';
 
 @Component({
-    selector: 'app-login',
-    templateUrl: './login.page.html',
-    styleUrls: ['./login.page.scss']
+    selector: 'app-sign-up',
+    templateUrl: './sign-up.page.html',
+    styleUrls: ['./sign-up.page.scss']
 })
-export class LoginPage implements OnInit {
+export class SignUpPage implements OnInit {
     showForm: 'username' | 'password' = 'username';
 
     usernameForm = this.forms.group({
@@ -37,12 +37,8 @@ export class LoginPage implements OnInit {
 
     ngOnInit() {}
 
-    get username() {
-        return 'nombre_de_usuario'; // TODO Get username
-    }
-
     onSignUpClicked() {
-        this.nav.signUp.go({
+        this.nav.login.go({
             extras: {
                 replaceUrl: true
             }
@@ -54,9 +50,9 @@ export class LoginPage implements OnInit {
             return;
         }
 
-        const userExists = true; // TODO Query user
+        const userExists = false; // TODO Query user
 
-        if (!userExists) {
+        if (userExists) {
             // TODO Show error message
             return;
         }

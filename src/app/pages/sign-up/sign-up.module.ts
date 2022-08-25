@@ -4,9 +4,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { LoginPageRoutingModule } from './login-routing.module';
+import { SignUpPageRoutingModule } from './sign-up-routing.module';
 
-import { LoginPage } from './login.page';
+import { SignUpPage } from './sign-up.page';
 import { CoreModule } from 'src/app/core/core.module';
 
 @NgModule({
@@ -14,11 +14,11 @@ import { CoreModule } from 'src/app/core/core.module';
         CommonModule,
         FormsModule,
         IonicModule,
-        LoginPageRoutingModule,
+        SignUpPageRoutingModule,
         FormsModule,
         ReactiveFormsModule,
         CoreModule
     ],
-    declarations: [LoginPage]
+    declarations: [SignUpPage]
 })
-export class LoginPageModule {}
+export class SignUpPageModule {}

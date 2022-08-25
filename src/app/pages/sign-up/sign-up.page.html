@@ -9,16 +9,18 @@
         >
             <div style="width: 100%">
                 <h4 class="ion-text-center ion-margin-bottom">
-                    <ng-container *ngIf="showForm == 'username'">
-                        Bienvenido Usuario
-                    </ng-container>
-                    <ng-container *ngIf="showForm == 'password'">
-                        Hola {{username}}
-                    </ng-container>
+                    Bienvenido Usuario
                 </h4>
 
                 <h5 class="ion-text-center ion-margin-bottom">
-                    <ion-text color="primary"> Ingresa a tu cuenta </ion-text>
+                    <ion-text color="primary">
+                        <ng-container *ngIf="showForm == 'username'">
+                            Crea un nombre de usuario para tu cuenta
+                        </ng-container>
+                        <ng-container *ngIf="showForm == 'password'">
+                            Crea una contraseña para tu cuenta
+                        </ng-container>
+                    </ion-text>
                 </h5>
 
                 <form
@@ -52,7 +54,7 @@
                             color="primary"
                             (click)="onUsernameFormSubmit()"
                         >
-                            Iniciar Sesión
+                            Continuar
                         </ion-button>
                     </div>
                     <div
@@ -63,7 +65,7 @@
                             (click)="onSignUpClicked()"
                             fill="outline"
                         >
-                            Registrarme
+                            Iniciar Sesión
                         </ion-button>
                     </div>
                 </form>
@@ -99,7 +101,7 @@
                             color="primary"
                             (click)="onPasswordFormSubmit()"
                         >
-                            Ingresar
+                            Registrarme
                         </ion-button>
                     </div>
                     <div class="d-flex ion-justify-content-center">

@@ -4,7 +4,7 @@ import { Logger, LogLevel } from './logger';
 import { Users } from './views';
 import { environment } from 'src/environments/environment';
 import { Platform } from '@ionic/angular';
-import { Debugger } from './core/debug/debugger.service';
+import { Debugger } from './core/components/debug/debugger.service';
 
 const logger = new Logger({
     level: LogLevel.Debug,
