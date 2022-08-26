@@ -1,0 +1,1 @@
+export { RouteGuardSyncService } from './route-guard-sync.service'
