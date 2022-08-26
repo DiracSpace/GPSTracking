@@ -1,7 +1,7 @@
 <ion-content class="ion-padding">
     <div class="d-flex" style="flex-direction: column; height: 100%">
         <div class="d-flex ion-justify-content-center">
-            <span>INSERT LOGO HERE</span>
+            <app-logo size="sm"></app-logo>
         </div>
         <div
             class="d-flex ion-justify-content-center ion-align-items-center"
@@ -75,14 +75,15 @@
                     [formGroup]="passwordForm"
                     (ngSubmit)="onPasswordFormSubmit()"
                 >
-                    <div id="passwordInput" class="ion-margin-bottom">
+                    <div id="passwordInput">
                         <ion-item>
                             <ion-label position="floating"
                                 >Contraseña</ion-label
                             >
                             <ion-input
-                                placeholder="Ingresa tu contraseña"
                                 formControlName="password"
+                                placeholder="Ingresa tu contraseña"
+                                type="password"
                             ></ion-input>
                         </ion-item>
                         <app-form-control-error
@@ -90,6 +91,25 @@
                             [formGroup]="passwordForm"
                             formControlNamex="password"
                             [messages]="passwordValidationMessages"
+                        ></app-form-control-error>
+                    </div>
+
+                    <div id="passwordConfirmInput" class="ion-margin-bottom">
+                        <ion-item>
+                            <ion-label position="floating"
+                                >Confirmar Contraseña</ion-label
+                            >
+                            <ion-input
+                                formControlName="passwordConfirm"
+                                placeholder="Confirma tu contraseña"
+                                type="password"
+                            ></ion-input>
+                        </ion-item>
+                        <app-form-control-error
+                            class="ion-padding-start"
+                            [formGroup]="passwordForm"
+                            formControlNamex="passwordConfirm"
+                            [messages]="passwordConfirmValidationMessages"
                         ></app-form-control-error>
                     </div>
 

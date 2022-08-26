@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
-import { Navigation } from 'src/app/core/navigation';
+import { Navigation } from 'src/app/navigation';
 
 @Component({
     selector: 'app-login',
@@ -76,7 +76,7 @@ export class LoginPage implements OnInit {
             return;
         }
 
-        // TODO Navigate to home page
+        this.nav.mainContainer.home.go();
     }
 
     onBackClicked() {

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
-import { Navigation } from 'src/app/core/navigation';
+import { Navigation } from 'src/app/navigation';
 
 @Component({
     selector: 'app-sign-up',
@@ -18,18 +18,26 @@ export class SignUpPage implements OnInit {
     usernameValidationMessages: ValidationErrorMessage[] = [
         {
             type: 'required',
-            message: 'Username is required'
+            message: 'Ingresa un nombre de usuario'
         }
     ];
 
     passwordForm = this.forms.group({
-        password: new FormControl('', [Validators.required])
+        password: new FormControl('', [Validators.required]),
+        passwordConfirm: new FormControl('', [Validators.required])
     });
 
     passwordValidationMessages: ValidationErrorMessage[] = [
         {
             type: 'required',
-            message: 'Password is required'
+            message: 'Ingresa una contraseña'
+        }
+    ];
+
+    passwordConfirmValidationMessages: ValidationErrorMessage[] = [
+        {
+            type: 'required',
+            message: 'Confirma tu contraseña'
         }
     ];
 
@@ -72,7 +80,7 @@ export class SignUpPage implements OnInit {
             return;
         }
 
-        // TODO Navigate to home page
+        this.nav.mainContainer.home.go();
     }
 
     onBackClicked() {
