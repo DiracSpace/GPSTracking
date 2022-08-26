@@ -8,6 +8,7 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { CoreModule } from './core/core.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { QrCodeModule } from './qr-code/qr-code.module';
 
 @NgModule({
     declarations: [AppComponent],
@@ -19,7 +20,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         AppRoutingModule,
         CoreModule,
         FormsModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        QrCodeModule
     ],
     providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
     bootstrap: [AppComponent]
