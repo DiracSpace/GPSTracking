@@ -20,6 +20,6 @@ export class HomePage {
     }
 
     onEditProfileClicked() {
-        this.nav.mainContainer.myProfile.go();
+        this.nav.mainContainer.profileSettings.go();
     }
 }

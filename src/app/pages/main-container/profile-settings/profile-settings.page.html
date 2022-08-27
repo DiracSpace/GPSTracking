@@ -3,8 +3,14 @@
         <ion-buttons slot="start">
             <ion-back-button></ion-back-button>
         </ion-buttons>
-        <ion-title>profile-settings</ion-title>
+        <ion-title>Mi Perfil</ion-title>
     </ion-toolbar>
 </ion-header>
 
-<ion-content> </ion-content>
+<ion-content>
+    <ion-list>
+        <ion-item *ngFor="let form of forms" (click)="onFormItemClicked(form)">
+            <ion-label>{{form.label}}</ion-label>
+        </ion-item>
+    </ion-list>
+</ion-content>

@@ -18,9 +18,28 @@ export class Navigation {
         ...NavigationItem(this.router, '/main-container'),
         firstSteps: NavigationItem(this.router, '/main-container/first-steps'),
         home: NavigationItem(this.router, '/main-container/home'),
-        myProfile: NavigationItem(
-            this.router,
-            '/main-container/profile-settings'
-        )
+        profileSettings: {
+            ...NavigationItem(this.router, '/main-container/profile-settings'),
+            names: NavigationItem(
+                this.router,
+                '/main-container/profile-settings/names'
+            ),
+            phoneNumbers: NavigationItem(
+                this.router,
+                '/main-container/profile-settings/phone-numbers'
+            ),
+            diseases: NavigationItem(
+                this.router,
+                '/main-container/profile-settings/diseases'
+            ),
+            alergies: NavigationItem(
+                this.router,
+                '/main-container/profile-settings/alergies'
+            ),
+            addresses: NavigationItem(
+                this.router,
+                '/main-container/profile-settings/addresses'
+            )
+        }
     };
 }
