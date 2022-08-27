@@ -1,9 +1,35 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>diseases-settings</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>Enfermedades</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
+  <div class="ion-margin">
+    <ion-input
+      type="text"
+      placeholder="Añade una enfermedad"
+      (keyup.enter)="onDiseaseEnter()"
+      [(ngModel)]="diseaseInput"
+    ></ion-input>
+  </div>
 
+  <ion-list>
+    <ion-item *ngFor="let disease of diseases">
+      <ion-label>{{disease}}</ion-label>
+      <ion-button
+        slot="end"
+        color="danger"
+        fill="outline"
+        (click)="onDeleteClicked(disease)"
+      >
+        Eliminar
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <div style="height: 200px"></div>
 </ion-content>

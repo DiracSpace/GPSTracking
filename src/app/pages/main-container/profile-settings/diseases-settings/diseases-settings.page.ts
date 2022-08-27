@@ -1,32 +1,52 @@
 import { Component, OnInit } from '@angular/core';
+import { LoadingController } from '@ionic/angular';
+import { ApiService } from 'src/app/api';
+import { PhoneNumber, User } from 'src/app/api/users';
+import { PhoneNumberOwnerTypes } from 'src/app/api/users/User';
 import {
-    FormArray,
-    FormBuilder,
-    FormControl,
-    FormGroup,
-    Validators
-} from '@angular/forms';
+  ArgumentNullError,
+  NotImplementedError,
+  RequiredPropError
+} from 'src/app/errors';
+import { State } from 'src/app/state';
+import { wait } from 'src/app/utils/time';
 
 @Component({
-    selector: 'app-diseases-settings',
-    templateUrl: './diseases-settings.page.html',
-    styleUrls: ['./diseases-settings.page.scss']
+  selector: 'app-diseases-settings',
+  templateUrl: './diseases-settings.page.html',
+  styleUrls: ['./diseases-settings.page.scss']
 })
 export class DiseasesSettingsPage implements OnInit {
-    formGroup = this.forms.group({
-        diseases: this.forms.array<FormGroup>([])
-    });
+  user = new User();
+  diseaseInput = '';
 
-    constructor(private forms: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private state: State,
+    private loadingController: LoadingController
+  ) {}
 
-    ngOnInit() {}
+  ngOnInit() {}
 
-    onAddDiseaseClicked() {
-        const formArray = this.formGroup.get('diseases') as FormArray;
-        formArray.push(
-            this.forms.group({
-                disease: new FormControl('', [Validators.required])
-            })
-        );
+  get diseases(): string[] {
+    if (this.user.diseases == undefined || this.user.diseases == null) {
+      return [];
     }
+
+    return this.user.diseases;
+  }
+
+  onDiseaseEnter() {
+    if (!this.diseaseInput) {
+      return;
+    }
+
+    this.diseases.push(this.diseaseInput);
+    this.diseaseInput = '';
+  }
+
+  onDeleteClicked(disease: string) {
+    const index = this.diseases.indexOf(disease);
+    this.diseases.splice(index, 1);
+  }
 }

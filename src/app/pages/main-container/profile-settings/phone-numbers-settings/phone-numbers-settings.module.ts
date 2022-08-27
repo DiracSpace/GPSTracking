@@ -10,15 +10,14 @@ import { PhoneNumbersSettingsPage } from './phone-numbers-settings.page';
 import { CoreModule } from 'src/app/core/core.module';
 
 @NgModule({
-    imports: [
-        CommonModule,
-        FormsModule,
-        IonicModule,
-        PhonenUmbersSettingsPageRoutingModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CoreModule
-    ],
-    declarations: [PhoneNumbersSettingsPage]
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonicModule,
+    PhonenUmbersSettingsPageRoutingModule,
+    FormsModule,
+    CoreModule
+  ],
+  declarations: [PhoneNumbersSettingsPage]
 })
 export class PhonenUmbersSettingsPageModule {}

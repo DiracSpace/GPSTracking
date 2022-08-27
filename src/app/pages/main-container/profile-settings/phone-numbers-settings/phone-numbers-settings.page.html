@@ -8,47 +8,60 @@
 </ion-header>
 
 <ion-content>
-  <ion-accordion-group [multiple]="true" [formGroup]="formGroup">
-    <ng-container formArrayName="phoneNumbers">
-      <ng-container *ngFor="let phoneNumberForm of formArray.controls; let index = index">
-        <ion-accordion>
-          <ion-item slot="header" color="light">
-            <ion-label>{{getPhoneNumberOrDefault(index)}}</ion-label>
-          </ion-item>
-          <form
-            slot="content"
-            [formGroup]="phoneNumberForm"
-            (ngSubmit)="onFormArraySubmit()"
-          >
-            <ion-item class="ion-margin-bottom">
-              <ion-label position="floating">Número</ion-label>
-              <ion-input formControlName="number" type="tel"></ion-input>
-            </ion-item>
-            <ion-item class="ion-margin-bottom">
-              <ion-label position="floating">¿De quien es este número?</ion-label>
-              <ion-input formControlName="who"></ion-input>
-            </ion-item>
-            <ion-item class="ion-margin-bottom">
-              <ion-label position="floating">Álias del contacto</ion-label>
-              <ion-input formControlName="alias"></ion-input>
-            </ion-item>
+  <ion-accordion-group [multiple]="true">
+    <ion-accordion *ngFor="let phoneNumber of phoneNumbers" [value]="phoneNumber.id">
+      <ion-item slot="header" color="light">
+        <ion-label>{{getPhoneNumberDescription(phoneNumber)}}</ion-label>
+      </ion-item>
+      <div slot="content">
+        <ion-item id="number" class="ion-margin-bottom">
+          <ion-label position="floating">Número</ion-label>
+          <ion-input type="tel" [(ngModel)]="phoneNumber.number"></ion-input>
+        </ion-item>
 
-            <div class="d-flex ion-justify-content-end ion-padding">
-              <ion-button
-                color="danger"
-                fill="outline"
-                class="ion-margin-end"
-                (click)="onDeleteClick(index)"
-                >Eliminar</ion-button
+        <div id="owner" class="ion-margin-bottom">
+          <ion-item>
+            <ion-label position="floating">¿De quien es este número?</ion-label>
+            <ion-select interface="action-sheet" [(ngModel)]="phoneNumber.owner">
+              <ion-select-option *ngFor="let type of ownerTypes" [value]="type"
+                >{{type}}</ion-select-option
               >
-              <ion-button color="primary" (click)="onFormArraySubmit()"
-                >Guardar</ion-button
-              >
-            </div>
-          </form>
-        </ion-accordion>
-      </ng-container>
-    </ng-container>
+            </ion-select>
+          </ion-item>
+          <ion-item *ngIf="phoneNumber.owner && isPhoneNumberOwnerOther(phoneNumber)">
+            <ion-label position="floating">Especifíque</ion-label>
+            <ion-input
+              type="text"
+              placeholder="¿Que relación tiene con este contacto?"
+              [(ngModel)]="phoneNumber.ownerOther"
+            >
+            </ion-input>
+          </ion-item>
+        </div>
+
+        <ion-item
+          *ngIf="phoneNumber.owner && isPhoneNumberOwnerNotMine(phoneNumber)"
+          id="ownerAlias"
+          class="ion-margin-bottom"
+        >
+          <ion-label position="floating">Nombre del contacto</ion-label>
+          <ion-input type="text" [(ngModel)]="phoneNumber.ownerName"></ion-input>
+        </ion-item>
+
+        <div id="buttons" class="d-flex ion-justify-content-end ion-padding">
+          <ion-button
+            color="danger"
+            fill="outline"
+            class="ion-margin-end"
+            (click)="onDeleteClick(phoneNumber)"
+            >Eliminar</ion-button
+          >
+          <ion-button color="primary" (click)="onSaveClicked(phoneNumber)"
+            >Guardar</ion-button
+          >
+        </div>
+      </div>
+    </ion-accordion>
   </ion-accordion-group>
 
   <div style="height: 200px"></div>
