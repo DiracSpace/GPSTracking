@@ -1,122 +1,124 @@
 import { Component, OnInit } from '@angular/core';
 import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
-import { PhoneNumber, User } from 'src/app/api/users';
-import { PhoneNumberOwnerTypes } from 'src/app/api/users/User';
 import {
-  ArgumentNullError,
-  NotImplementedError,
-  RequiredPropError
+    ArgumentNullError,
+    NotImplementedError,
+    RequiredPropError
 } from 'src/app/errors';
 import { State } from 'src/app/state';
 import { wait } from 'src/app/utils/time';
+import { PhoneNumberOwnerTypes, User, UserPhoneNumber } from 'src/app/views';
 
 @Component({
-  selector: 'app-phone-numbers-settings',
-  templateUrl: './phone-numbers-settings.page.html',
-  styleUrls: ['./phone-numbers-settings.page.scss']
+    selector: 'app-phone-numbers-settings',
+    templateUrl: './phone-numbers-settings.page.html',
+    styleUrls: ['./phone-numbers-settings.page.scss']
 })
 export class PhoneNumbersSettingsPage implements OnInit {
-  user = new User();
-  ownerTypes = PhoneNumberOwnerTypes;
+    user = new User();
+    ownerTypes = PhoneNumberOwnerTypes;
 
-  constructor(
-    private api: ApiService,
-    private state: State,
-    private loadingController: LoadingController
-  ) {}
+    constructor(
+        private api: ApiService,
+        private state: State,
+        private loadingController: LoadingController
+    ) {}
 
-  ngOnInit() {}
+    ngOnInit() {}
 
-  get phoneNumbers(): PhoneNumber[] {
-    if (this.user.phoneNumbers == undefined || this.user.phoneNumbers == null) {
-      return [];
+    get phoneNumbers(): UserPhoneNumber[] {
+        if (this.user.phoneNumbers == undefined || this.user.phoneNumbers == null) {
+            return [];
+        }
+
+        return this.user.phoneNumbers;
     }
 
-    return this.user.phoneNumbers;
-  }
+    async onAddClicked() {
+        const loadingDialog = await this.loadingController.create({
+            message: 'Añadiendo...'
+        });
 
-  async onAddClicked() {
-    const loadingDialog = await this.loadingController.create({
-      message: 'Añadiendo...'
-    });
+        await loadingDialog.present();
 
-    await loadingDialog.present();
+        await wait(500); // TODO Remove this
 
-    await wait(500); // TODO Remove this
+        const phoneNumber = new UserPhoneNumber();
+        this.phoneNumbers.push(phoneNumber);
+        // TODO Add to firestore
+        // TODO Add to app state
 
-    const phoneNumber = new PhoneNumber();
-    this.phoneNumbers.push(phoneNumber);
-    // TODO Add to firestore
-    // TODO Add to app state
-
-    await loadingDialog.dismiss();
-  }
-
-  async onDeleteClick(phoneNumber: PhoneNumber) {
-    const caller = 'onDeleteClick';
-    RequiredPropError.throwIfNull(this.phoneNumbers, 'phoneNumbers', caller);
-
-    const index = this.phoneNumbers.indexOf(phoneNumber);
-
-    if (index == -1) {
-      throw new NotImplementedError('Could not find phone number to delete', caller);
+        await loadingDialog.dismiss();
     }
 
-    const loadingDialog = await this.loadingController.create({
-      message: 'Eliminando...'
-    });
+    async onDeleteClick(phoneNumber: UserPhoneNumber) {
+        const caller = 'onDeleteClick';
+        RequiredPropError.throwIfNull(this.phoneNumbers, 'phoneNumbers', caller);
 
-    await loadingDialog.present();
+        const index = this.phoneNumbers.indexOf(phoneNumber);
 
-    await wait(500); // TODO Remove this
-    // TODO Delete from firestore
-    // TODO Delete from app state
-    this.phoneNumbers.splice(index, 1);
+        if (index == -1) {
+            throw new NotImplementedError(
+                'Could not find phone number to delete',
+                caller
+            );
+        }
 
-    await loadingDialog.dismiss();
-  }
+        const loadingDialog = await this.loadingController.create({
+            message: 'Eliminando...'
+        });
 
-  async onSaveClicked(phoneNumber: PhoneNumber) {
-    const loadingDialog = await this.loadingController.create({
-      message: 'Guardando...'
-    });
+        await loadingDialog.present();
 
-    await loadingDialog.present();
+        await wait(500); // TODO Remove this
+        // TODO Delete from firestore
+        // TODO Delete from app state
+        this.phoneNumbers.splice(index, 1);
 
-    await wait(500); // TODO Remove this
-    // TOOD Update in firestore
-    // TODO Update in app state
-
-    await loadingDialog.dismiss();
-  }
-
-  getPhoneNumberDescription(phoneNumber: PhoneNumber): string {
-    const caller = 'getPhoneNumberOrDefault';
-    ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
-
-    if (!phoneNumber.number) {
-      return 'Desconocido';
+        await loadingDialog.dismiss();
     }
 
-    const parts: string[] = [phoneNumber.number];
+    async onSaveClicked(phoneNumber: UserPhoneNumber) {
+        const loadingDialog = await this.loadingController.create({
+            message: 'Guardando...'
+        });
 
-    if (phoneNumber.owner) {
-      parts.push(phoneNumber.owner);
+        await loadingDialog.present();
+
+        await wait(500); // TODO Remove this
+        // TOOD Update in firestore
+        // TODO Update in app state
+
+        await loadingDialog.dismiss();
     }
 
-    return parts.join(' | ');
-  }
+    getPhoneNumberDescription(phoneNumber: UserPhoneNumber): string {
+        const caller = 'getPhoneNumberOrDefault';
+        ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
 
-  isPhoneNumberOwnerNotMine(phoneNumber: PhoneNumber): boolean {
-    const caller = 'isPhoneNumberOwnerNotMine';
-    ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
-    return phoneNumber.owner != 'Mío';
-  }
+        if (!phoneNumber.number) {
+            return 'Desconocido';
+        }
 
-  isPhoneNumberOwnerOther(phoneNumber: PhoneNumber): boolean {
-    const caller = 'isPhoneNumberOwnerOther';
-    ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
-    return phoneNumber.owner == 'Otro';
-  }
+        const parts: string[] = [phoneNumber.number];
+
+        if (phoneNumber.owner) {
+            parts.push(phoneNumber.owner);
+        }
+
+        return parts.join(' | ');
+    }
+
+    isPhoneNumberOwnerNotMine(phoneNumber: UserPhoneNumber): boolean {
+        const caller = 'isPhoneNumberOwnerNotMine';
+        ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
+        return phoneNumber.owner != 'Mío';
+    }
+
+    isPhoneNumberOwnerOther(phoneNumber: UserPhoneNumber): boolean {
+        const caller = 'isPhoneNumberOwnerOther';
+        ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
+        return phoneNumber.owner == 'Otro';
+    }
 }

@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "gpstracking-d1f5c"
+  },
+  "targets": {
+    "gpstracking-d1f5c": {
+      "hosting": {
+        "app": [
+          "gpstracking-d1f5c"
+        ]
+      }
+    }
+  }
+}

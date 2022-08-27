@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { User } from '../api/users';
+import { User } from '../views';
 
 @Injectable({ providedIn: 'root' })
 export class State {
