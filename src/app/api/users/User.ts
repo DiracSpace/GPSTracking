@@ -32,8 +32,6 @@ export class PhoneNumber {
   /** Only available if the "owner" property is not "Mío" */
   ownerName?: string;
 
-  _expanded?: boolean;
-
   constructor() {
     this.id = guid();
   }
@@ -44,6 +42,8 @@ export type PhoneNumberOwner = 'Mío' | 'Mamá' | 'Papá' | 'Otro';
 export const PhoneNumberOwnerTypes: PhoneNumberOwner[] = ['Mío', 'Mamá', 'Papá', 'Otro'];
 
 export class Address {
+  readonly id: string;
+
   state?: string; // Estado
   county?: string; // Ciudad/Municipio
   neighbourhood?: string; // Colonia
@@ -53,6 +53,49 @@ export class Address {
   betweenStreet1?: string;
   betweenStreet2?: string;
   zipCode?: number; // Codigo Postal
-  addressType?: string;
+  addressType?: string; //
   additionalInstructions?: string;
+
+  constructor() {
+    this.id = guid();
+  }
 }
+
+export const MexicoStates = [
+  'Aguascalientes',
+  'Baja California',
+  'Baja California Sur',
+  'Campeche',
+  'Chiapas',
+  'Chihuahua',
+  'Coahuila de Zaragoza',
+  'Colima',
+  'Ciudad de México',
+  'Durango',
+  'Guanajuato',
+  'Guerrero',
+  'Hidalgo',
+  'Jalisco',
+  'Estado de Mexico',
+  'Michoacan de Ocampo',
+  'Morelos',
+  'Nayarit',
+  'Nuevo Leon',
+  'Oaxaca',
+  'Puebla',
+  'Queretaro de Arteaga',
+  'Quintana Roo',
+  'San Luis Potosi',
+  'Sinaloa',
+  'Sonora',
+  'Tabasco',
+  'Tamaulipas',
+  'Tlaxcala',
+  'Veracruz de Ignacio de la Llave',
+  'Yucatan',
+  'Zacatecas'
+];
+
+export type AddressType = 'Hogar' | 'Trabajo' | 'Otro';
+
+export const AddressTypeTypes: AddressType[] = ['Hogar', 'Trabajo', 'Otro'];

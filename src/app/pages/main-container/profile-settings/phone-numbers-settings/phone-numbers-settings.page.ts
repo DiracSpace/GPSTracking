@@ -7,7 +7,7 @@ import {
   Validators
 } from '@angular/forms';
 import { LoadingController } from '@ionic/angular';
-import { ApiService } from 'src/app/api/ihdex';
+import { ApiService } from 'src/app/api';
 import { PhoneNumber, User } from 'src/app/api/users';
 import { PhoneNumberOwnerTypes } from 'src/app/api/users/User';
 import {
