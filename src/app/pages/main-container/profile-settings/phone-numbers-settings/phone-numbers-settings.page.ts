@@ -6,6 +6,17 @@ import {
   FormGroup,
   Validators
 } from '@angular/forms';
+import { LoadingController } from '@ionic/angular';
+import { ApiService } from 'src/app/api/ihdex';
+import { PhoneNumber, User } from 'src/app/api/users';
+import { PhoneNumberOwnerTypes } from 'src/app/api/users/User';
+import {
+  ArgumentNullError,
+  NotImplementedError,
+  RequiredPropError
+} from 'src/app/errors';
+import { State } from 'src/app/state';
+import { wait } from 'src/app/utils/time';
 
 @Component({
   selector: 'app-phone-numbers-settings',
@@ -13,50 +24,106 @@ import {
   styleUrls: ['./phone-numbers-settings.page.scss']
 })
 export class PhoneNumbersSettingsPage implements OnInit {
-  formGroup = this.forms.group({
-    phoneNumbers: this.forms.array<FormGroup>([])
-  });
+  user = new User();
+  ownerTypes = PhoneNumberOwnerTypes;
 
-  constructor(private forms: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private state: State,
+    private loadingController: LoadingController
+  ) {}
 
   ngOnInit() {}
 
-  get formArray() {
-    return this.formGroup.controls.phoneNumbers;
+  get phoneNumbers(): PhoneNumber[] {
+    if (this.user.phoneNumbers == undefined || this.user.phoneNumbers == null) {
+      return [];
+    }
+
+    return this.user.phoneNumbers;
   }
 
-  onAddClicked() {
-    const formArray = this.formGroup.get('phoneNumbers') as FormArray;
-    formArray.push(
-      this.forms.group({
-        // The phone number
-        number: new FormControl(''),
+  async onAddClicked() {
+    const loadingDialog = await this.loadingController.create({
+      message: 'Añadiendo...'
+    });
 
-        // The owner of this phone number
-        // Available options are "Mine", "Mom's", "Dad's", Other (specify)
-        who: new FormControl(''),
+    await loadingDialog.present();
 
-        // Only available if the "who" option is not "Mine"
-        alias: new FormControl('')
-      })
-    );
+    await wait(500); // TODO Remove this
+
+    const phoneNumber = new PhoneNumber();
+    this.phoneNumbers.push(phoneNumber);
+    // TODO Add to firestore
+    // TODO Add to app state
+
+    await loadingDialog.dismiss();
   }
 
-  onDeleteClick(index: number) {
-    this.formArray.removeAt(index);
+  async onDeleteClick(phoneNumber: PhoneNumber) {
+    const caller = 'onDeleteClick';
+    RequiredPropError.throwIfNull(this.phoneNumbers, 'phoneNumbers', caller);
+
+    const index = this.phoneNumbers.indexOf(phoneNumber);
+
+    if (index == -1) {
+      throw new NotImplementedError('Could not find phone number to delete', caller);
+    }
+
+    const loadingDialog = await this.loadingController.create({
+      message: 'Eliminando...'
+    });
+
+    await loadingDialog.present();
+
+    await wait(500); // TODO Remove this
+    // TODO Delete from firestore
+    // TODO Delete from app state
+    this.phoneNumbers.splice(index, 1);
+
+    await loadingDialog.dismiss();
   }
 
-  onFormArraySubmit() {
-    console.log('submit');
+  async onSaveClicked(phoneNumber: PhoneNumber) {
+    const loadingDialog = await this.loadingController.create({
+      message: 'Guardando...'
+    });
+
+    await loadingDialog.present();
+
+    await wait(500); // TODO Remove this
+    // TOOD Update in firestore
+    // TODO Update in app state
+
+    await loadingDialog.dismiss();
   }
 
-  getPhoneNumberOrDefault(index: number): string {
-    const control = this.formArray.controls[index];
-    console.log('control', control);
-    const value = this.formArray.controls[index].get('phoneNumber');
-    console.log('value', value);
-    return value as any;
-    // return value;
-    // return phoneNumberForm.value;
+  getPhoneNumberDescription(phoneNumber: PhoneNumber): string {
+    const caller = 'getPhoneNumberOrDefault';
+    ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
+
+    if (!phoneNumber.number) {
+      return 'Desconocido';
+    }
+
+    const parts: string[] = [phoneNumber.number];
+
+    if (phoneNumber.owner) {
+      parts.push(phoneNumber.owner);
+    }
+
+    return parts.join(' | ');
+  }
+
+  isPhoneNumberOwnerNotMine(phoneNumber: PhoneNumber): boolean {
+    const caller = 'isPhoneNumberOwnerNotMine';
+    ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
+    return phoneNumber.owner != 'Mío';
+  }
+
+  isPhoneNumberOwnerOther(phoneNumber: PhoneNumber): boolean {
+    const caller = 'isPhoneNumberOwnerOther';
+    ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
+    return phoneNumber.owner == 'Otro';
   }
 }

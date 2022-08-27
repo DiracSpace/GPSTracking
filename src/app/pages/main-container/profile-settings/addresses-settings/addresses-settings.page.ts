@@ -20,15 +20,15 @@ export class AddressesSettingsPage implements OnInit {
 
         formArray.push(
             this.forms.group({
-                state: new FormControl(''), // Estado
-                county: new FormControl(''), // Ciudad/Municipio
-                neighbourhood: new FormControl(''), // Colonia
+                state: new FormControl(''), 
+                county: new FormControl(''), 
+                neighbourhood: new FormControl(''), 
                 street: new FormControl(''),
                 numberExternal: new FormControl(''),
                 numberInternal: new FormControl(''),
                 betweenStreet1: new FormControl(''),
                 betweenStreet2: new FormControl(''),
-                zipCode: new FormControl(0), // Codigo Postal
+                zipCode: new FormControl(0), 
                 addressType: new FormControl(''),
                 additionalInstructions: new FormControl('')
             })
