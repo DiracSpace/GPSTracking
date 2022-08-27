@@ -1,32 +1,52 @@
 import { Component, OnInit } from '@angular/core';
+import { LoadingController } from '@ionic/angular';
+import { ApiService } from 'src/app/api';
+import { PhoneNumber, User } from 'src/app/api/users';
+import { PhoneNumberOwnerTypes } from 'src/app/api/users/User';
 import {
-    FormArray,
-    FormBuilder,
-    FormControl,
-    FormGroup,
-    Validators
-} from '@angular/forms';
+  ArgumentNullError,
+  NotImplementedError,
+  RequiredPropError
+} from 'src/app/errors';
+import { State } from 'src/app/state';
+import { wait } from 'src/app/utils/time';
 
 @Component({
-    selector: 'app-alergies-settings',
-    templateUrl: './alergies-settings.page.html',
-    styleUrls: ['./alergies-settings.page.scss']
+  selector: 'app-alergies-settings',
+  templateUrl: './alergies-settings.page.html',
+  styleUrls: ['./alergies-settings.page.scss']
 })
 export class AlergiesSettingsPage implements OnInit {
-    formGroup = this.forms.group({
-        alergies: this.forms.array<FormGroup>([])
-    });
+  user = new User();
+  alergyInput = '';
 
-    constructor(private forms: FormBuilder) {}
+  constructor(
+    private api: ApiService,
+    private state: State,
+    private loadingController: LoadingController
+  ) {}
 
-    ngOnInit() {}
+  ngOnInit() {}
 
-    onAddClicked() {
-        const formArray = this.formGroup.get('alergies') as FormArray;
-        formArray.push(
-            this.forms.group({
-                alergy: new FormControl('', [Validators.required])
-            })
-        );
+  get alergies(): string[] {
+    if (this.user.alergies == undefined || this.user.alergies == null) {
+      return [];
     }
+
+    return this.user.alergies;
+  }
+
+  onAlergyEnter() {
+    if (!this.alergyInput) {
+      return;
+    }
+
+    this.alergies.push(this.alergyInput);
+    this.alergyInput = '';
+  }
+
+  onDeleteClicked(alergy: string) {
+    const index = this.alergies.indexOf(alergy);
+    this.alergies.splice(index, 1);
+  }
 }

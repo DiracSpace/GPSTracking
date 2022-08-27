@@ -1,11 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators
-} from '@angular/forms';
 import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { PhoneNumber, User } from 'src/app/api/users';
