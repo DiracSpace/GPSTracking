@@ -1,9 +1,28 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>names-settings</ion-title>
-  </ion-toolbar>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-back-button></ion-back-button>
+        </ion-buttons>
+        <ion-title>Nombre(s)</ion-title>
+    </ion-toolbar>
 </ion-header>
 
-<ion-content>
-
+<ion-content class="ion-padding">
+    <form [formGroup]="formGroup">
+        <ion-item id="names" class="ion-margin-bottom">
+            <ion-label position="floating">Nombre(s)</ion-label>
+            <ion-input formControlName="names"></ion-input>
+        </ion-item>
+        <ion-item id="lastNameFather" class="ion-margin-bottom">
+            <ion-label position="floating">Apellido Paterno</ion-label>
+            <ion-input formControlName="lastNameFather"></ion-input>
+        </ion-item>
+        <ion-item id="lastNameMother" class="ion-margin-bottom">
+            <ion-label position="floating">Apellido Materno</ion-label>
+            <ion-input formControlName="lastNameMother"></ion-input>
+        </ion-item>
+        <div class="d-flex ion-justify-content-end">
+            <ion-button color="primary">Guardar</ion-button>
+        </div>
+    </form>
 </ion-content>

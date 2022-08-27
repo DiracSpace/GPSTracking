@@ -1,9 +1,61 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>phonen-umbers-settings</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>Números de Teléfono</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
+  <ion-accordion-group [multiple]="true" [formGroup]="formGroup">
+    <ng-container formArrayName="phoneNumbers">
+      <ng-container *ngFor="let phoneNumberForm of formArray.controls; let index = index">
+        <ion-accordion>
+          <ion-item slot="header" color="light">
+            <ion-label>{{getPhoneNumberOrDefault(index)}}</ion-label>
+          </ion-item>
+          <form
+            slot="content"
+            [formGroup]="phoneNumberForm"
+            (ngSubmit)="onFormArraySubmit()"
+          >
+            <ion-item class="ion-margin-bottom">
+              <ion-label position="floating">Número</ion-label>
+              <ion-input formControlName="number" type="tel"></ion-input>
+            </ion-item>
+            <ion-item class="ion-margin-bottom">
+              <ion-label position="floating">¿De quien es este número?</ion-label>
+              <ion-input formControlName="who"></ion-input>
+            </ion-item>
+            <ion-item class="ion-margin-bottom">
+              <ion-label position="floating">Álias del contacto</ion-label>
+              <ion-input formControlName="alias"></ion-input>
+            </ion-item>
 
+            <div class="d-flex ion-justify-content-end ion-padding">
+              <ion-button
+                color="danger"
+                fill="outline"
+                class="ion-margin-end"
+                (click)="onDeleteClick(index)"
+                >Eliminar</ion-button
+              >
+              <ion-button color="primary" (click)="onFormArraySubmit()"
+                >Guardar</ion-button
+              >
+            </div>
+          </form>
+        </ion-accordion>
+      </ng-container>
+    </ng-container>
+  </ion-accordion-group>
+
+  <div style="height: 200px"></div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="onAddClicked()">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>
