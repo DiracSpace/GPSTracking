@@ -9,7 +9,7 @@
         >
             <div style="width: 100%">
                 <h4 class="ion-text-center ion-margin-bottom">
-                    <ng-container *ngIf="showForm == 'username'">
+                    <ng-container *ngIf="showForm == 'email'">
                         Bienvenido Usuario
                     </ng-container>
                     <ng-container *ngIf="showForm == 'password'">
@@ -22,42 +22,36 @@
                 </h5>
 
                 <form
-                    *ngIf="showForm == 'username'"
-                    [formGroup]="usernameForm"
-                    (ngSubmit)="onUsernameFormSubmit()"
+                    *ngIf="showForm == 'email'"
+                    [formGroup]="emailForm"
+                    (ngSubmit)="onEmailFormSubmit()"
                 >
                     <div id="usernameInput" class="ion-margin-bottom">
                         <ion-item>
-                            <ion-label position="floating"
-                                >Nombre de usuario</ion-label
-                            >
+                            <ion-label position="floating">Correo Electrónico</ion-label>
                             <ion-input
-                                placeholder="Ingresa tu nombre de usuario"
-                                formControlName="username"
+                                placeholder="Ingresa tu correo electrónico"
+                                formControlName="email"
                             ></ion-input>
                         </ion-item>
                         <app-form-control-error
                             class="ion-padding-start"
-                            [formGroup]="usernameForm"
-                            formControlNamex="username"
-                            [messages]="usernameValidationMessages"
+                            [formGroup]="emailForm"
+                            formControlNamex="email"
+                            [messages]="emailValidationMessages"
                         ></app-form-control-error>
                     </div>
 
-                    <div
-                        class="d-flex ion-justify-content-center ion-margin-bottom"
-                    >
+                    <div class="d-flex ion-justify-content-center ion-margin-bottom">
                         <ion-button
-                            [disabled]="!usernameForm.valid"
+                            [disabled]="!emailForm.valid"
                             color="primary"
-                            (click)="onUsernameFormSubmit()"
+                            (click)="onEmailFormSubmit()"
                         >
                             Iniciar Sesión
                         </ion-button>
                     </div>
-                    <div
-                        class="d-flex ion-justify-content-center ion-margin-bottom"
-                    >
+                    <div class="d-flex ion-justify-content-center ion-margin-bottom">
                         <ion-button
                             color="primary"
                             (click)="onSignUpClicked()"
@@ -75,12 +69,11 @@
                 >
                     <div id="passwordInput" class="ion-margin-bottom">
                         <ion-item>
-                            <ion-label position="floating"
-                                >Contraseña</ion-label
-                            >
+                            <ion-label position="floating">Contraseña</ion-label>
                             <ion-input
                                 placeholder="Ingresa tu contraseña"
                                 formControlName="password"
+                                type="password"
                             ></ion-input>
                         </ion-item>
                         <app-form-control-error
@@ -91,9 +84,7 @@
                         ></app-form-control-error>
                     </div>
 
-                    <div
-                        class="d-flex ion-justify-content-center ion-margin-bottom"
-                    >
+                    <div class="d-flex ion-justify-content-center ion-margin-bottom">
                         <ion-button
                             [disabled]="!passwordForm.valid"
                             color="primary"

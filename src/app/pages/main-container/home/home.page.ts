@@ -16,9 +16,8 @@ export class HomePage implements OnInit {
 
     constructor(
         private nav: Navigation,
-        private state: State,
+        private loadingController: LoadingController,
         private api: ApiService,
-        private loadingController: LoadingController
     ) {}
 
     ngOnInit(): void {
@@ -29,9 +28,13 @@ export class HomePage implements OnInit {
         return this.user.username;
     }
 
-    onLogoutClicked() {
-        // TODO Terminate user session
-        // TODO Clear any resources (cache, subscriptions, tokens, etc.)
+    async onLogoutClicked() {
+        const loadingDialog = await this.loadingController.create({
+            message: 'Cerrando Sesión'
+        });
+        await loadingDialog.present();
+        await this.api.auth.signOut();
+        await loadingDialog.dismiss();
         this.nav._.go();
     }
 

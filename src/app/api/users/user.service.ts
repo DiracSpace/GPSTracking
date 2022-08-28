@@ -14,7 +14,7 @@ import {
     WhereFilterOp,
     writeBatch
 } from '@angular/fire/firestore';
-import { EntityConverter, User } from 'src/app/views';
+import { FirebaseEntityConverter, User } from 'src/app/views';
 import { Logger, LogLevel } from 'src/app/logger';
 import { setDoc } from '@firebase/firestore';
 import { Injectable } from '@angular/core';
@@ -37,7 +37,7 @@ export class UserService {
         }
 
         const userDocRef = doc(this.afStore, COLLECTION_NAME, entity.uid).withConverter(
-            EntityConverter<User>()
+            FirebaseEntityConverter<User>()
         );
         await setDoc(userDocRef, entity);
     }
@@ -45,8 +45,8 @@ export class UserService {
     /**
      * Uses a batch to create multiple
      * entities in the collection.
-     * 
-     * @param entities 
+     *
+     * @param entities
      * @returns null if failed
      */
     async createAllAsync(entities: User[]): Promise<void> {
@@ -62,7 +62,7 @@ export class UserService {
                 this.afStore,
                 COLLECTION_NAME,
                 entity.uid
-            ).withConverter(EntityConverter<User>());
+            ).withConverter(FirebaseEntityConverter<User>());
 
             batch.set(userDocRef, entity);
         }
@@ -73,13 +73,13 @@ export class UserService {
     /**
      * Queries all documents in collection
      * where entityId equals uid.
-     * 
+     *
      * Uses cache by default! You can override
      * this by providing false.
-     * 
-     * @param entityId 
-     * @param searchCache 
-     * @returns 
+     *
+     * @param entityId
+     * @param searchCache
+     * @returns
      */
     async getByUidOrDefaultAsync(
         entityId: string,
@@ -90,13 +90,13 @@ export class UserService {
         }
 
         const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
-            EntityConverter<User>()
+            FirebaseEntityConverter<User>()
         );
-        
+
         if (searchCache) {
             const cachedDocSnap = await getDocFromCache(userDocRef);
             if (!cachedDocSnap.exists()) return null;
-            
+
             logger.log('Exists in cache!');
             return cachedDocSnap.data();
         }
