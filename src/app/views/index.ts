@@ -6,7 +6,7 @@ export { UserAlergyDetail } from './User/UserAlergyDetail';
 export { UserPhoneNumber } from './User/UserPhoneNumber';
 export { UserAddress } from './User/UserAddress';
 export { UserEmail } from './User/UserEmail';
-export { EntityConverter } from './User/FirestoreConverter/EntityConverter';
+export { FirebaseEntityConverter, EntityConverter } from './User/FirestoreConverter/EntityConverter';
 
 export const PhoneNumberOwnerTypes: PhoneNumberOwner[] = ['Mío', 'Mamá', 'Papá', 'Otro'];
 export const AddressTypeTypes: AddressType[] = ['Hogar', 'Trabajo', 'Otro'];

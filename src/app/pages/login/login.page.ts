@@ -9,16 +9,16 @@ import { Navigation } from 'src/app/navigation';
     styleUrls: ['./login.page.scss']
 })
 export class LoginPage implements OnInit {
-    showForm: 'username' | 'password' = 'username';
+    showForm: 'email' | 'password' = 'email';
 
-    usernameForm = this.forms.group({
-        username: new FormControl('', [Validators.required])
+    emailForm = this.forms.group({
+        email: new FormControl('', [Validators.required])
     });
 
-    usernameValidationMessages: ValidationErrorMessage[] = [
+    emailValidationMessages: ValidationErrorMessage[] = [
         {
             type: 'required',
-            message: 'Username is required'
+            message: 'El correo electrónico es obligatorio'
         }
     ];
 
@@ -29,7 +29,7 @@ export class LoginPage implements OnInit {
     passwordValidationMessages: ValidationErrorMessage[] = [
         {
             type: 'required',
-            message: 'Password is required'
+            message: 'La contraseña es obligatoria'
         }
     ];
 
@@ -38,7 +38,7 @@ export class LoginPage implements OnInit {
     ngOnInit() {}
 
     get username() {
-        return 'nombre_de_usuario'; // TODO Get username
+        return this.emailForm.get('email')?.value ?? 'Usuario';
     }
 
     onSignUpClicked() {
@@ -49,8 +49,8 @@ export class LoginPage implements OnInit {
         });
     }
 
-    async onUsernameFormSubmit() {
-        if (!this.usernameForm.valid) {
+    async onEmailFormSubmit() {
+        if (!this.emailForm.valid) {
             return;
         }
 
@@ -80,6 +80,6 @@ export class LoginPage implements OnInit {
     }
 
     onBackClicked() {
-        this.showForm = 'username';
+        this.showForm = 'email';
     }
 }

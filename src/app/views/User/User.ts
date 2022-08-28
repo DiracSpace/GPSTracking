@@ -16,25 +16,19 @@ export class User {
     lastNameFather: string;
     lastNameMother: string;
 
-    emails: UserEmail[];
+    emailVerified: boolean;
+    email: string;
+    photoUrl: string;
+    qrCodeUrl: string;
+
     phoneNumbers: UserPhoneNumber[];
-    storageDetails: UserStorageDetail;
     addresses: UserAddress[];
 
     diseases: UserDiseaseDetail[];
     alergies: UserAlergyDetail[];
 
     constructor() {
-        this.uid = guid();
-        this.username = empty();
-        this.firstName = empty();
-        this.middleName = empty();
-        this.lastNameFather = empty();
-        this.lastNameMother = empty();
-
-        this.emails = [];
         this.phoneNumbers = [];
-        this.storageDetails = new UserStorageDetail();
         this.addresses = [];
         this.alergies = [];
     }

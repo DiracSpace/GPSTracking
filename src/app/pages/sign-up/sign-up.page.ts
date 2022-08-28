@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
+import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Navigation } from 'src/app/navigation';
+import { EntityConverter, User, UserEmail } from 'src/app/views';
 
 @Component({
     selector: 'app-sign-up',
@@ -9,16 +11,16 @@ import { Navigation } from 'src/app/navigation';
     styleUrls: ['./sign-up.page.scss']
 })
 export class SignUpPage implements OnInit {
-    showForm: 'username' | 'password' = 'username';
+    showForm: 'email' | 'password' = 'email';
 
-    usernameForm = this.forms.group({
-        username: new FormControl('', [Validators.required])
+    emailForm = this.forms.group({
+        email: new FormControl('', [Validators.required])
     });
 
-    usernameValidationMessages: ValidationErrorMessage[] = [
+    emailValidationMessages: ValidationErrorMessage[] = [
         {
             type: 'required',
-            message: 'Ingresa un nombre de usuario'
+            message: 'El correo electrónico es obligatorio'
         }
     ];
 
@@ -41,7 +43,7 @@ export class SignUpPage implements OnInit {
         }
     ];
 
-    constructor(private forms: FormBuilder, private nav: Navigation) {}
+    constructor(private forms: FormBuilder, private nav: Navigation, private api: ApiService) {}
 
     ngOnInit() {}
 
@@ -53,8 +55,8 @@ export class SignUpPage implements OnInit {
         });
     }
 
-    async onUsernameFormSubmit() {
-        if (!this.usernameForm.valid) {
+    async onEmailFormSubmit() {
+        if (!this.emailForm.valid) {
             return;
         }
 
@@ -80,10 +82,22 @@ export class SignUpPage implements OnInit {
             return;
         }
 
+        const email = this.emailForm.get('email').value;
+        const password = this.passwordForm.get('password').value;
+        const fireAuthUser = await this.api.auth.createUserWithEmailAndPasswordAsync(email, password);
+        const user = new User();
+
+        user.uid = fireAuthUser.uid;
+        user.email = fireAuthUser.email;
+        user.emailVerified = fireAuthUser.emailVerified;
+        user.photoUrl = fireAuthUser.photoURL;
+
+        await this.api.users.createAsync(user);
+
         this.nav.mainContainer.home.go();
     }
 
     onBackClicked() {
-        this.showForm = 'username';
+        this.showForm = 'email';
     }
 }
