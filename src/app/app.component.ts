@@ -5,6 +5,8 @@ import { Logger, LogLevel } from './logger';
 import { Platform } from '@ionic/angular';
 import { ApiService } from './api';
 import { User } from './views';
+import { enableIndexedDbPersistence } from '@angular/fire/firestore';
+import { getDatabase, provideDatabase } from '@angular/fire/database';
 
 const logger = new Logger({
     level: LogLevel.Debug,
@@ -43,5 +45,9 @@ export class AppComponent implements OnInit {
         return environment.showDebug;
     }
 
-    private async initAsync() {}
+    private async initAsync() {
+        const uid = "3d708c85-c501-4879-a151-eae5d9a1d4b2";
+        const queriedUser = await this.api.users.getByUidOrDefaultAsync(uid);
+        logger.log("queriedUser:", queriedUser);
+    }
 }
