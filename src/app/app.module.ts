@@ -13,7 +13,11 @@ import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { environment } from '../environments/environment';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideDatabase, getDatabase } from '@angular/fire/database';
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import {
+    provideFirestore,
+    getFirestore,
+    enableIndexedDbPersistence
+} from '@angular/fire/firestore';
 
 @NgModule({
     declarations: [AppComponent],
@@ -30,7 +34,11 @@ import { provideFirestore, getFirestore } from '@angular/fire/firestore';
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideAuth(() => getAuth()),
         provideDatabase(() => getDatabase()),
-        provideFirestore(() => getFirestore())
+        provideFirestore(() => {
+            const firestore = getFirestore();
+            enableIndexedDbPersistence(firestore);
+            return firestore;
+        })
     ],
     providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
     bootstrap: [AppComponent]
