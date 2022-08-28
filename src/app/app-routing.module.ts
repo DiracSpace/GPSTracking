@@ -15,9 +15,7 @@ const routes: Routes = [
     {
         path: 'sign-up',
         loadChildren: () =>
-            import('./pages/sign-up/sign-up.module').then(
-                (m) => m.SignUpPageModule
-            )
+            import('./pages/sign-up/sign-up.module').then((m) => m.SignUpPageModule)
     },
     {
         path: 'main-container',
@@ -28,15 +26,17 @@ const routes: Routes = [
     },
     {
         path: 'qr',
+        loadChildren: () => import('./qr-code/qr-code.module').then((m) => m.QrCodeModule)
+    },
+    {
+        path: 'user',
         loadChildren: () =>
-            import('./qr-code/qr-code.module').then((m) => m.QrCodeModule)
+            import('./pages/user/user.module').then((m) => m.UserPageModule)
     }
 ];
 
 @NgModule({
-    imports: [
-        RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })
-    ],
+    imports: [RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })],
     exports: [RouterModule]
 })
 export class AppRoutingModule {}
