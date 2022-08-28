@@ -19,7 +19,7 @@ export const environment = {
         authDomain: 'gpstracking-d1f5c.firebaseapp.com',
         messagingSenderId: '14386123808'
     },
-    showDebug: false,
+    showDebug: true,
     environmentName: 'notspecified'
 };
 

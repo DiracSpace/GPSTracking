@@ -1,6 +1,6 @@
 export interface IRepository<T> {
-    createAsync<T>(entity: T): Promise<T>;
-    createAllAsync<T>(entities: T[]): Promise<T[]>;
+    createAsync<T>(entity: T): Promise<void>;
+    createAllAsync<T>(entities: T[]): Promise<void>;
     getAsync<T>(entityId: number): Promise<T>;
     getAllAsync<T>(): Promise<T[]>;
     deleteAsync<T>(entityId: number): Promise<void>;
