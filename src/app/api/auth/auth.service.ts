@@ -36,13 +36,14 @@ export class AuthService {
         });
     }
 
-    async userProfile() {
-        if (!this.currentUser) {
-            logger.log('No currently signed in user!');
-            return null;
+    async getCurrentUserAsync(): Promise<User> {
+        const user = await this.currentUser;
+
+        if (!user) {
+            throw 'No se pudo autenticar. Por favor vuelva a iniciar sesión'
         }
 
-        return await this.currentUser;
+        return user;
     }
     /* #endregion */
 

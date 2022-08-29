@@ -41,7 +41,7 @@ export class HomePage implements OnInit {
         await loadingDialog.present();
         await this.api.auth.signOut();
         await loadingDialog.dismiss();
-        this.nav._.go();
+        this.nav.login.go();
     }
 
     onEditProfileClicked() {
