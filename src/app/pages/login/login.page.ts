@@ -4,6 +4,7 @@ import { LoadingController, ToastController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Navigation } from 'src/app/navigation';
+import { wait } from 'src/app/utils/time';
 
 @Component({
     selector: 'app-login',
@@ -80,11 +81,17 @@ export class LoginPage implements OnInit {
         try {
             await this.api.auth.signInWithEmailAndPassword(email, password);
         } catch (err) {
+            await loadingDialog.dismiss();
+
             const toast = await this.toasts.create({
                 message: err,
-                duration: 800
+                duration: 1000
             });
+
             await toast.present();
+            await wait(600);
+
+            this.nav.login.go();
             return;
         }
 
