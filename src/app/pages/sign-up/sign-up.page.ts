@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
+import { ToastController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Navigation } from 'src/app/navigation';
@@ -43,7 +44,12 @@ export class SignUpPage implements OnInit {
         }
     ];
 
-    constructor(private forms: FormBuilder, private nav: Navigation, private api: ApiService) {}
+    constructor(
+        private toasts: ToastController,
+        private forms: FormBuilder,
+        private nav: Navigation,
+        private api: ApiService
+    ) {}
 
     ngOnInit() {}
 
@@ -59,14 +65,6 @@ export class SignUpPage implements OnInit {
         if (!this.emailForm.valid) {
             return;
         }
-
-        const userExists = false; // TODO Query user
-
-        if (userExists) {
-            // TODO Show error message
-            return;
-        }
-
         this.showForm = 'password';
     }
 
@@ -75,16 +73,24 @@ export class SignUpPage implements OnInit {
             return;
         }
 
-        const credentialsAreValid = true; // TODO Query credentials
+        const email = this.emailForm.get('email').value;
+        const password = this.passwordForm.get('password').value;
+        let fireAuthUser = null;
 
-        if (!credentialsAreValid) {
-            // TODO Show error message
+        try {
+            fireAuthUser = await this.api.auth.createUserWithEmailAndPasswordAsync(
+                email,
+                password
+            );
+        } catch (err) {
+            const toast = await this.toasts.create({
+                message: err,
+                duration: 800
+            });
+            await toast.present();
             return;
         }
 
-        const email = this.emailForm.get('email').value;
-        const password = this.passwordForm.get('password').value;
-        const fireAuthUser = await this.api.auth.createUserWithEmailAndPasswordAsync(email, password);
         const user = new User();
 
         user.uid = fireAuthUser.uid;
@@ -93,6 +99,9 @@ export class SignUpPage implements OnInit {
         user.photoUrl = fireAuthUser.photoURL;
 
         await this.api.users.createAsync(user);
+
+        this.emailForm.reset();
+        this.passwordForm.reset();
 
         this.nav.mainContainer.home.go();
     }
