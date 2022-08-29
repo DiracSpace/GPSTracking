@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
+import { LoadingController, ToastController } from '@ionic/angular';
+import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Navigation } from 'src/app/navigation';
 
@@ -33,7 +35,13 @@ export class LoginPage implements OnInit {
         }
     ];
 
-    constructor(private forms: FormBuilder, private nav: Navigation) {}
+    constructor(
+        private loadingController: LoadingController,
+        private toasts: ToastController,
+        private forms: FormBuilder,
+        private nav: Navigation,
+        private api: ApiService
+    ) {}
 
     ngOnInit() {}
 
@@ -53,14 +61,6 @@ export class LoginPage implements OnInit {
         if (!this.emailForm.valid) {
             return;
         }
-
-        const userExists = true; // TODO Query user
-
-        if (!userExists) {
-            // TODO Show error message
-            return;
-        }
-
         this.showForm = 'password';
     }
 
@@ -69,12 +69,29 @@ export class LoginPage implements OnInit {
             return;
         }
 
-        const credentialsAreValid = true; // TODO Query credentials
+        const email = this.emailForm.get('email').value;
+        const password = this.passwordForm.get('password').value;
 
-        if (!credentialsAreValid) {
-            // TODO Show error message
+        const loadingDialog = await this.loadingController.create({
+            message: 'Iniciando sesión'
+        });
+        await loadingDialog.present();
+
+        try {
+            await this.api.auth.signInWithEmailAndPassword(email, password);
+        } catch (err) {
+            const toast = await this.toasts.create({
+                message: err,
+                duration: 800
+            });
+            await toast.present();
             return;
         }
+
+        this.emailForm.reset();
+        this.passwordForm.reset();
+
+        await loadingDialog.dismiss();
 
         this.nav.mainContainer.home.go();
     }

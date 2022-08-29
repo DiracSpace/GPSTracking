@@ -2,12 +2,9 @@ import {
     createUserWithEmailAndPassword,
     getAuth,
     signInWithEmailAndPassword,
-    User,
-    UserCredential
-} from '@angular/fire/auth';
+    User} from '@angular/fire/auth';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Injectable } from '@angular/core';
-import { from, Observable } from 'rxjs';
 
 const logger = new Logger({
     source: 'AuthService',
@@ -30,29 +27,22 @@ export class AuthService {
     }
 
     /* #region userInformation */
-    get currentUser() {
-        return this.afAuth.currentUser;
+    get currentUser(): Promise<User> {
+        return new Promise((resolve, reject) => {
+            const unsubscribe = this.afAuth.onAuthStateChanged((user) => {
+                unsubscribe();
+                resolve(user);
+            }, reject);
+        });
     }
 
-    userProfile() {
+    async userProfile() {
         if (!this.currentUser) {
             logger.log('No currently signed in user!');
             return null;
         }
 
-        return this.currentUser;
-    }
-
-    get displayName(): string | undefined {
-        return this.currentUser?.displayName;
-    }
-
-    get email(): string | undefined {
-        return this.currentUser?.email;
-    }
-
-    get photoUrl(): string | undefined {
-        return this.currentUser?.photoURL;
+        return await this.currentUser;
     }
     /* #endregion */
 
@@ -69,9 +59,37 @@ export class AuthService {
             );
             logger.log('Signed up!');
             return credentials.user;
-        } catch (err) {
-            logger.log('Not signed up!');
-            logger.log('err:', err);
+        } catch (error) {
+            let message = '';
+
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    message = `El correo electrónico no está disponible.`;
+                    logger.log(message);
+                    break;
+                case 'auth/invalid-email':
+                    message = `El correo electrónico no tiene el formato adecuado.`;
+                    logger.log(message);
+                    break;
+                case 'auth/operation-not-allowed':
+                    message = `Error al registrarse.`;
+                    logger.log(message);
+                    break;
+                case 'auth/weak-password':
+                    message = 'La contraseña no es lo suficientemente fuerte.';
+                    logger.log(message);
+                    break;
+                case 'auth/quota-exceeded':
+                    message = `El proveedor no está disponible de momento.`;
+                    logger.log(message);
+                    break;
+                default:
+                    message = error.message;
+                    logger.log(message);
+                    break;
+            }
+
+            throw message;
         }
     }
 
@@ -84,9 +102,37 @@ export class AuthService {
             );
             logger.log('Signed in!');
             return credentials.user;
-        } catch (err) {
-            logger.log('Not signed in');
-            logger.log('err:', err);
+        } catch (error) {
+            let message = '';
+
+            switch (error.code) {
+                case 'auth/wrong-password':
+                    message = `Las credenciales están incorrectas.`;
+                    logger.log(message);
+                    break;
+                case 'auth/invalid-email':
+                    message = `Las credenciales están incorrectas.`;
+                    logger.log(message);
+                    break;
+                case 'auth/custom-token-mismatch':
+                    message = `Las credenciales están incorrectas.`;
+                    logger.log(message);
+                    break;
+                case 'auth/user-not-found':
+                    message = `El correo electrónico no está registrado.`;
+                    logger.log(message);
+                    break;
+                case 'auth/quota-exceeded':
+                    message = `El proveedor no está disponible de momento.`;
+                    logger.log(message);
+                    break;
+                default:
+                    message = error.message;
+                    logger.log(message);
+                    break;
+            }
+
+            throw message;
         }
     }
 }

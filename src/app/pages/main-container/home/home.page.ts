@@ -1,9 +1,14 @@
 import { ApiService } from 'src/app/api/ApiService.service';
+import { LoadingController, ToastController } from '@ionic/angular';
+import { Logger, LogLevel } from 'src/app/logger';
 import { Component, OnInit } from '@angular/core';
-import { LoadingController } from '@ionic/angular';
 import { Navigation } from 'src/app/navigation';
-import { State } from 'src/app/state';
 import { User } from 'src/app/views';
+
+const logger = new Logger({
+    source: 'HomePage',
+    level: LogLevel.Debug
+});
 
 @Component({
     selector: 'app-home',
@@ -15,8 +20,9 @@ export class HomePage implements OnInit {
     user = new User();
 
     constructor(
-        private nav: Navigation,
         private loadingController: LoadingController,
+        private toasts: ToastController,
+        private nav: Navigation,
         private api: ApiService,
     ) {}
 
@@ -25,7 +31,7 @@ export class HomePage implements OnInit {
     }
 
     get username() {
-        return this.user.username;
+        return this.user.username ?? this.user.email;
     }
 
     async onLogoutClicked() {
@@ -48,6 +54,22 @@ export class HomePage implements OnInit {
             message: 'Cargando tu perfíl'
         });
         await loadingDialog.present();
+
+        const user = await this.api.auth.currentUser;
+
+        if (!user) {
+            const toast = await this.toasts.create({
+                message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
+                duration: 800
+            });
+            await toast.present();
+
+            this.api.auth.signOut();
+            this.nav.login.go();
+            return;
+        }
+
+        this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
 
         await loadingDialog.dismiss();
         this.loading = false;
