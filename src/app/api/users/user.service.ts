@@ -10,6 +10,7 @@ import {
     orderBy,
     query,
     QueryDocumentSnapshot,
+    updateDoc,
     where,
     WhereFilterOp,
     writeBatch
@@ -161,8 +162,12 @@ export class UserService {
         throw new Error('Method not implemented.');
     }
 
-    updateAsync<T>(entityId: number, entities: T): Promise<T> {
-        throw new Error('Method not implemented.');
+    async updateAsync(entityId: string, entity: User): Promise<void> {
+        const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
+            FirebaseEntityConverter<User>()
+        );
+
+        await updateDoc(userDocRef, entity);
     }
 
     updateAllAsync<T>(entities: T[]): Promise<T[]> {

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
-import { ToastController } from '@ionic/angular';
+import { LoadingController, ToastController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Navigation } from 'src/app/navigation';
@@ -45,6 +45,7 @@ export class SignUpPage implements OnInit {
     ];
 
     constructor(
+        private loadingController: LoadingController,
         private toasts: ToastController,
         private forms: FormBuilder,
         private nav: Navigation,
@@ -73,6 +74,11 @@ export class SignUpPage implements OnInit {
             return;
         }
 
+        const loadingDialog = await this.loadingController.create({
+            message: 'Iniciando sesión'
+        });
+        await loadingDialog.present();
+
         const email = this.emailForm.get('email').value;
         const password = this.passwordForm.get('password').value;
         let fireAuthUser = null;
@@ -83,11 +89,13 @@ export class SignUpPage implements OnInit {
                 password
             );
         } catch (err) {
+            await loadingDialog.dismiss();
             const toast = await this.toasts.create({
                 message: err,
                 duration: 800
             });
             await toast.present();
+            this.resetForm();
             return;
         }
 
@@ -98,15 +106,19 @@ export class SignUpPage implements OnInit {
         user.emailVerified = fireAuthUser.emailVerified;
         user.photoUrl = fireAuthUser.photoURL;
 
+        this.resetForm();
         await this.api.users.createAsync(user);
-
-        this.emailForm.reset();
-        this.passwordForm.reset();
-
+        await loadingDialog.dismiss();
         this.nav.mainContainer.home.go();
     }
 
     onBackClicked() {
         this.showForm = 'email';
+    }
+
+    private resetForm() {
+        this.showForm = 'email';
+        this.emailForm.reset();
+        this.passwordForm.reset();
     }
 }

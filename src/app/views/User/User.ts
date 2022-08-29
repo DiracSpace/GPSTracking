@@ -1,11 +1,7 @@
-import { UserStorageDetail } from './UserStorageDetail';
 import { UserDiseaseDetail } from './UserDiseaseDetail';
 import { UserAlergyDetail } from './UserAlergyDetail';
 import { UserPhoneNumber } from './UserPhoneNumber';
-import { empty } from 'src/app/utils/strings';
 import { UserAddress } from './UserAddress';
-import { UserEmail } from './UserEmail';
-import { guid } from 'src/app/utils';
 
 export class User {
     uid: string;
