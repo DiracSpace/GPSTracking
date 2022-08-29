@@ -58,6 +58,8 @@ export class HomePage implements OnInit {
         const user = await this.api.auth.currentUser;
 
         if (!user) {
+            await loadingDialog.dismiss();
+            
             const toast = await this.toasts.create({
                 message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
                 duration: 800
