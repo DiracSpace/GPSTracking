@@ -5,6 +5,7 @@ import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Navigation } from 'src/app/navigation';
 import { EntityConverter, User, UserEmail } from 'src/app/views';
+import { environment } from 'src/environments/environment';
 
 @Component({
     selector: 'app-sign-up',
@@ -105,6 +106,7 @@ export class SignUpPage implements OnInit {
         user.email = fireAuthUser.email;
         user.emailVerified = fireAuthUser.emailVerified;
         user.photoUrl = fireAuthUser.photoURL;
+        user.qrCodeUrl = `${environment.domains.default}/${fireAuthUser.uid}`;
 
         this.resetForm();
         await this.api.users.createAsync(user);

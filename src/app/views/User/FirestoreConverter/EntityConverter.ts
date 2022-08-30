@@ -12,3 +12,10 @@ export const FirebaseEntityConverter = <T>() => ({
 export const EntityConverter = {
     fromFirestore: <T>(entity: any): T => entity as T,
 }
+
+export const ListEntityConverter = <T>() => ({
+    fromListToFirestore: (entities: T[]): DocumentData => {
+        const json = JSON.stringify(entities);
+        return JSON.parse(json);
+    }
+})

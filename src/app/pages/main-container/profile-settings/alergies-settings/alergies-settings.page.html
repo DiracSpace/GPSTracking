@@ -1,35 +1,65 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button></ion-back-button>
-    </ion-buttons>
-    <ion-title>Alergias</ion-title>
-  </ion-toolbar>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-back-button></ion-back-button>
+        </ion-buttons>
+        <ion-title>Alergias</ion-title>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <div class="ion-margin">
-    <ion-input
-      type="text"
-      placeholder="Añade una alergia"
-      (keyup.enter)="onAlergyEnter()"
-      [(ngModel)]="alergyInput"
-    ></ion-input>
-  </div>
+    <ion-accordion-group [multiple]="true">
+        <ion-accordion *ngFor="let alergy of alergies" [value]="alergy.id">
+            <ion-item slot="header" color="light">
+                <ion-label>{{ alergy.name ?? "Alergia" }}</ion-label>
+            </ion-item>
+            <div slot="content">
+                <ion-item id="nombre" class="ion-margin-bottom">
+                    <ion-label position="floating">Nombre de la alergia</ion-label>
+                    <ion-input type="tel" [(ngModel)]="alergy.name"></ion-input>
+                </ion-item>
 
-  <ion-list>
-    <ion-item *ngFor="let alergy of alergies">
-      <ion-label>{{alergy}}</ion-label>
-      <ion-button
-        slot="end"
-        color="danger"
-        fill="outline"
-        (click)="onDeleteClicked(alergy)"
-      >
-        Eliminar
-      </ion-button>
-    </ion-item>
-  </ion-list>
+                <ion-item id="numeroDeIncidentes" class="ion-margin-bottom">
+                    <ion-label position="floating"
+                        >Número de incidentes (opcional)</ion-label
+                    >
+                    <ion-input
+                        type="text"
+                        [(ngModel)]="alergy.numberOfIncidents"
+                    ></ion-input>
+                </ion-item>
 
-  <div style="height: 200px"></div>
+                <ion-item id="numeroDeIncidentes" class="ion-margin-bottom">
+                    <ion-label position="floating"
+                        >Número de veces hospitalizado (opcional)</ion-label
+                    >
+                    <ion-input
+                        type="text"
+                        [(ngModel)]="alergy.timesHospitalized"
+                    ></ion-input>
+                </ion-item>
+
+                <div id="buttons" class="d-flex ion-justify-content-end ion-padding">
+                    <ion-button
+                        color="danger"
+                        fill="outline"
+                        class="ion-margin-end"
+                        (click)="onDeleteClicked(alergy)"
+                        >Eliminar</ion-button
+                    >
+                    <ion-button color="primary" (click)="onSaveClicked(alergy)"
+                        >Guardar</ion-button
+                    >
+                </div>
+            </div>
+        </ion-accordion>
+    </ion-accordion-group>
+
+    <div style="height: 200px"></div>
+
+    <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button (click)="onAddClicked()">
+            <ion-icon name="add-outline"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
 </ion-content>

@@ -1,14 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { LoadingController } from '@ionic/angular';
+import { LoadingController, ToastController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import {
     ArgumentNullError,
     NotImplementedError,
     RequiredPropError
 } from 'src/app/errors';
+import { Logger, LogLevel } from 'src/app/logger';
 import { State } from 'src/app/state';
+import { guid } from 'src/app/utils';
 import { wait } from 'src/app/utils/time';
 import { AddressTypeTypes, MexicoStates, User, UserAddress } from 'src/app/views';
+
+const logger = new Logger({
+    source: 'AddressesSettingsPage',
+    level: LogLevel.Debug
+});
 
 @Component({
     selector: 'app-addresses-settings',
@@ -21,12 +28,15 @@ export class AddressesSettingsPage implements OnInit {
     states = MexicoStates;
 
     constructor(
+        private loadingController: LoadingController,
+        private toastController: ToastController,
         private api: ApiService,
-        private state: State,
-        private loadingController: LoadingController
+        private state: State
     ) {}
 
-    ngOnInit() {}
+    ngOnInit() {
+        this.loadAsync();
+    }
 
     get addresses(): UserAddress[] {
         if (this.user.addresses == undefined || this.user.addresses == null) {
@@ -41,23 +51,17 @@ export class AddressesSettingsPage implements OnInit {
     }
 
     async onAddClicked() {
-        const loadingDialog = await this.loadingController.create({
-            message: 'Añadiendo...'
-        });
-
-        await loadingDialog.present();
-
-        await wait(500); // TODO Remove this
-
+        logger.log('Adding new!');
         const address = new UserAddress();
+        address.id = guid();
         this.addresses.push(address);
-        // TODO Add to firestore
-        // TODO Add to app state
-
-        await loadingDialog.dismiss();
     }
 
     async onDeleteClick(address: UserAddress) {
+        if (!address) {
+            return;
+        }
+
         const caller = 'onDeleteClick';
         RequiredPropError.throwIfNull(this.addresses, 'addresses', caller);
 
@@ -67,30 +71,57 @@ export class AddressesSettingsPage implements OnInit {
             throw new NotImplementedError('Could not find address to delete', caller);
         }
 
+        this.addresses.splice(index, 1);
+
         const loadingDialog = await this.loadingController.create({
             message: 'Eliminando...'
         });
-
         await loadingDialog.present();
 
-        await wait(500); // TODO Remove this
-        // TODO Delete from firestore
-        // TODO Delete from app state
-        this.addresses.splice(index, 1);
+        try {
+            logger.log('address:', address);
+            await this.api.users.removeArrayElementAsync(
+                'addresses',
+                this.user.uid,
+                address
+            );
+        } catch (error) {
+            logger.log('error:', error);
+            await loadingDialog.dismiss();
+            const toast = await this.toastController.create({
+                message: error,
+                duration: 800
+            });
+            await toast.present();
+            return;
+        }
 
         await loadingDialog.dismiss();
     }
 
     async onSaveClicked(address: UserAddress) {
+        if (!address) {
+            return;
+        }
+
         const loadingDialog = await this.loadingController.create({
             message: 'Guardando...'
         });
-
         await loadingDialog.present();
 
-        await wait(500); // TODO Remove this
-        // TOOD Update in firestore
-        // TODO Update in app state
+        try {
+            logger.log('address:', address);
+            await this.api.users.updateArrayAsync('addresses', this.user.uid, address);
+        } catch (error) {
+            logger.log('error:', error);
+            await loadingDialog.dismiss();
+            const toast = await this.toastController.create({
+                message: error,
+                duration: 800
+            });
+            await toast.present();
+            return;
+        }
 
         await loadingDialog.dismiss();
     }
@@ -130,5 +161,30 @@ export class AddressesSettingsPage implements OnInit {
         }
 
         return 'Desconocido';
+    }
+
+    private async loadAsync() {
+        const loadingDialog = await this.loadingController.create({
+            message: 'Cargando tu perfíl'
+        });
+        await loadingDialog.present();
+
+        const user = await this.api.auth.currentUser;
+
+        if (!user) {
+            await loadingDialog.dismiss();
+
+            const toast = await this.toastController.create({
+                message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
+                duration: 800
+            });
+            await toast.present();
+            return;
+        }
+
+        this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
+        logger.log('this.user:', this.user);
+
+        await loadingDialog.dismiss();
     }
 }

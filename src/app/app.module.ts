@@ -8,7 +8,6 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { CoreModule } from './core/core.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { QrCodeModule } from './qr-code/qr-code.module';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { environment } from '../environments/environment';
 import { provideAuth, getAuth } from '@angular/fire/auth';
@@ -22,6 +21,12 @@ import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions
 import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
 import { ErrorHandlerService } from './services/error-handler.service';
+import { Logger, LogLevel } from './logger';
+
+const logger = new Logger({
+    source: 'AppModule',
+    level: LogLevel.Debug
+});
 
 @NgModule({
     declarations: [AppComponent],
@@ -34,13 +39,34 @@ import { ErrorHandlerService } from './services/error-handler.service';
         CoreModule,
         FormsModule,
         ReactiveFormsModule,
-        QrCodeModule,
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideAuth(() => getAuth()),
         provideDatabase(() => getDatabase()),
         provideFirestore(() => {
             const firestore = getFirestore();
-            enableIndexedDbPersistence(firestore);
+            try {
+                enableIndexedDbPersistence(firestore);
+            } catch (error) {
+                let message = '';
+
+                switch (error.code) {
+                    case 'failed-precondition':
+                        message = `No hay acceso al servicio de cache de Firebase.`;
+                        logger.log(message);
+                        break;
+                    case 'unimplemented':
+                        message = `No está implementado el servicio de cache de Firebase.`;
+                        logger.log(message);
+                        break;
+                    default:
+                        message = error.message;
+                        logger.log(message);
+                        break;
+                }
+
+                throw message;
+            }
+
             return firestore;
         })
     ],

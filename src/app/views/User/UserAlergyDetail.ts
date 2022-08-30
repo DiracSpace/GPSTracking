@@ -1,4 +1,6 @@
 export class UserAlergyDetail {
+    id: string;
+    
     dateOfLastIncident?: Date;
 
     numberOfIncidents?: number;

@@ -6,6 +6,7 @@ import { HomePage } from './home.page';
 
 import { HomePageRoutingModule } from './home-routing.module';
 import { CoreModule } from 'src/app/core/core.module';
+import { QrCodeModule } from 'src/app/qr-code/qr-code.module';
 
 @NgModule({
     imports: [
@@ -13,7 +14,8 @@ import { CoreModule } from 'src/app/core/core.module';
         FormsModule,
         IonicModule,
         HomePageRoutingModule,
-        CoreModule
+        CoreModule,
+        QrCodeModule
     ],
     declarations: [HomePage]
 })

@@ -1,108 +1,129 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button></ion-back-button>
-    </ion-buttons>
-    <ion-title>Direcciones</ion-title>
-  </ion-toolbar>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-back-button></ion-back-button>
+        </ion-buttons>
+        <ion-title>Direcciones</ion-title>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <ion-accordion-group [multiple]="true">
-    <ion-accordion *ngFor="let address of addresses" [value]="address.id">
-      <ion-item slot="header" color="light">
-        <ion-label style="overflow: unset; text-overflow: unset; white-space: pre-wrap"
-          >{{getAddressDescription(address)}}</ion-label
-        >
-      </ion-item>
-      <div slot="content">
-        <ion-item id="state" class="ion-margin-bottom">
-          <ion-label position="floating">Estado</ion-label>
-          <ion-select interface="action-sheet" [(ngModel)]="address.state">
-            <ion-select-option *ngFor="let state of states" [value]="state"
-              >{{state}}</ion-select-option
-            >
-          </ion-select>
-        </ion-item>
+    <ion-accordion-group [multiple]="true">
+        <ion-accordion *ngFor="let address of addresses" [value]="address.id">
+            <ion-item slot="header" color="light">
+                <ion-label
+                    style="overflow: unset; text-overflow: unset; white-space: pre-wrap"
+                    >{{getAddressDescription(address)}}</ion-label
+                >
+            </ion-item>
+            <div slot="content">
+                <ion-item id="state" class="ion-margin-bottom">
+                    <ion-label position="floating">Estado</ion-label>
+                    <ion-select interface="action-sheet" [(ngModel)]="address.state">
+                        <ion-select-option *ngFor="let state of states" [value]="state"
+                            >{{state}}</ion-select-option
+                        >
+                    </ion-select>
+                </ion-item>
 
-        <ion-item id="county" class="ion-margin-bottom">
-          <ion-label position="floating">Ciudad/Municipio</ion-label>
-          <ion-input type="text" [(ngModel)]="address.county"></ion-input>
-        </ion-item>
+                <ion-item id="county" class="ion-margin-bottom">
+                    <ion-label position="floating">Ciudad/Municipio</ion-label>
+                    <ion-input type="text" [(ngModel)]="address.county"></ion-input>
+                </ion-item>
 
-        <ion-item id="neighbourhood" class="ion-margin-bottom">
-          <ion-label position="floating">Colonia</ion-label>
-          <ion-input type="text" [(ngModel)]="address.neighbourhood"></ion-input>
-        </ion-item>
+                <ion-item id="neighbourhood" class="ion-margin-bottom">
+                    <ion-label position="floating">Colonia</ion-label>
+                    <ion-input
+                        type="text"
+                        [(ngModel)]="address.neighbourhood"
+                    ></ion-input>
+                </ion-item>
 
-        <ion-item id="street" class="ion-margin-bottom">
-          <ion-label position="floating">Calle</ion-label>
-          <ion-input type="text" [(ngModel)]="address.street"></ion-input>
-        </ion-item>
+                <ion-item id="street" class="ion-margin-bottom">
+                    <ion-label position="floating">Calle</ion-label>
+                    <ion-input type="text" [(ngModel)]="address.street"></ion-input>
+                </ion-item>
 
-        <ion-item id="numberExternal" class="ion-margin-bottom">
-          <ion-label position="floating">Número Exterior</ion-label>
-          <ion-input type="text" [(ngModel)]="address.numberExternal"></ion-input>
-        </ion-item>
+                <ion-item id="numberExternal" class="ion-margin-bottom">
+                    <ion-label position="floating">Número Exterior</ion-label>
+                    <ion-input
+                        type="text"
+                        [(ngModel)]="address.numberExternal"
+                    ></ion-input>
+                </ion-item>
 
-        <ion-item id="numberInternal" class="ion-margin-bottom">
-          <ion-label position="floating">Número Interior</ion-label>
-          <ion-input type="text" [(ngModel)]="address.numberInternal"></ion-input>
-        </ion-item>
+                <ion-item id="numberInternal" class="ion-margin-bottom">
+                    <ion-label position="floating">Número Interior</ion-label>
+                    <ion-input
+                        type="text"
+                        [(ngModel)]="address.numberInternal"
+                    ></ion-input>
+                </ion-item>
 
-        <ion-item id="betweenStreet1" class="ion-margin-bottom">
-          <ion-label position="floating">Entre Calle 1</ion-label>
-          <ion-input type="text" [(ngModel)]="address.betweenStreet1"></ion-input>
-        </ion-item>
+                <ion-item id="betweenStreet1" class="ion-margin-bottom">
+                    <ion-label position="floating">Entre Calle 1</ion-label>
+                    <ion-input
+                        type="text"
+                        [(ngModel)]="address.betweenStreet1"
+                    ></ion-input>
+                </ion-item>
 
-        <ion-item id="betweenStreet2" class="ion-margin-bottom">
-          <ion-label position="floating">Entre Calle 2</ion-label>
-          <ion-input type="text" [(ngModel)]="address.betweenStreet2"></ion-input>
-        </ion-item>
+                <ion-item id="betweenStreet2" class="ion-margin-bottom">
+                    <ion-label position="floating">Entre Calle 2</ion-label>
+                    <ion-input
+                        type="text"
+                        [(ngModel)]="address.betweenStreet2"
+                    ></ion-input>
+                </ion-item>
 
-        <ion-item id="zipCode" class="ion-margin-bottom">
-          <ion-label position="floating">Código Postal</ion-label>
-          <ion-input type="number" [(ngModel)]="address.zipCode"></ion-input>
-        </ion-item>
+                <ion-item id="zipCode" class="ion-margin-bottom">
+                    <ion-label position="floating">Código Postal</ion-label>
+                    <ion-input type="number" [(ngModel)]="address.zipCode"></ion-input>
+                </ion-item>
 
-        <ion-item id="addressType" class="ion-margin-bottom">
-          <ion-label position="floating">Tipo de Dirección</ion-label>
-          <ion-select interface="action-sheet" [(ngModel)]="address.addressType">
-            <ion-select-option *ngFor="let type of addressTypes" [value]="type"
-              >{{type}}</ion-select-option
-            >
-          </ion-select>
-        </ion-item>
+                <ion-item id="addressType" class="ion-margin-bottom">
+                    <ion-label position="floating">Tipo de Dirección</ion-label>
+                    <ion-select
+                        interface="action-sheet"
+                        [(ngModel)]="address.addressType"
+                    >
+                        <ion-select-option
+                            *ngFor="let type of addressTypes"
+                            [value]="type"
+                            >{{type}}</ion-select-option
+                        >
+                    </ion-select>
+                </ion-item>
 
-        <ion-item id="additionalInstructions" class="ion-margin-bottom">
-          <ion-label position="floating">Instrucciones extra</ion-label>
-          <ion-textarea
-            [(ngModel)]="address.additionalInstructions"
-            rows="3"
-          ></ion-textarea>
-        </ion-item>
+                <ion-item id="additionalInstructions" class="ion-margin-bottom">
+                    <ion-label position="floating">Instrucciones extra</ion-label>
+                    <ion-textarea
+                        [(ngModel)]="address.additionalInstructions"
+                        rows="3"
+                    ></ion-textarea>
+                </ion-item>
 
-        <div id="buttons" class="d-flex ion-justify-content-end ion-padding">
-          <ion-button
-            color="danger"
-            fill="outline"
-            class="ion-margin-end"
-            (click)="onDeleteClick(address)"
-            >Eliminar</ion-button
-          >
-          <ion-button color="primary" (click)="onSaveClicked(address)"
-            >Guardar</ion-button
-          >
-        </div>
-      </div>
-    </ion-accordion>
-  </ion-accordion-group>
+                <div id="buttons" class="d-flex ion-justify-content-end ion-padding">
+                    <ion-button
+                        color="danger"
+                        fill="outline"
+                        class="ion-margin-end"
+                        (click)="onDeleteClick(address)"
+                        >Eliminar</ion-button
+                    >
+                    <ion-button color="primary" (click)="onSaveClicked(address)"
+                        >Guardar</ion-button
+                    >
+                </div>
+            </div>
+        </ion-accordion>
+    </ion-accordion-group>
 
-  <div style="height: 200px"></div>
+    <div style="height: 200px"></div>
 
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="onAddClicked()">
-      <ion-icon name="add-outline"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
+    <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button (click)="onAddClicked()">
+            <ion-icon name="add-outline"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
 </ion-content>

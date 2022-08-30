@@ -20,19 +20,17 @@ const logger = new Logger({
 })
 export class AppComponent implements OnInit {
     constructor(platform: Platform, debug: Debugger, private api: ApiService) {
-        if (this.showDebug) {
-            platform.ready().then((result) => {
-                debug.info('Platform ready:', result);
+        platform.ready().then((result) => {
+            debug.info('Platform ready:', result);
 
-                const platformName = (() => {
-                    const platforms = platform.platforms();
-                    return platforms.join(', ');
-                })();
+            const platformName = (() => {
+                const platforms = platform.platforms();
+                return platforms.join(', ');
+            })();
 
-                debug.info('Platform name:', platformName);
-                debug.info('Environment:', environment.environmentName);
-            });
-        }
+            debug.info('Platform name:', platformName);
+            debug.info('Environment:', environment.environmentName);
+        });
     }
 
     ngOnInit(): void {
@@ -46,8 +44,8 @@ export class AppComponent implements OnInit {
     }
 
     private async initAsync() {
-        const uid = "3d708c85-c501-4879-a151-eae5d9a1d4b2";
+        const uid = '3d708c85-c501-4879-a151-eae5d9a1d4b2';
         const queriedUser = await this.api.users.getByUidOrDefaultAsync(uid);
-        logger.log("queriedUser:", queriedUser);
+        logger.log('queriedUser:', queriedUser);
     }
 }

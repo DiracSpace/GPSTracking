@@ -1,4 +1,6 @@
 import {
+    arrayRemove,
+    arrayUnion,
     collection,
     doc,
     DocumentData,
@@ -17,7 +19,12 @@ import {
     WhereFilterOp,
     writeBatch
 } from '@angular/fire/firestore';
-import { FirebaseEntityConverter, User } from 'src/app/views';
+import {
+    EntityConverter,
+    FirebaseEntityConverter,
+    User,
+    UserPhoneNumber
+} from 'src/app/views';
 import { Logger, LogLevel } from 'src/app/logger';
 import { setDoc } from '@firebase/firestore';
 import { Injectable } from '@angular/core';
@@ -184,7 +191,37 @@ export class UserService {
         await updateDoc(userDocRef, entity);
     }
 
-    updateAllAsync<T>(entities: T[]): Promise<T[]> {
-        throw new Error('Method not implemented.');
+    async updateArrayAsync<T>(
+        entityKey: string,
+        entityId: string,
+        entity: T
+    ): Promise<void> {
+        const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
+            FirebaseEntityConverter<User>()
+        );
+
+        const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
+
+        let genericObj = {};
+        genericObj[entityKey] = arrayUnion(firebaseEntity);
+
+        await updateDoc(userDocRef, genericObj);
+    }
+
+    async removeArrayElementAsync<T>(
+        entityKey: string,
+        entityId: string,
+        entity: T
+    ): Promise<void> {
+        const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
+            FirebaseEntityConverter<User>()
+        );
+
+        const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
+
+        let genericObj = {};
+        genericObj[entityKey] = arrayRemove(firebaseEntity);
+
+        await updateDoc(userDocRef, genericObj);
     }
 }
