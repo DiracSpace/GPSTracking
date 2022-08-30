@@ -10,11 +10,11 @@ export class LogoImgComponent implements OnInit {
     @Input() size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'md';
 
     private readonly _sizeMappings = new Map<string, string>([
-        ['xs', '20px'],
-        ['sm', '30px'],
-        ['md', '40px'],
-        ['lg', '50px'],
-        ['xl', '60px']
+        ['xs', '16px'],
+        ['sm', '20px'],
+        ['md', '27px'],
+        ['lg', '35px'],
+        ['xl', '45px']
     ]);
 
     constructor() {}

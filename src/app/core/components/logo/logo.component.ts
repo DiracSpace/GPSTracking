@@ -9,11 +9,11 @@ export class LogoComponent implements OnInit {
     @Input() size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'md';
 
     private readonly _fontSizeMappings = new Map<string, string>([
-        ['xs', '1.3rem'],
-        ['sm', '1.8rem'],
-        ['md', '2.5rem'],
-        ['lg', '3.3rem'],
-        ['xl', '3.9rem']
+        ['xs', '0.9rem'],
+        ['sm', '1.1rem'],
+        ['md', '1.5rem'],
+        ['lg', '2rem'],
+        ['xl', '2.7rem']
     ]);
 
     private readonly _logoImgMarginMappings = new Map<string, string>([
