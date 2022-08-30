@@ -2,6 +2,8 @@ import {
     collection,
     doc,
     DocumentData,
+    DocumentReference,
+    DocumentSnapshot,
     Firestore,
     getDoc,
     getDocFromCache,
@@ -93,24 +95,36 @@ export class UserService {
         const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
             FirebaseEntityConverter<User>()
         );
+        let userSnapshot: DocumentSnapshot<User> = null;
 
+        logger.log('searchCache:', searchCache);
         if (searchCache) {
-            const cachedDocSnap = await getDocFromCache(userDocRef);
-            if (!cachedDocSnap.exists()) return null;
-
-            logger.log('Exists in cache!');
-            return cachedDocSnap.data();
+            userSnapshot = await this.tryToGetFromCacheAsync(userDocRef);
         }
 
-        logger.log('Fetching data!');
-        const docSnap = await getDoc(userDocRef);
-
-        if (!docSnap.exists()) {
-            logger.log("Can't fetch data!");
-            return null;
+        if (!userSnapshot) {
+            logger.log('Fetching data!');
+            userSnapshot = await getDoc(userDocRef);
         }
 
-        return docSnap.data();
+        return userSnapshot.data();
+    }
+
+    private async tryToGetFromCacheAsync(userDocRef: DocumentReference<User>) {
+        logger.log('Trying to get from cache ... ');
+        let cachedDocSnap: DocumentSnapshot<User> = null;
+
+        try {
+            cachedDocSnap = await getDocFromCache(userDocRef);
+        } catch (error) {
+            logger.log('error.code:', error.code);
+        }
+
+        if (!cachedDocSnap) return null;
+        if (!cachedDocSnap.exists()) return null;
+
+        logger.log('Exists in cache!');
+        return cachedDocSnap;
     }
 
     /**
