@@ -1,3 +1,28 @@
-<p>
-  qr-code-viewer works!
-</p>
+<div
+    class="qrcodeImage"
+    style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        height: 100%;
+    "
+>
+    <qrcode
+        #qrCodeElement
+        [qrdata]="qrCodeInformation"
+        [allowEmptyString]="true"
+        [alt]="'A custom alt attribute'"
+        [ariaLabel]="'QR Code image with the following content...'"
+        [colorDark]="'#000000'"
+        [colorLight]="'#ffffff'"
+        [elementType]="'img'"
+        [errorCorrectionLevel]="'M'"
+        [margin]="4"
+        [scale]="1"
+        [title]="'A custom title attribute'"
+        [width]="300"
+        (qrCodeURL)="onChangeURL($event)"
+    ></qrcode>
+    <ion-button (click)="onDownloadClicked()">Guardar Imagen</ion-button>
+</div>
