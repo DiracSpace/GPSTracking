@@ -5,11 +5,12 @@
         justify-content: center;
         align-items: center;
         flex-direction: column;
-        height: 100%;
+        height: calc(100% - 25%);
     "
 >
     <qrcode
         #qrCodeElement
+        *ngIf="!hasGeneratedQrCode"
         [qrdata]="qrCodeInformation"
         [allowEmptyString]="true"
         [alt]="'A custom alt attribute'"
@@ -24,5 +25,8 @@
         [width]="300"
         (qrCodeURL)="onChangeURL($event)"
     ></qrcode>
+
+    <img *ngIf="hasGeneratedQrCode" [src]="qrCodeImgSrc" width="300px" height="300px" />
+
     <ion-button (click)="onDownloadClicked()">Guardar Imagen</ion-button>
 </div>
