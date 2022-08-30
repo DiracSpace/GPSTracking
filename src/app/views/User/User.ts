@@ -6,6 +6,7 @@ import { UserAddress } from './UserAddress';
 export class User {
     uid: string;
     username: string;
+    pin: number;
 
     firstName: string;
     middleName: string;
@@ -26,6 +27,7 @@ export class User {
     constructor() {
         this.phoneNumbers = [];
         this.addresses = [];
+        this.diseases = [];
         this.alergies = [];
     }
 }

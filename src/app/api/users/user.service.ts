@@ -191,30 +191,37 @@ export class UserService {
         await updateDoc(userDocRef, entity);
     }
 
-    async updateArrayAsync(entityId: string, entity: UserPhoneNumber): Promise<void> {
-        const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
-            FirebaseEntityConverter<User>()
-        );
-
-        const firebaseEntity =
-            FirebaseEntityConverter<UserPhoneNumber>().toFirestore(entity);
-        await updateDoc(userDocRef, {
-            phoneNumbers: arrayUnion(firebaseEntity)
-        });
-    }
-
-    async removeArrayElementAsync(
+    async updateArrayAsync<T>(
+        entityKey: string,
         entityId: string,
-        entity: UserPhoneNumber
+        entity: T
     ): Promise<void> {
         const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
             FirebaseEntityConverter<User>()
         );
 
-        const firebaseEntity =
-            FirebaseEntityConverter<UserPhoneNumber>().toFirestore(entity);
-        await updateDoc(userDocRef, {
-            phoneNumbers: arrayRemove(firebaseEntity)
-        });
+        const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
+
+        let genericObj = {};
+        genericObj[entityKey] = arrayUnion(firebaseEntity);
+
+        await updateDoc(userDocRef, genericObj);
+    }
+
+    async removeArrayElementAsync<T>(
+        entityKey: string,
+        entityId: string,
+        entity: T
+    ): Promise<void> {
+        const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
+            FirebaseEntityConverter<User>()
+        );
+
+        const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
+
+        let genericObj = {};
+        genericObj[entityKey] = arrayRemove(firebaseEntity);
+
+        await updateDoc(userDocRef, genericObj);
     }
 }

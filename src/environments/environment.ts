@@ -20,7 +20,7 @@ export const environment = {
         messagingSenderId: '14386123808'
     },
     showDebug: false,
-    environmentName: 'notspecified'
+    environmentName: 'ios'
 };
 
 /*

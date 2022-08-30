@@ -64,6 +64,8 @@ export class PhoneNumbersSettingsPage implements OnInit {
             );
         }
 
+        this.phoneNumbers.splice(index, 1);
+
         const loadingDialog = await this.loadingController.create({
             message: 'Eliminando...'
         });
@@ -71,7 +73,11 @@ export class PhoneNumbersSettingsPage implements OnInit {
 
         try {
             logger.log('phoneNumber:', phoneNumber);
-            await this.api.users.removeArrayElementAsync(this.user.uid, phoneNumber);
+            await this.api.users.removeArrayElementAsync(
+                'phoneNumbers',
+                this.user.uid,
+                phoneNumber
+            );
         } catch (error) {
             logger.log('error:', error);
             await loadingDialog.dismiss();
@@ -94,7 +100,11 @@ export class PhoneNumbersSettingsPage implements OnInit {
 
         try {
             logger.log('phoneNumber:', phoneNumber);
-            await this.api.users.updateArrayAsync(this.user.uid, phoneNumber);
+            await this.api.users.updateArrayAsync(
+                'phoneNumbers',
+                this.user.uid,
+                phoneNumber
+            );
         } catch (error) {
             logger.log('error:', error);
             await loadingDialog.dismiss();

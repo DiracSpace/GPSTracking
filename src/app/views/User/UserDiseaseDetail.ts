@@ -1,4 +1,6 @@
 export class UserDiseaseDetail {
+    id: string;
+    
     dateOfLastIncident?: Date;
 
     numberOfIncidents?: number;

@@ -1,6 +1,6 @@
 export class UserAddress {
     isDefault: boolean;
-    uid: string;
+    id: string;
 
     state?: string; // Estado
     county?: string; // Ciudad/Municipio
