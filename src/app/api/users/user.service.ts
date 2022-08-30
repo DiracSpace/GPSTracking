@@ -1,4 +1,6 @@
 import {
+    arrayRemove,
+    arrayUnion,
     collection,
     doc,
     DocumentData,
@@ -17,7 +19,12 @@ import {
     WhereFilterOp,
     writeBatch
 } from '@angular/fire/firestore';
-import { FirebaseEntityConverter, User } from 'src/app/views';
+import {
+    EntityConverter,
+    FirebaseEntityConverter,
+    User,
+    UserPhoneNumber
+} from 'src/app/views';
 import { Logger, LogLevel } from 'src/app/logger';
 import { setDoc } from '@firebase/firestore';
 import { Injectable } from '@angular/core';
@@ -184,7 +191,30 @@ export class UserService {
         await updateDoc(userDocRef, entity);
     }
 
-    updateAllAsync<T>(entities: T[]): Promise<T[]> {
-        throw new Error('Method not implemented.');
+    async updateArrayAsync(entityId: string, entity: UserPhoneNumber): Promise<void> {
+        const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
+            FirebaseEntityConverter<User>()
+        );
+
+        const firebaseEntity =
+            FirebaseEntityConverter<UserPhoneNumber>().toFirestore(entity);
+        await updateDoc(userDocRef, {
+            phoneNumbers: arrayUnion(firebaseEntity)
+        });
+    }
+
+    async removeArrayElementAsync(
+        entityId: string,
+        entity: UserPhoneNumber
+    ): Promise<void> {
+        const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
+            FirebaseEntityConverter<User>()
+        );
+
+        const firebaseEntity =
+            FirebaseEntityConverter<UserPhoneNumber>().toFirestore(entity);
+        await updateDoc(userDocRef, {
+            phoneNumbers: arrayRemove(firebaseEntity)
+        });
     }
 }

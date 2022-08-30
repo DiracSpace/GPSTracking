@@ -18,6 +18,12 @@ import {
     getFirestore,
     enableIndexedDbPersistence
 } from '@angular/fire/firestore';
+import { Logger, LogLevel } from './logger';
+
+const logger = new Logger({
+    source: 'AppModule',
+    level: LogLevel.Debug
+});
 
 @NgModule({
     declarations: [AppComponent],
@@ -36,7 +42,29 @@ import {
         provideDatabase(() => getDatabase()),
         provideFirestore(() => {
             const firestore = getFirestore();
-            enableIndexedDbPersistence(firestore);
+            try {
+                enableIndexedDbPersistence(firestore);
+            } catch (error) {
+                let message = '';
+                
+                switch (error.code) {
+                    case 'failed-precondition':
+                        message = `El correo electrónico no está disponible.`;
+                        logger.log(message);
+                        break;
+                    case 'unimplemented':
+                        message = `El correo electrónico no tiene el formato adecuado.`;
+                        logger.log(message);
+                        break;
+                    default:
+                        message = error.message;
+                        logger.log(message);
+                        break;
+                }
+
+                throw message;
+            }
+            
             return firestore;
         })
     ],

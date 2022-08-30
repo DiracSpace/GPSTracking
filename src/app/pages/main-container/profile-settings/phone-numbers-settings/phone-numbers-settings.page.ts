@@ -1,14 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { LoadingController } from '@ionic/angular';
+import { LoadingController, ToastController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import {
     ArgumentNullError,
     NotImplementedError,
     RequiredPropError
 } from 'src/app/errors';
+import { Logger, LogLevel } from 'src/app/logger';
 import { State } from 'src/app/state';
+import { guid } from 'src/app/utils';
 import { wait } from 'src/app/utils/time';
 import { PhoneNumberOwnerTypes, User, UserPhoneNumber } from 'src/app/views';
+
+const logger = new Logger({
+    source: 'PhoneNumbersSettingsPage',
+    level: LogLevel.Debug
+});
 
 @Component({
     selector: 'app-phone-numbers-settings',
@@ -20,12 +27,15 @@ export class PhoneNumbersSettingsPage implements OnInit {
     ownerTypes = PhoneNumberOwnerTypes;
 
     constructor(
+        private loadingController: LoadingController,
+        private toastController: ToastController,
         private api: ApiService,
-        private state: State,
-        private loadingController: LoadingController
+        private state: State
     ) {}
 
-    ngOnInit() {}
+    ngOnInit() {
+        this.loadAsync();
+    }
 
     get phoneNumbers(): UserPhoneNumber[] {
         if (this.user.phoneNumbers == undefined || this.user.phoneNumbers == null) {
@@ -36,20 +46,9 @@ export class PhoneNumbersSettingsPage implements OnInit {
     }
 
     async onAddClicked() {
-        const loadingDialog = await this.loadingController.create({
-            message: 'Añadiendo...'
-        });
-
-        await loadingDialog.present();
-
-        await wait(500); // TODO Remove this
-
         const phoneNumber = new UserPhoneNumber();
+        phoneNumber.id = guid();
         this.phoneNumbers.push(phoneNumber);
-        // TODO Add to firestore
-        // TODO Add to app state
-
-        await loadingDialog.dismiss();
     }
 
     async onDeleteClick(phoneNumber: UserPhoneNumber) {
@@ -68,13 +67,21 @@ export class PhoneNumbersSettingsPage implements OnInit {
         const loadingDialog = await this.loadingController.create({
             message: 'Eliminando...'
         });
-
         await loadingDialog.present();
 
-        await wait(500); // TODO Remove this
-        // TODO Delete from firestore
-        // TODO Delete from app state
-        this.phoneNumbers.splice(index, 1);
+        try {
+            logger.log('phoneNumber:', phoneNumber);
+            await this.api.users.removeArrayElementAsync(this.user.uid, phoneNumber);
+        } catch (error) {
+            logger.log('error:', error);
+            await loadingDialog.dismiss();
+            const toast = await this.toastController.create({
+                message: error,
+                duration: 800
+            });
+            await toast.present();
+            return;
+        }
 
         await loadingDialog.dismiss();
     }
@@ -83,12 +90,21 @@ export class PhoneNumbersSettingsPage implements OnInit {
         const loadingDialog = await this.loadingController.create({
             message: 'Guardando...'
         });
-
         await loadingDialog.present();
 
-        await wait(500); // TODO Remove this
-        // TOOD Update in firestore
-        // TODO Update in app state
+        try {
+            logger.log('phoneNumber:', phoneNumber);
+            await this.api.users.updateArrayAsync(this.user.uid, phoneNumber);
+        } catch (error) {
+            logger.log('error:', error);
+            await loadingDialog.dismiss();
+            const toast = await this.toastController.create({
+                message: error,
+                duration: 800
+            });
+            await toast.present();
+            return;
+        }
 
         await loadingDialog.dismiss();
     }
@@ -120,5 +136,29 @@ export class PhoneNumbersSettingsPage implements OnInit {
         const caller = 'isPhoneNumberOwnerOther';
         ArgumentNullError.throwIfNull(phoneNumber, 'phoneNumber', caller);
         return phoneNumber.owner == 'Otro';
+    }
+
+    private async loadAsync() {
+        const loadingDialog = await this.loadingController.create({
+            message: 'Cargando tu perfíl'
+        });
+        await loadingDialog.present();
+
+        const user = await this.api.auth.currentUser;
+
+        if (!user) {
+            await loadingDialog.dismiss();
+
+            const toast = await this.toastController.create({
+                message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
+                duration: 800
+            });
+            await toast.present();
+            return;
+        }
+
+        this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
+
+        await loadingDialog.dismiss();
     }
 }
