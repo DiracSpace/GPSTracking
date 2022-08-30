@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { ErrorHandler, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
 
@@ -18,6 +18,10 @@ import {
     getFirestore,
     enableIndexedDbPersistence
 } from '@angular/fire/firestore';
+import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
+import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
+import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
+import { ErrorHandlerService } from './services/error-handler.service';
 
 @NgModule({
     declarations: [AppComponent],
@@ -40,7 +44,16 @@ import {
             return firestore;
         })
     ],
-    providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
+    providers: [
+        { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+        {
+            provide: ErrorHandler,
+            useClass: ErrorHandlerService
+        },
+        AndroidPermissions,
+        Geolocation,
+        LocationAccuracy
+    ],
     bootstrap: [AppComponent]
 })
 export class AppModule {}
