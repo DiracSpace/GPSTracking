@@ -8,7 +8,6 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { CoreModule } from './core/core.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { QrCodeModule } from './qr-code/qr-code.module';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { environment } from '../environments/environment';
 import { provideAuth, getAuth } from '@angular/fire/auth';
@@ -36,7 +35,6 @@ const logger = new Logger({
         CoreModule,
         FormsModule,
         ReactiveFormsModule,
-        QrCodeModule,
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideAuth(() => getAuth()),
         provideDatabase(() => getDatabase()),
@@ -46,14 +44,14 @@ const logger = new Logger({
                 enableIndexedDbPersistence(firestore);
             } catch (error) {
                 let message = '';
-                
+
                 switch (error.code) {
                     case 'failed-precondition':
-                        message = `El correo electrónico no está disponible.`;
+                        message = `No hay acceso al servicio de cache de Firebase.`;
                         logger.log(message);
                         break;
                     case 'unimplemented':
-                        message = `El correo electrónico no tiene el formato adecuado.`;
+                        message = `No está implementado el servicio de cache de Firebase.`;
                         logger.log(message);
                         break;
                     default:
@@ -64,7 +62,7 @@ const logger = new Logger({
 
                 throw message;
             }
-            
+
             return firestore;
         })
     ],

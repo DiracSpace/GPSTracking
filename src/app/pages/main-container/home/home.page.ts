@@ -23,11 +23,19 @@ export class HomePage implements OnInit {
         private loadingController: LoadingController,
         private toasts: ToastController,
         private nav: Navigation,
-        private api: ApiService,
+        private api: ApiService
     ) {}
 
     ngOnInit(): void {
         this.loadAsync();
+    }
+
+    get hasQrCode() {
+        return this.user.qrCodeUrl.length > 0;
+    }
+
+    get qrCodeInformation() {
+        return this.user.qrCodeUrl;
     }
 
     get username() {
@@ -42,6 +50,10 @@ export class HomePage implements OnInit {
         await this.api.auth.signOut();
         await loadingDialog.dismiss();
         this.nav.login.go();
+    }
+
+    async onQrSrcObtained(qrSrc: string) {
+        logger.log("qrSrc:", qrSrc);
     }
 
     onEditProfileClicked() {
@@ -59,7 +71,7 @@ export class HomePage implements OnInit {
 
         if (!user) {
             await loadingDialog.dismiss();
-            
+
             const toast = await this.toasts.create({
                 message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
                 duration: 800
@@ -72,6 +84,7 @@ export class HomePage implements OnInit {
         }
 
         this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
+        logger.log("this.user:", this.user);
 
         await loadingDialog.dismiss();
         this.loading = false;
