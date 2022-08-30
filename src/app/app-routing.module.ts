@@ -29,7 +29,7 @@ const routes: Routes = [
         loadChildren: () => import('./qr-code/qr-code.module').then((m) => m.QrCodeModule)
     },
     {
-        path: 'user',
+        path: 'user/:id',
         loadChildren: () =>
             import('./pages/user/user.module').then((m) => m.UserPageModule)
     }

@@ -11,6 +11,7 @@ import { State } from 'src/app/state';
 import { guid } from 'src/app/utils';
 import { wait } from 'src/app/utils/time';
 import { AddressTypeTypes, MexicoStates, User, UserAddress } from 'src/app/views';
+import { getAddressDescription } from 'src/app/views/User/UserAddress';
 
 const logger = new Logger({
     source: 'AddressesSettingsPage',
@@ -126,41 +127,8 @@ export class AddressesSettingsPage implements OnInit {
         await loadingDialog.dismiss();
     }
 
-    getAddressDescription(address: UserAddress): string {
-        const caller = 'getAddressDescription';
-        ArgumentNullError.throwIfNull(address, 'address', caller);
-
-        const parts: string[] = [];
-
-        if (address.street) {
-            parts.push(address.street);
-        }
-
-        if (address.numberExternal) {
-            parts.push(`#${address.numberExternal}`);
-        }
-
-        if (address.neighbourhood) {
-            parts.push(address.neighbourhood);
-        }
-
-        if (address.county) {
-            parts.push(address.county);
-        }
-
-        if (address.state) {
-            parts.push(address.state);
-        }
-
-        if (address.zipCode) {
-            parts.push(address.zipCode.toString());
-        }
-
-        if (parts.length > 0) {
-            return parts.join(', ');
-        }
-
-        return 'Desconocido';
+    getAddressDescription(address: UserAddress) {
+        return getAddressDescription(address);
     }
 
     private async loadAsync() {
