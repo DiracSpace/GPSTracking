@@ -1,11 +1,4 @@
-import {
-    Component,
-    EventEmitter,
-    Input,
-    OnInit,
-    Output,
-    ViewChild
-} from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { SafeUrl } from '@angular/platform-browser';
 import { Logger, LogLevel } from 'src/app/logger';
 
@@ -24,7 +17,9 @@ export class QrCodeViewerComponent implements OnInit {
     qrCodeElement: any;
 
     @Input() qrCodeInformation: string = '';
-    @Output() qrCodeSrc = new EventEmitter<string>();
+    @Input() qrCodeImgSrc: string = '';
+    @Input() hasGeneratedQrCode: boolean = false;
+    @Output() qrCodeSrcEmitter = new EventEmitter<string>();
 
     constructor() {}
 
@@ -48,25 +43,32 @@ export class QrCodeViewerComponent implements OnInit {
 
     onChangeURL(url: SafeUrl) {
         if (this.qrCodeElement) {
-            this.qrCodeSrc.emit(this.imgSrc);
+            this.qrCodeSrcEmitter.emit(this.imgSrc);
         }
     }
 
     onDownloadClicked() {
-        if (this.imgSrc) {
+        logger.log('this.hasGeneratedQrCode:', this.hasGeneratedQrCode);
+        if (this.imgSrc && !this.hasGeneratedQrCode) {
             logger.log('this.imgSrc:', this.imgSrc);
-
-            // converts base 64 encoded image to blobData
-            let blobData = this.convertBase64ToBlob(this.imgSrc);
-            // saves as image
-            const blob = new Blob([blobData], { type: 'image/png' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            // name of the file
-            link.download = 'Qrcode';
-            link.click();
+            this.triggerDownload(this.imgSrc);
+        } else if (this.qrCodeImgSrc && this.hasGeneratedQrCode) {
+            logger.log('this.qrCodeImgSrc:', this.qrCodeImgSrc);
+            this.triggerDownload(this.qrCodeImgSrc);
         }
+    }
+
+    private triggerDownload(src: string) {
+        // converts base 64 encoded image to blobData
+        let blobData = this.convertBase64ToBlob(src);
+        // saves as image
+        const blob = new Blob([blobData], { type: 'image/png' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        // name of the file
+        link.download = 'Qrcode';
+        link.click();
     }
 
     private convertBase64ToBlob(Base64Image: string) {

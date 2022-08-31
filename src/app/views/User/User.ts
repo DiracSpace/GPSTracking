@@ -15,8 +15,10 @@ export class User {
 
     emailVerified: boolean;
     email: string;
+
     photoUrl: string;
     qrCodeUrl: string;
+    qrCodeBase64: string;
 
     phoneNumbers: UserPhoneNumber[];
     addresses: UserAddress[];

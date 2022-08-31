@@ -22,7 +22,9 @@
         <app-qr-code-viewer
             *ngIf="hasQrCode"
             [qrCodeInformation]="qrCodeInformation"
-            (qrCodeSrc)="onQrSrcObtained($event)"
+            [hasGeneratedQrCode]="hasGeneratedQrCode"
+            [qrCodeImgSrc]="qrCodeSrc"
+            (qrCodeSrcEmitter)="onQrSrcObtained($event)"
         ></app-qr-code-viewer>
     </ng-container>
 </ion-content>

@@ -68,7 +68,6 @@ export class NamesSettingsPage implements OnInit {
 
         await loadingDialog.present();
 
-        // TODO Update user in firestore
         try {
             await this.api.users.updateAsync(this.user.uid, this.user);
         } catch (error) {
@@ -80,12 +79,8 @@ export class NamesSettingsPage implements OnInit {
             await toast.present();
             return;
         }
-
-        // TODO Update user in app state
-
+        
         await loadingDialog.dismiss();
-
-        // TODO Go back?
     }
 
     private async initAsync() {

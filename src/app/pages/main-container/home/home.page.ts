@@ -31,11 +31,22 @@ export class HomePage implements OnInit {
     }
 
     get hasQrCode() {
+        if (this.user.qrCodeUrl == null || this.user.qrCodeUrl == undefined) return false;
         return this.user.qrCodeUrl.length > 0;
     }
 
     get qrCodeInformation() {
         return this.user.qrCodeUrl;
+    }
+
+    get hasGeneratedQrCode() {
+        if (this.user.qrCodeBase64 == null || this.user.qrCodeBase64 == undefined)
+            return false;
+        return this.user.qrCodeBase64.length > 0;
+    }
+
+    get qrCodeSrc() {
+        return this.user.qrCodeBase64;
     }
 
     get username() {
@@ -53,7 +64,23 @@ export class HomePage implements OnInit {
     }
 
     async onQrSrcObtained(qrSrc: string) {
-        logger.log("qrSrc:", qrSrc);
+        if (this.user.qrCodeBase64 == qrSrc) {
+            logger.log('No changes to qrSrc');
+            return;
+        }
+
+        try {
+            logger.log('Updating qrSrc!');
+            this.user.qrCodeBase64 = qrSrc;
+            await this.api.users.updateAsync(this.user.uid, this.user);
+        } catch (error) {
+            const toast = await this.toasts.create({
+                message: error,
+                duration: 800
+            });
+            await toast.present();
+            return;
+        }
     }
 
     onEditProfileClicked() {
@@ -84,7 +111,7 @@ export class HomePage implements OnInit {
         }
 
         this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
-        logger.log("this.user:", this.user);
+        logger.log('this.user:', this.user);
 
         await loadingDialog.dismiss();
         this.loading = false;
