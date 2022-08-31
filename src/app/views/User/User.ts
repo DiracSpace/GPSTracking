@@ -33,3 +33,15 @@ export class User {
         this.alergies = [];
     }
 }
+
+export function formatToBlobName(uid: string, format: string = 'png'): string {
+    if (!uid) {
+        throw 'uid not provided for formatting qr code name.';
+    }
+
+    if (format.includes('.')) {
+        throw 'qr code format name should not include a ".".';
+    }
+
+    return `${uid}.${format}`;
+}

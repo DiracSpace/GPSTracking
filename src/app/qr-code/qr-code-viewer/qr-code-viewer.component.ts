@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { SafeUrl } from '@angular/platform-browser';
+import { ApiService } from 'src/app/api';
 import { Logger, LogLevel } from 'src/app/logger';
+import { formatToBlobName } from 'src/app/views/User/User';
 
 const logger = new Logger({
     source: 'QrCodeViewerComponent',
@@ -13,19 +15,31 @@ const logger = new Logger({
     styleUrls: ['./qr-code-viewer.component.scss']
 })
 export class QrCodeViewerComponent implements OnInit {
-    @ViewChild('qrCodeElement', { static: true })
+    @ViewChild('qrCodeElement', { static: false })
     qrCodeElement: any;
 
     @Input() qrCodeInformation: string = '';
-    @Input() qrCodeImgSrc: string = '';
-    @Input() hasGeneratedQrCode: boolean = false;
-    @Output() qrCodeSrcEmitter = new EventEmitter<string>();
+    @Output() qrCodeSrcEmitter = new EventEmitter<Blob>();
 
-    constructor() {}
+    constructor(
+        private api: ApiService,
+    ) {}
 
     ngOnInit() {}
 
-    get imgSrc() {
+    get hasFirebase(): boolean {
+        if (!this.qrCodeInformation) {
+            return false;
+        }
+
+        if (this.qrCodeInformation.length < 1) {
+            return false;
+        }
+
+        return this.qrCodeInformation.includes('firebase');
+    }
+
+    get imgSrc(): string | null {
         if (!this.qrCodeElement) {
             logger.log('Could not get qrCodeElement');
             return null;
@@ -43,35 +57,41 @@ export class QrCodeViewerComponent implements OnInit {
 
     onChangeURL(url: SafeUrl) {
         if (this.qrCodeElement) {
-            this.qrCodeSrcEmitter.emit(this.imgSrc);
+            const blob = this.getBlob();
+            this.qrCodeSrcEmitter.emit(blob);
         }
     }
 
-    onDownloadClicked() {
-        logger.log('this.hasGeneratedQrCode:', this.hasGeneratedQrCode);
-        if (this.imgSrc && !this.hasGeneratedQrCode) {
-            logger.log('this.imgSrc:', this.imgSrc);
-            this.triggerDownload(this.imgSrc);
-        } else if (this.qrCodeImgSrc && this.hasGeneratedQrCode) {
-            logger.log('this.qrCodeImgSrc:', this.qrCodeImgSrc);
-            this.triggerDownload(this.qrCodeImgSrc);
+    async onDownloadClicked() {
+        const { uid } = await this.api.auth.currentUser;
+        const fileName = formatToBlobName(uid);
+        let blob: Blob = null;
+        
+        if (this.hasFirebase) {
+            blob = await this.api.storage.getBlobFromStorage(fileName);
+        } else {
+            blob = this.getBlob();
         }
-    }
-
-    private triggerDownload(src: string) {
-        // converts base 64 encoded image to blobData
-        let blobData = this.convertBase64ToBlob(src);
-        // saves as image
-        const blob = new Blob([blobData], { type: 'image/png' });
+        
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        // name of the file
-        link.download = 'Qrcode';
+        link.download = fileName;
         link.click();
     }
 
+    private getBlob(): Blob {
+        // converts base 64 encoded image to blobData
+        let blobData = this.convertBase64ToBlob(this.imgSrc);
+        // saves as image
+        return new Blob([blobData], { type: 'image/png' });
+    }
+
     private convertBase64ToBlob(Base64Image: string) {
+        if (!Base64Image) {
+            throw 'There are no bytes provided.';
+        }
+
         // split into two parts
         const parts = Base64Image.split(';base64,');
         // hold the content type
