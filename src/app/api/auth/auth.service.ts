@@ -2,9 +2,11 @@ import {
     createUserWithEmailAndPassword,
     getAuth,
     signInWithEmailAndPassword,
-    User} from '@angular/fire/auth';
+    User
+} from '@angular/fire/auth';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Injectable } from '@angular/core';
+import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 
 const logger = new Logger({
     source: 'AuthService',
@@ -40,7 +42,7 @@ export class AuthService {
         const user = await this.currentUser;
 
         if (!user) {
-            throw 'No se pudo autenticar. Por favor vuelva a iniciar sesión'
+            throw 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
         }
 
         return user;
@@ -61,35 +63,7 @@ export class AuthService {
             logger.log('Signed up!');
             return credentials.user;
         } catch (error) {
-            let message = '';
-
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    message = `El correo electrónico no está disponible.`;
-                    logger.log(message);
-                    break;
-                case 'auth/invalid-email':
-                    message = `El correo electrónico no tiene el formato adecuado.`;
-                    logger.log(message);
-                    break;
-                case 'auth/operation-not-allowed':
-                    message = `Error al registrarse.`;
-                    logger.log(message);
-                    break;
-                case 'auth/weak-password':
-                    message = 'La contraseña no es lo suficientemente fuerte.';
-                    logger.log(message);
-                    break;
-                case 'auth/quota-exceeded':
-                    message = `El proveedor no está disponible de momento.`;
-                    logger.log(message);
-                    break;
-                default:
-                    message = error.message;
-                    logger.log(message);
-                    break;
-            }
-
+            const message = HandleFirebaseError(error);
             throw message;
         }
     }
@@ -104,35 +78,7 @@ export class AuthService {
             logger.log('Signed in!');
             return credentials.user;
         } catch (error) {
-            let message = '';
-
-            switch (error.code) {
-                case 'auth/wrong-password':
-                    message = `Las credenciales están incorrectas.`;
-                    logger.log(message);
-                    break;
-                case 'auth/invalid-email':
-                    message = `Las credenciales están incorrectas.`;
-                    logger.log(message);
-                    break;
-                case 'auth/custom-token-mismatch':
-                    message = `Las credenciales están incorrectas.`;
-                    logger.log(message);
-                    break;
-                case 'auth/user-not-found':
-                    message = `El correo electrónico no está registrado.`;
-                    logger.log(message);
-                    break;
-                case 'auth/quota-exceeded':
-                    message = `El proveedor no está disponible de momento.`;
-                    logger.log(message);
-                    break;
-                default:
-                    message = error.message;
-                    logger.log(message);
-                    break;
-            }
-
+            const message = HandleFirebaseError(error);
             throw message;
         }
     }
