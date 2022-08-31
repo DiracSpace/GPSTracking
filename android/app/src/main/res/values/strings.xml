@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">CBTIS 15 QR</string>
     <string name="title_activity_main">CBTIS 15 QR</string>
-    <string name="package_name">io.ionic.starter</string>
-    <string name="custom_url_scheme">io.ionic.starter</string>
+    <string name="package_name">viex.cbtis15.qr</string>
+    <string name="custom_url_scheme">viex.cbtis15.qr</string>
 </resources>

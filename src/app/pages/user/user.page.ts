@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { LoadingController } from '@ionic/angular';
+import { ApiService } from 'src/app/api';
 import { wait } from 'src/app/utils/time';
+import { User, UserAddress } from 'src/app/views';
+import { getAddressDescription } from 'src/app/views/User/UserAddress';
 
 @Component({
     selector: 'app-user',
@@ -9,12 +13,49 @@ import { wait } from 'src/app/utils/time';
 })
 export class UserPage implements OnInit {
     loading = false;
-    user: any = {};
+    user: User;
 
-    constructor(private loadingController: LoadingController) {}
+    constructor(
+        private loadingController: LoadingController,
+        private api: ApiService,
+        private activeatedRoute: ActivatedRoute
+    ) {}
 
     ngOnInit() {
-        this.loadUserAsync();
+        if (this.userId) {
+            this.loadUserAsync();
+        }
+    }
+
+    get userId(): string | undefined {
+        const userId = this.activeatedRoute.snapshot.params.id;
+        return userId;
+    }
+
+    get fullName(): string {
+        const parts: string[] = [];
+
+        if (this.user.firstName) {
+            parts.push(this.user.firstName);
+        }
+
+        if (this.user.middleName) {
+            parts.push(this.user.middleName);
+        }
+
+        if (this.user.lastNameFather) {
+            parts.push(this.user.lastNameFather);
+        }
+
+        if (this.user.lastNameMother) {
+            parts.push(this.user.lastNameMother);
+        }
+
+        return parts.join(' ');
+    }
+
+    getAddressDescription(address: UserAddress) {
+        return getAddressDescription(address);
     }
 
     private async loadUserAsync() {
@@ -24,7 +65,7 @@ export class UserPage implements OnInit {
         });
         await loadingDialog.present();
         await wait(500);
-        this.user = {}; // TODO Get user from firestore
+        this.user = await this.api.users.getByUidOrDefaultAsync(this.userId);
         await loadingDialog.dismiss();
         this.loading = false;
     }
