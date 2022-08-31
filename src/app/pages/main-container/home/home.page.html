@@ -20,10 +20,7 @@
     <ng-container *ngIf="!loading">
         <h4 class="ion-text-center ion-margin-bottom">Hola {{username}}</h4>
         <app-qr-code-viewer
-            *ngIf="hasQrCode"
             [qrCodeInformation]="qrCodeInformation"
-            [hasGeneratedQrCode]="hasGeneratedQrCode"
-            [qrCodeImgSrc]="qrCodeSrc"
             (qrCodeSrcEmitter)="onQrSrcObtained($event)"
         ></app-qr-code-viewer>
     </ng-container>

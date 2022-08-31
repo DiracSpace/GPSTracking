@@ -1,0 +1,11 @@
+[
+    {
+        "origin": [
+            "https://gpstracking-d1f5c.firebaseapp.com/",
+            "https://gpstracking-d1f5c.web.app/",
+            "http://localhost:8100/"
+        ],
+        "method": ["GET"],
+        "maxAgeSeconds": 3600
+    }
+]

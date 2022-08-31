@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import {
+    getBlob,
+    getDownloadURL,
     getStorage,
     ref,
-    uploadBytes,
+    StorageError,
     uploadBytesResumable,
-    UploadTask
+    UploadTask,
+    UploadTaskSnapshot
 } from '@angular/fire/storage';
+import { BehaviorSubject } from 'rxjs';
 import { Logger, LogLevel } from 'src/app/logger';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 
@@ -16,8 +20,17 @@ const logger = new Logger({
 
 @Injectable({ providedIn: 'root' })
 export class StorageService {
-    private afStorage = getStorage();
+    private readonly afStorage = getStorage();
+
+    private readonly resumableTaskSubject = new BehaviorSubject<number>(0);
+    public readonly progress = {
+        get: () => this.resumableTaskSubject.value,
+        set: (value: number) => this.resumableTaskSubject.next(value),
+        watch: () => this.resumableTaskSubject.asObservable()
+    };
+
     resumableTask: UploadTask = null;
+
     constructor() {}
 
     pauseTask(): boolean {
@@ -44,20 +57,47 @@ export class StorageService {
         return this.resumableTask.cancel();
     }
 
-    async uploadBlobAsync(blob: Blob, fileName: string) {
+    async getBlobFromStorage(fileName: string): Promise<Blob> {
+        logger.log('fileName:', fileName);
+        const storageRef = ref(this.afStorage, fileName);
+
         try {
-            const storageRef = ref(this.afStorage, fileName);
-            const uploadResult = await uploadBytes(storageRef, blob);
+            return await getBlob(storageRef);
         } catch (error) {
             const message = HandleFirebaseError(error);
             throw message;
         }
     }
 
-    async uploadTaskAsync(blob: Blob, fileName: string) {
+    async uploadBlobWithProgressAsync(blob: Blob, fileName: string): Promise<string> {
+        const storageRef = ref(this.afStorage, fileName);
+        this.resumableTask = uploadBytesResumable(storageRef, blob);
+        let resourceUrl = '';
+
         try {
-            const storageRef = ref(this.afStorage, fileName);
-            this.resumableTask = uploadBytesResumable(storageRef, blob);
-        } catch (error) {}
+            this.resumableTask.on(
+                'state_changed',
+                (snapshot: UploadTaskSnapshot) => {
+                    const progress =
+                        (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    logger.log(`${progress}% done`);
+                    this.progress.set(progress);
+                },
+                (error: StorageError) => {
+                    logger.log('error:', error);
+                    const message = HandleFirebaseError(error);
+                    throw message;
+                },
+                () => {
+                    const taskRef = this.resumableTask.snapshot.ref;
+                    getDownloadURL(taskRef).then((url: string) => (resourceUrl = url));
+                }
+            );
+
+            return resourceUrl;
+        } catch (error) {
+            const message = HandleFirebaseError(error);
+            throw message;
+        }
     }
 }

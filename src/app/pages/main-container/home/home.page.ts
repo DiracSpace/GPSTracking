@@ -4,6 +4,7 @@ import { Logger, LogLevel } from 'src/app/logger';
 import { Component, OnInit } from '@angular/core';
 import { Navigation } from 'src/app/navigation';
 import { User } from 'src/app/views';
+import { formatToBlobName } from 'src/app/views/User/User';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -30,19 +31,8 @@ export class HomePage implements OnInit {
         this.loadAsync();
     }
 
-    get hasQrCode() {
-        if (this.user.qrCodeUrl == null || this.user.qrCodeUrl == undefined) return false;
-        return this.user.qrCodeUrl.length > 0;
-    }
-
     get qrCodeInformation() {
         return this.user.qrCodeUrl;
-    }
-
-    get hasGeneratedQrCode() {
-        if (this.user.qrCodeBase64 == null || this.user.qrCodeBase64 == undefined)
-            return false;
-        return this.user.qrCodeBase64.length > 0;
     }
 
     get qrCodeSrc() {
@@ -63,24 +53,40 @@ export class HomePage implements OnInit {
         this.nav.login.go();
     }
 
-    async onQrSrcObtained(qrSrc: string) {
-        if (this.user.qrCodeBase64 == qrSrc) {
-            logger.log('No changes to qrSrc');
+    async onQrSrcObtained(qrSrc: Blob) {
+        if (!qrSrc) {
+            throw 'No source provided for upload to storage!';
+        }
+
+        if (this.user.qrCodeUrl.includes('firebasestorage')) {
+            logger.log("Already uploaded to storage!");
             return;
         }
 
+        const loadingDialog = await this.loadingController.create({
+            message: 'Generando el código QR'
+        });
+        await loadingDialog.present();
+
         try {
-            logger.log('Updating qrSrc!');
-            this.user.qrCodeBase64 = qrSrc;
+            const fileName = formatToBlobName(this.user.uid);
+            const resourceUrl = await this.api.storage.uploadBlobWithProgressAsync(
+                qrSrc,
+                fileName
+            );
+            logger.log("resourceUrl:", resourceUrl);
+            this.user.qrCodeUrl = resourceUrl;
             await this.api.users.updateAsync(this.user.uid, this.user);
         } catch (error) {
+            await loadingDialog.dismiss();
             const toast = await this.toasts.create({
                 message: error,
                 duration: 800
             });
             await toast.present();
-            return;
         }
+
+        await loadingDialog.dismiss();
     }
 
     onEditProfileClicked() {
