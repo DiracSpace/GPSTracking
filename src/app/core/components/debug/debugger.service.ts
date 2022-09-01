@@ -1,6 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
 
-enum DebugLevel {
+export enum DebugLevel {
     Off = 'off',
     Info = 'info',
     Warning = 'warn',

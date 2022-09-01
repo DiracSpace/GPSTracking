@@ -106,7 +106,7 @@ export class SignUpPage implements OnInit {
         user.email = fireAuthUser.email;
         user.emailVerified = fireAuthUser.emailVerified;
         user.photoUrl = fireAuthUser.photoURL;
-        user.qrCodeUrl = `${environment.domains.default}/${fireAuthUser.uid}`;
+        user.qrCodeUrl = `${environment.domains.default}/user/${fireAuthUser.uid}`;
 
         this.resetForm();
         await this.api.users.createAsync(user);

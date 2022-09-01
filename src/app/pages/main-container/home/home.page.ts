@@ -17,6 +17,7 @@ import { handleAndDecode } from 'src/app/utils/promises';
 import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
 import { Geolocation, Geoposition } from '@awesome-cordova-plugins/geolocation/ngx';
 import { guid } from 'src/app/utils';
+import { ScannerPermissions } from '../scanner/scanner-permissions.service';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -33,6 +34,8 @@ export class HomePage implements OnInit {
     loading = false;
     user = new User();
 
+    scanning = false;
+
     constructor(
         private loadingController: LoadingController,
         private toasts: ToastController,
@@ -43,7 +46,8 @@ export class HomePage implements OnInit {
         private androidPermissions: AndroidPermissions,
         private androidPermissionsUtils: AndroidPermissionsUtils,
         private alerts: AlertController,
-        private geolocation: Geolocation
+        private geolocation: Geolocation,
+        private scannerPermissions: ScannerPermissions
     ) {}
 
     ngOnInit(): void {
@@ -66,6 +70,11 @@ export class HomePage implements OnInit {
     get scannerBtnText() {
         return this.viewCode ? 'Escanear un código QR' : 'Regresar';
     }
+
+    get isScannerAvailable(): boolean {
+        return this.scannerPermissions.isAvailableForPlatform;
+    }
+
     /* #endregion */
 
     async onLogoutClicked() {
@@ -127,6 +136,10 @@ export class HomePage implements OnInit {
 
     onEditProfileClicked() {
         this.nav.mainContainer.profileSettings.go();
+    }
+
+    onScanClicked() {
+        this.nav.mainContainer.scanner.go();
     }
 
     onClickScanQRCode() {
