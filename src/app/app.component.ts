@@ -34,18 +34,9 @@ export class AppComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        if (this.showDebug) {
-            this.initAsync();
-        }
     }
 
     get showDebug(): boolean {
         return environment.showDebug;
-    }
-
-    private async initAsync() {
-        const uid = '3d708c85-c501-4879-a151-eae5d9a1d4b2';
-        const queriedUser = await this.api.users.getByUidOrDefaultAsync(uid);
-        logger.log('queriedUser:', queriedUser);
     }
 }

@@ -1,32 +1,29 @@
-<div
-    class="qrcodeImage"
-    style="
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        height: calc(100% - 25%);
-    "
+<qrcode
+    #qrCodeElement
+    *ngIf="!hasFirebase"
+    [qrdata]="qrCodeInformation"
+    [allowEmptyString]="true"
+    [alt]="'A custom alt attribute'"
+    [ariaLabel]="'QR Code image with the following content...'"
+    [colorDark]="'#000000'"
+    [colorLight]="'#ffffff'"
+    [elementType]="'img'"
+    [errorCorrectionLevel]="'M'"
+    [margin]="4"
+    [scale]="1"
+    [title]="'A custom title attribute'"
+    [width]="300"
+    (qrCodeURL)="onChangeURL($event)"
+></qrcode>
+
+<img
+    *ngIf="hasFirebase"
+    [src]="qrCodeInformation"
+    width="300px"
+    height="300px"
+    style="display: block; margin: 0 auto"
+/>
+
+<ion-button (click)="onDownloadClicked()" style="display: block; margin: 15px auto"
+    >Guardar Imagen</ion-button
 >
-    <qrcode
-        #qrCodeElement
-        *ngIf="!hasFirebase"
-        [qrdata]="qrCodeInformation"
-        [allowEmptyString]="true"
-        [alt]="'A custom alt attribute'"
-        [ariaLabel]="'QR Code image with the following content...'"
-        [colorDark]="'#000000'"
-        [colorLight]="'#ffffff'"
-        [elementType]="'img'"
-        [errorCorrectionLevel]="'M'"
-        [margin]="4"
-        [scale]="1"
-        [title]="'A custom title attribute'"
-        [width]="300"
-        (qrCodeURL)="onChangeURL($event)"
-    ></qrcode>
-
-    <img *ngIf="hasFirebase" [src]="qrCodeInformation" width="300px" height="300px" />
-
-    <ion-button (click)="onDownloadClicked()">Guardar Imagen</ion-button>
-</div>

@@ -18,11 +18,20 @@
 
 <ion-content>
     <ng-container *ngIf="!loading">
-        <h4 class="ion-text-center ion-margin-bottom">Hola {{username}}</h4>
-        <app-qr-code-viewer
-            [qrCodeInformation]="qrCodeInformation"
-            (qrCodeSrcEmitter)="onQrSrcObtained($event)"
-        ></app-qr-code-viewer>
+        <div style="margin: 15px; height: calc(85% - 25%)">
+            <h4 class="ion-text-center ion-margin-bottom">Hola {{username}}</h4>
+            <app-qr-code-viewer
+                [qrCodeInformation]="qrCodeInformation"
+                (qrCodeSrcEmitter)="onQrSrcObtained($event)"
+                *ngIf="viewCode"
+            ></app-qr-code-viewer>
+            <app-qr-code-scanner *ngIf="!viewCode"></app-qr-code-scanner>
+            <ion-button
+                (click)="onClickScanQRCode()"
+                style="display: block; margin: 15px auto"
+                >{{ scannerBtnText }}</ion-button
+            >
+        </div>
 
         <ion-fab vertical="bottom" horizontal="end" slot="fixed">
             <ion-fab-button (click)="onLocationClicked()">
