@@ -19,12 +19,7 @@ import {
     WhereFilterOp,
     writeBatch
 } from '@angular/fire/firestore';
-import {
-    EntityConverter,
-    FirebaseEntityConverter,
-    User,
-    UserPhoneNumber
-} from 'src/app/views';
+import { FirebaseEntityConverter, User } from 'src/app/views';
 import { Logger, LogLevel } from 'src/app/logger';
 import { setDoc } from '@firebase/firestore';
 import { Injectable } from '@angular/core';

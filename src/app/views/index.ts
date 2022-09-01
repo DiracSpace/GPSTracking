@@ -1,12 +1,20 @@
-export { User } from './User/User';
-
+/* #region UserEntity */
 export { UserStorageDetail } from './User/UserStorageDetail';
 export { UserDiseaseDetail } from './User/UserDiseaseDetail';
 export { UserAlergyDetail } from './User/UserAlergyDetail';
 export { UserPhoneNumber } from './User/UserPhoneNumber';
 export { UserAddress } from './User/UserAddress';
 export { UserEmail } from './User/UserEmail';
-export { FirebaseEntityConverter, ListEntityConverter, EntityConverter } from './User/FirestoreConverter/EntityConverter';
+export { User } from './User/User';
+/* #endregion */
+
+export { Location } from './Location/Location';
+
+export {
+    FirebaseEntityConverter,
+    ListEntityConverter,
+    EntityConverter
+} from './FirestoreConverter/EntityConverter';
 
 export const PhoneNumberOwnerTypes: PhoneNumberOwner[] = ['Mío', 'Mamá', 'Papá', 'Otro'];
 export const AddressTypeTypes: AddressType[] = ['Hogar', 'Trabajo', 'Otro'];
