@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { FirebaseEntityConverter, Location } from 'src/app/views';
 import { doc, Firestore, setDoc } from '@angular/fire/firestore';
 import { Logger, LogLevel } from 'src/app/logger';
-import { FirebaseEntityConverter, Location } from 'src/app/views';
+import { Injectable } from '@angular/core';
 
 const logger = new Logger({
     source: 'LocationService',
@@ -12,7 +12,7 @@ const COLLECTION_NAME = 'locations';
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
-    constructor(private afStore: Firestore) {}
+    constructor(private afStore: Firestore) { }
 
     async createAsync(entity: Location): Promise<void> {
         if (!entity) {

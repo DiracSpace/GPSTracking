@@ -44,10 +44,11 @@ export class HomePage implements OnInit {
         private androidPermissionsUtils: AndroidPermissionsUtils,
         private alerts: AlertController,
         private geolocation: Geolocation
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.loadAsync();
+        this.backgroundLocationListener();
     }
 
     /* #region getters */
@@ -197,6 +198,11 @@ export class HomePage implements OnInit {
 
         await loadingDialog.dismiss();
         this.loading = false;
+    }
+
+    private async backgroundLocationListener() {
+        const result = await this.api.backgroundLocation.attachWatcherListener();
+        logger.log("result:", result);
     }
 
     private async verifyPermissionForGpsAsync(): Promise<boolean> {
