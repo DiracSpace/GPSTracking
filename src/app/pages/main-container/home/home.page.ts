@@ -59,7 +59,7 @@ export class HomePage implements OnInit {
         }
 
         if (this.user.qrCodeUrl.includes('firebasestorage')) {
-            logger.log("Already uploaded to storage!");
+            logger.log('Already uploaded to storage!');
             return;
         }
 
@@ -70,11 +70,12 @@ export class HomePage implements OnInit {
 
         try {
             const fileName = formatToBlobName(this.user.uid);
+            logger.log('waiting...');
             const resourceUrl = await this.api.storage.uploadBlobWithProgressAsync(
                 qrSrc,
                 fileName
             );
-            logger.log("resourceUrl:", resourceUrl);
+            logger.log('resourceUrl:', resourceUrl);
             this.user.qrCodeUrl = resourceUrl;
             await this.api.users.updateAsync(this.user.uid, this.user);
         } catch (error) {
