@@ -8,7 +8,7 @@ import {
 import { Logger, LogLevel } from 'src/app/logger';
 import { Component, OnInit } from '@angular/core';
 import { Navigation } from 'src/app/navigation';
-import { User } from 'src/app/views';
+import { Location, User } from 'src/app/views';
 import { formatToBlobName } from 'src/app/views/User/User';
 import { AndroidPermissionsUtils } from 'src/app/services/android-permissions-utils.service';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
@@ -16,6 +16,7 @@ import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions
 import { handleAndDecode } from 'src/app/utils/promises';
 import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
 import { Geolocation, Geoposition } from '@awesome-cordova-plugins/geolocation/ngx';
+import { guid } from 'src/app/utils';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -48,6 +49,7 @@ export class HomePage implements OnInit {
         this.loadAsync();
     }
 
+    /* #region getters */
     get qrCodeInformation() {
         return this.user.qrCodeUrl;
     }
@@ -59,6 +61,7 @@ export class HomePage implements OnInit {
     get username() {
         return this.user.username ?? this.user.email;
     }
+    /* #endregion */
 
     async onLogoutClicked() {
         const loadingDialog = await this.loadingController.create({
@@ -131,7 +134,30 @@ export class HomePage implements OnInit {
         const geoposition = await this.getMyLocationAsync();
         const { latitude, longitude } = geoposition.coords;
         this.debug.info(`User's location is ${latitude} ${longitude}`);
-        // TODO Save user's location in firestore collection
+
+        const loadingDialog = await this.loadingController.create({
+            message: 'Actualizando su ubicación'
+        });
+        await loadingDialog.present();
+        try {
+            const location: Location = {
+                id: guid(),
+                uid: this.user.uid,
+                latitude: latitude,
+                longitude: longitude
+            };
+
+            await this.api.location.createAsync(location);
+        } catch (error) {
+            await loadingDialog.dismiss();
+            const toast = await this.toasts.create({
+                message: error,
+                duration: 800
+            });
+            await toast.present();
+        }
+
+        await loadingDialog.dismiss();
     }
 
     private async loadAsync() {
