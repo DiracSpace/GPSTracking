@@ -21,11 +21,11 @@ export class QrCodeViewerComponent implements OnInit {
     @Input() qrCodeInformation: string = '';
     @Output() qrCodeSrcEmitter = new EventEmitter<Blob>();
 
-    constructor(
-        private api: ApiService,
-    ) {}
+    constructor(private api: ApiService) {}
 
-    ngOnInit() {}
+    ngOnInit() {
+        logger.log('this.qrCodeInformation:', this.qrCodeInformation);
+    }
 
     get hasFirebase(): boolean {
         if (!this.qrCodeInformation) {
@@ -66,13 +66,13 @@ export class QrCodeViewerComponent implements OnInit {
         const { uid } = await this.api.auth.currentUser;
         const fileName = formatToBlobName(uid);
         let blob: Blob = null;
-        
+
         if (this.hasFirebase) {
             blob = await this.api.storage.getBlobFromStorage(fileName);
         } else {
             blob = this.getBlob();
         }
-        
+
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
