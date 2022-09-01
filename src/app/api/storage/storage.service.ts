@@ -72,9 +72,8 @@ export class StorageService {
     async uploadBlobWithProgressAsync(blob: Blob, fileName: string): Promise<string> {
         const storageRef = ref(this.afStorage, fileName);
         this.resumableTask = uploadBytesResumable(storageRef, blob);
-        let resourceUrl = '';
 
-        try {
+        return new Promise<string>((resolve, reject) => {
             this.resumableTask.on(
                 'state_changed',
                 (snapshot: UploadTaskSnapshot) => {
@@ -88,16 +87,12 @@ export class StorageService {
                     const message = HandleFirebaseError(error);
                     throw message;
                 },
-                () => {
+                async () => {
                     const taskRef = this.resumableTask.snapshot.ref;
-                    getDownloadURL(taskRef).then((url: string) => (resourceUrl = url));
+                    const resourceUrl = await getDownloadURL(taskRef);
+                    return resolve(resourceUrl);
                 }
             );
-
-            return resourceUrl;
-        } catch (error) {
-            const message = HandleFirebaseError(error);
-            throw message;
-        }
+        });
     }
 }

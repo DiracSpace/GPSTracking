@@ -75,6 +75,7 @@ export class HomePage implements OnInit {
         try {
             logger.log('qrSrc:', qrSrc);
             const fileName = formatToBlobName(this.user.uid);
+            logger.log('waiting...');
             const resourceUrl = await this.api.storage.uploadBlobWithProgressAsync(
                 qrSrc,
                 fileName
@@ -84,7 +85,7 @@ export class HomePage implements OnInit {
             if (!resourceUrl) {
                 throw 'Could not get resourceUrl';
             }
-
+            logger.log('resourceUrl:', resourceUrl);
             this.user.qrCodeUrl = resourceUrl;
             await this.api.users.updateAsync(this.user.uid, this.user);
         } catch (error) {
