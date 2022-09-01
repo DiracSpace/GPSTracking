@@ -23,5 +23,11 @@
             [qrCodeInformation]="qrCodeInformation"
             (qrCodeSrcEmitter)="onQrSrcObtained($event)"
         ></app-qr-code-viewer>
+
+        <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+            <ion-fab-button (click)="onLocationClicked()">
+                <ion-icon name="location-outline"></ion-icon>
+            </ion-fab-button>
+        </ion-fab>
     </ng-container>
 </ion-content>

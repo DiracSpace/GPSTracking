@@ -1,10 +1,21 @@
 import { ApiService } from 'src/app/api/ApiService.service';
-import { LoadingController, ToastController } from '@ionic/angular';
+import {
+    AlertController,
+    LoadingController,
+    Platform,
+    ToastController
+} from '@ionic/angular';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Component, OnInit } from '@angular/core';
 import { Navigation } from 'src/app/navigation';
 import { User } from 'src/app/views';
 import { formatToBlobName } from 'src/app/views/User/User';
+import { AndroidPermissionsUtils } from 'src/app/services/android-permissions-utils.service';
+import { Debugger } from 'src/app/core/components/debug/debugger.service';
+import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
+import { handleAndDecode } from 'src/app/utils/promises';
+import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
+import { Geolocation, Geoposition } from '@awesome-cordova-plugins/geolocation/ngx';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -24,7 +35,13 @@ export class HomePage implements OnInit {
         private loadingController: LoadingController,
         private toasts: ToastController,
         private nav: Navigation,
-        private api: ApiService
+        private api: ApiService,
+        private debug: Debugger,
+        private platform: Platform,
+        private androidPermissions: AndroidPermissions,
+        private androidPermissionsUtils: AndroidPermissionsUtils,
+        private alerts: AlertController,
+        private geolocation: Geolocation
     ) {}
 
     ngOnInit(): void {
@@ -104,6 +121,19 @@ export class HomePage implements OnInit {
         this.nav.mainContainer.profileSettings.go();
     }
 
+    async onLocationClicked() {
+        const permissionsVerified = await this.verifyPermissionForGpsAsync();
+
+        if (!permissionsVerified) {
+            return;
+        }
+
+        const geoposition = await this.getMyLocationAsync();
+        const { latitude, longitude } = geoposition.coords;
+        this.debug.info(`User's location is ${latitude} ${longitude}`);
+        // TODO Save user's location in firestore collection
+    }
+
     private async loadAsync() {
         this.loading = true;
         const loadingDialog = await this.loadingController.create({
@@ -132,5 +162,116 @@ export class HomePage implements OnInit {
 
         await loadingDialog.dismiss();
         this.loading = false;
+    }
+
+    private async verifyPermissionForGpsAsync(): Promise<boolean> {
+        this.debug.info('onLocationClicked');
+
+        if (!this.platform.is('android')) {
+            this.debug.info('Platform is not android');
+            this.debug.info('Android permission is not necessary');
+            return true;
+        }
+
+        this.debug.info('Platform is android');
+        this.debug.info('Android permission must be requested');
+
+        // prettier-ignore
+        const locationPermission = this.androidPermissions.PERMISSION.ACCESS_FINE_LOCATION;
+
+        const { result: hasPermission, error: hasPermissionError } =
+            await handleAndDecode(
+                this.androidPermissionsUtils.hasAndroidPermissionAsync(locationPermission)
+            );
+
+        if (hasPermissionError) {
+            await this.showErrorAlertAsync(hasPermissionError);
+            return false;
+        }
+
+        if (!hasPermission) {
+            const {
+                result: canRequestLocationAccuracy,
+                error: canRequestLocationAccuracyError
+            } = await handleAndDecode(
+                this.androidPermissionsUtils.canRequestLocationAccuracy()
+            );
+
+            if (canRequestLocationAccuracyError) {
+                await this.showErrorAlertAsync(canRequestLocationAccuracyError);
+                return false;
+            }
+
+            if (!canRequestLocationAccuracy) {
+                const { result: permissionGranted, error: permissionGrantedError } =
+                    await handleAndDecode(
+                        this.androidPermissionsUtils.requestAndroidPermissionAsync(
+                            locationPermission
+                        )
+                    );
+
+                if (permissionGrantedError) {
+                    await this.showErrorAlertAsync(permissionGrantedError);
+                    return false;
+                }
+
+                if (!permissionGranted) {
+                    return false;
+                }
+            }
+        }
+
+        const { error: turnOnGpsError } = await handleAndDecode(
+            this.androidPermissionsUtils.turnOnGpsAsync()
+        );
+
+        if (turnOnGpsError) {
+            await this.showErrorAlertAsync(turnOnGpsError);
+            return false;
+        }
+
+        return true;
+    }
+
+    private async showAlertAsync(message: string) {
+        const alert = await this.alerts.create({
+            message
+        });
+        await alert.present();
+        return alert;
+    }
+
+    private async showErrorAlertAsync(error: ErrorDetails) {
+        const errorString = error.toString();
+        this.debug.error(errorString);
+        return await this.showAlertAsync(errorString);
+    }
+
+    private async getMyLocationAsync(): Promise<Geoposition> {
+        this.debug.info("Trying to get user's location...");
+
+        const loadingModal = await this.loadingController.create({
+            message: 'Obteniendo tu ubicación...'
+        });
+
+        loadingModal.present();
+
+        this.debug.info("Getting user's location...");
+
+        try {
+            const geoposition = await this.geolocation.getCurrentPosition({
+                timeout: 10000, // TODO Make this an env var?
+                enableHighAccuracy: true, // TODO Make this an env var?
+                maximumAge: 0 // TODO Make this an env var?
+            });
+
+            return geoposition;
+        } catch (error) {
+            const errorDetails = decodeErrorDetails(error);
+            await this.showErrorAlertAsync(errorDetails);
+            throw error;
+        } finally {
+            loadingModal.dismiss();
+        }
     }
 }
