@@ -29,6 +29,7 @@ const logger = new Logger({
     styleUrls: ['home.page.scss']
 })
 export class HomePage implements OnInit {
+    viewCode: boolean = true;
     loading = false;
     user = new User();
 
@@ -60,6 +61,10 @@ export class HomePage implements OnInit {
 
     get username() {
         return this.user.username ?? this.user.email;
+    }
+
+    get scannerBtnText() {
+        return this.viewCode ? 'Escanear un código QR' : 'Regresar';
     }
     /* #endregion */
 
@@ -122,6 +127,10 @@ export class HomePage implements OnInit {
 
     onEditProfileClicked() {
         this.nav.mainContainer.profileSettings.go();
+    }
+
+    onClickScanQRCode() {
+        this.viewCode = !this.viewCode;
     }
 
     async onLocationClicked() {
