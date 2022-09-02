@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 import { MainContainerPage } from './main-container.page';
+import { ScannerPermissionsGuard } from './scanner/scanner-permissions.guard';
 import { TokenGuard } from './token-guard.service';
 
 const routes: Routes = [
@@ -16,16 +17,15 @@ const routes: Routes = [
                 redirectTo: 'home'
             },
             {
-                path: 'first-steps',
-                loadChildren: () =>
-                    import('./first-steps/first-steps.module').then(
-                        (m) => m.FirstStepsPageModule
-                    )
-            },
-            {
                 path: 'home',
                 loadChildren: () =>
                     import('./home/home.module').then((m) => m.HomePageModule)
+            },
+            {
+                path: 'scanner',
+                canActivate: [ScannerPermissionsGuard],
+                loadChildren: () =>
+                    import('./scanner/scanner.module').then((m) => m.ScannerPageModule)
             },
             {
                 path: 'profile-settings',

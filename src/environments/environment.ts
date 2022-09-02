@@ -24,7 +24,7 @@ export const environment = {
         fallback: 'https://gpstracking-d1f5c.firebaseapp.com'
     },
     showDebug: true,
-    environmentName: 'ios'
+    environmentName: 'default'
 };
 
 /*

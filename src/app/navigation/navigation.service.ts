@@ -18,12 +18,10 @@ export class Navigation {
         ...NavigationItem(this.router, '/main-container'),
         firstSteps: NavigationItem(this.router, '/main-container/first-steps'),
         home: NavigationItem(this.router, '/main-container/home'),
+        scanner: NavigationItem(this.router, '/main-container/scanner'),
         profileSettings: {
             ...NavigationItem(this.router, '/main-container/profile-settings'),
-            names: NavigationItem(
-                this.router,
-                '/main-container/profile-settings/names'
-            ),
+            names: NavigationItem(this.router, '/main-container/profile-settings/names'),
             phoneNumbers: NavigationItem(
                 this.router,
                 '/main-container/profile-settings/phone-numbers'
@@ -42,4 +40,6 @@ export class Navigation {
             )
         }
     };
+
+    user = (uid: string) => NavigationItem(this.router, `/user/${uid}`);
 }

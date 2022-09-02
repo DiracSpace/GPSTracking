@@ -1,16 +1,34 @@
 :host {
-    position: fixed;
-    top: 0;
-    left: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 60vw;
+  max-height: 100vh;
+  z-index: 99;
+  overflow-y: auto;
+  color: white;
+
+  header {
+    border-bottom: 1px solid white;
     padding: 0.4rem;
-    background-color: rgba(0, 0, 0, 0.5);
-    width: 60vw;
-    max-height: 100vh;
-    z-index: 99;
-    overflow-y: auto;
+
+    span {
+      font-size: 0.6rem;
+      margin: 0;
+      margin-right: 8px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  }
+
+  .logs-container {
+    padding: 0.4rem;
 
     p {
-        font-size: 0.6rem;
-        margin: 0;
+      font-size: 0.6rem;
+      margin: 0;
     }
+  }
 }

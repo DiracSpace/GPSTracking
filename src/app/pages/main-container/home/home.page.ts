@@ -19,6 +19,7 @@ import { Geolocation, Geoposition } from '@awesome-cordova-plugins/geolocation/n
 import { guid } from 'src/app/utils';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { repeatWhen, takeUntil } from 'rxjs/operators';
+import { ScannerPermissions } from '../scanner/scanner-permissions.service';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -37,8 +38,9 @@ const BACKGROUND_GPS_INTERVAL = 3600000;
 export class HomePage implements OnInit, OnDestroy {
     viewCode: boolean = true;
     loading = false;
+    scanning = false;
     user = new User();
-
+    
     private idleInterval: Observable<number>;
     closeIdleIntervalObservable() {
         if (this.idleInterval) {
@@ -56,7 +58,7 @@ export class HomePage implements OnInit, OnDestroy {
             this.listenSubscription = null;
         }
     }
-
+    
     constructor(
         private loadingController: LoadingController,
         private toasts: ToastController,
@@ -67,7 +69,8 @@ export class HomePage implements OnInit, OnDestroy {
         private androidPermissions: AndroidPermissions,
         private androidPermissionsUtils: AndroidPermissionsUtils,
         private alerts: AlertController,
-        private geolocation: Geolocation
+        private geolocation: Geolocation,
+        private scannerPermissions: ScannerPermissions
     ) {}
 
     ngOnInit(): void {
@@ -96,6 +99,11 @@ export class HomePage implements OnInit, OnDestroy {
     get scannerBtnText() {
         return this.viewCode ? 'Escanear un código QR' : 'Regresar';
     }
+
+    get isScannerAvailable(): boolean {
+        return this.scannerPermissions.isAvailableForPlatform;
+    }
+
     /* #endregion */
 
     async onLogoutClicked() {
@@ -157,6 +165,10 @@ export class HomePage implements OnInit, OnDestroy {
 
     onEditProfileClicked() {
         this.nav.mainContainer.profileSettings.go();
+    }
+
+    onScanClicked() {
+        this.nav.mainContainer.scanner.go();
     }
 
     onClickScanQRCode() {

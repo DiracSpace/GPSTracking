@@ -6,8 +6,8 @@ import { IonicModule } from '@ionic/angular';
 import { QrCodeScannerComponent } from './qr-code-scanner/qr-code-scanner.component';
 
 @NgModule({
-    declarations: [QrCodeViewerComponent, QrCodeScannerComponent],
+    declarations: [QrCodeViewerComponent],
     imports: [CommonModule, QRCodeModule, IonicModule],
-    exports: [QrCodeViewerComponent, QrCodeScannerComponent]
+    exports: [QrCodeViewerComponent]
 })
 export class QrCodeModule {}
