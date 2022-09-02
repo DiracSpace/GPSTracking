@@ -4,4 +4,7 @@ export class Location {
 
     longitude: number;
     latitude: number;
+
+    fromBackground: boolean;
+    dateRegistered: Date;
 }
