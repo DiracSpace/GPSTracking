@@ -13,7 +13,7 @@
                 <h5 class="ion-text-center ion-margin-bottom">
                     <ion-text color="primary">
                         <ng-container *ngIf="showForm == 'email'">
-                            Crea un nombre de usuario para tu cuenta
+                            Agrega un correo para tu cuenta
                         </ng-container>
                         <ng-container *ngIf="showForm == 'password'">
                             Crea una contraseña para tu cuenta
@@ -28,10 +28,11 @@
                 >
                     <div id="usernameInput" class="ion-margin-bottom">
                         <ion-item>
-                            <ion-label position="floating">Nombre de usuario</ion-label>
+                            <ion-label position="floating">Correo electrónico</ion-label>
                             <ion-input
                                 placeholder="Ingresa tu correo electrónico"
                                 formControlName="email"
+                                type="email"
                             ></ion-input>
                         </ion-item>
                         <app-form-control-error

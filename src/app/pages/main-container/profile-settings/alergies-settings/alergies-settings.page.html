@@ -16,7 +16,7 @@
             <div slot="content">
                 <ion-item id="nombre" class="ion-margin-bottom">
                     <ion-label position="floating">Nombre de la alergia</ion-label>
-                    <ion-input type="tel" [(ngModel)]="alergy.name"></ion-input>
+                    <ion-input type="text" [(ngModel)]="alergy.name"></ion-input>
                 </ion-item>
 
                 <ion-item id="numeroDeIncidentes" class="ion-margin-bottom">
@@ -24,7 +24,7 @@
                         >Número de incidentes (opcional)</ion-label
                     >
                     <ion-input
-                        type="text"
+                        type="number"
                         [(ngModel)]="alergy.numberOfIncidents"
                     ></ion-input>
                 </ion-item>
@@ -34,7 +34,7 @@
                         >Número de veces hospitalizado (opcional)</ion-label
                     >
                     <ion-input
-                        type="text"
+                        type="number"
                         [(ngModel)]="alergy.timesHospitalized"
                     ></ion-input>
                 </ion-item>
