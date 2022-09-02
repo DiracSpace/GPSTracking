@@ -6,7 +6,7 @@ import {
     ToastController
 } from '@ionic/angular';
 import { Logger, LogLevel } from 'src/app/logger';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Navigation } from 'src/app/navigation';
 import { Location, User } from 'src/app/views';
 import { formatToBlobName } from 'src/app/views/User/User';
@@ -17,21 +17,45 @@ import { handleAndDecode } from 'src/app/utils/promises';
 import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
 import { Geolocation, Geoposition } from '@awesome-cordova-plugins/geolocation/ngx';
 import { guid } from 'src/app/utils';
+import { interval, Observable, Subject, Subscription } from 'rxjs';
+import { repeatWhen, takeUntil } from 'rxjs/operators';
 
 const logger = new Logger({
     source: 'HomePage',
     level: LogLevel.Debug
 });
 
+// 1 hour = 3600000
+// 1 minute = 60000
+const BACKGROUND_GPS_INTERVAL = 3600000;
+
 @Component({
     selector: 'app-home',
     templateUrl: 'home.page.html',
     styleUrls: ['home.page.scss']
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
     viewCode: boolean = true;
     loading = false;
     user = new User();
+
+    private idleInterval: Observable<number>;
+    closeIdleIntervalObservable() {
+        if (this.idleInterval) {
+            this.idleInterval = null;
+        }
+    }
+
+    private readonly _restartInterval = new Subject<void>();
+    private readonly _stopInterval = new Subject<void>();
+
+    private listenSubscription: Subscription;
+    closeListenSubscription() {
+        if (this.listenSubscription) {
+            this.listenSubscription.unsubscribe();
+            this.listenSubscription = null;
+        }
+    }
 
     constructor(
         private loadingController: LoadingController,
@@ -44,11 +68,16 @@ export class HomePage implements OnInit {
         private androidPermissionsUtils: AndroidPermissionsUtils,
         private alerts: AlertController,
         private geolocation: Geolocation
-    ) { }
+    ) {}
 
     ngOnInit(): void {
         this.loadAsync();
         this.backgroundLocationListener();
+    }
+
+    ngOnDestroy(): void {
+        this.closeIdleIntervalObservable();
+        this.closeListenSubscription();
     }
 
     /* #region getters */
@@ -143,31 +172,7 @@ export class HomePage implements OnInit {
 
         const geoposition = await this.getMyLocationAsync();
         const { latitude, longitude } = geoposition.coords;
-        this.debug.info(`User's location is ${latitude} ${longitude}`);
-
-        const loadingDialog = await this.loadingController.create({
-            message: 'Actualizando su ubicación'
-        });
-        await loadingDialog.present();
-        try {
-            const location: Location = {
-                id: guid(),
-                uid: this.user.uid,
-                latitude: latitude,
-                longitude: longitude
-            };
-
-            await this.api.location.createAsync(location);
-        } catch (error) {
-            await loadingDialog.dismiss();
-            const toast = await this.toasts.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
-        }
-
-        await loadingDialog.dismiss();
+        await this.savingLocationInFirebaseAsync(latitude, longitude);
     }
 
     private async loadAsync() {
@@ -201,8 +206,63 @@ export class HomePage implements OnInit {
     }
 
     private async backgroundLocationListener() {
-        const result = await this.api.backgroundLocation.attachWatcherListener();
-        logger.log("result:", result);
+        if (!this.listenSubscription) {
+            this.idleInterval = interval(BACKGROUND_GPS_INTERVAL);
+
+            this.listenSubscription = this.idleInterval
+                .pipe(
+                    takeUntil(this._stopInterval),
+                    repeatWhen(() => this._restartInterval)
+                )
+                .subscribe(async () => {
+                    const { latitude, longitude } =
+                        await this.api.backgroundLocation.attachWatcherListener();
+                    this.debug.info('Saving location from background!');
+                    await this.savingLocationInFirebaseAsync(latitude, longitude, true);
+                });
+        }
+    }
+
+    private async savingLocationInFirebaseAsync(
+        latitude: number,
+        longitude: number,
+        fromBackground: boolean = false
+    ) {
+        if (!latitude || latitude == 0) {
+            logger.log('No latitude provided!');
+            return;
+        }
+
+        if (!longitude || longitude == 0) {
+            logger.log('No longitude provided!');
+            return;
+        }
+
+        const loadingDialog = await this.loadingController.create({
+            message: 'Actualizando su ubicación'
+        });
+        await loadingDialog.present();
+        try {
+            const location: Location = {
+                id: guid(),
+                uid: this.user.uid,
+                latitude: latitude,
+                longitude: longitude,
+                fromBackground: fromBackground,
+                dateRegistered: new Date()
+            };
+
+            await this.api.location.createAsync(location);
+        } catch (error) {
+            await loadingDialog.dismiss();
+            const toast = await this.toasts.create({
+                message: error,
+                duration: 800
+            });
+            await toast.present();
+        }
+
+        await loadingDialog.dismiss();
     }
 
     private async verifyPermissionForGpsAsync(): Promise<boolean> {
