@@ -16,21 +16,24 @@
     </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content
+    [fullscreen]="scanning"
+    [style.--background]="scanning ? '#00000000' : '#ffffff'"
+>
     <ng-container *ngIf="!loading">
         <div style="margin: 15px; height: calc(85% - 25%)">
             <h4 class="ion-text-center ion-margin-bottom">Hola {{username}}</h4>
             <app-qr-code-viewer
+                *ngIf="viewCode"
                 [qrCodeInformation]="qrCodeInformation"
                 (qrCodeSrcEmitter)="onQrSrcObtained($event)"
-                *ngIf="viewCode"
             ></app-qr-code-viewer>
-            <app-qr-code-scanner *ngIf="!viewCode"></app-qr-code-scanner>
-            <ion-button
-                (click)="onClickScanQRCode()"
-                style="display: block; margin: 15px auto"
-                >{{ scannerBtnText }}</ion-button
+            <div
+                *ngIf="isScannerAvailable"
+                class="d-flex ion-justify-content-center ion-margin-top"
             >
+                <ion-button (click)="onScanClicked()">Escanear</ion-button>
+            </div>
         </div>
 
         <ion-fab vertical="bottom" horizontal="end" slot="fixed">

@@ -1,3 +1,13 @@
-<p *ngFor="let log of logs">
-  {{ log }}
-</p>
+<header>
+  <div class="d-flex">
+    <span (click)="onClearClicked()">Clear</span>
+    <span (click)="onToggleClicked()">Toggle</span>
+  </div>
+</header>
+
+<div *ngIf="showLogsContainer" class="logs-container">
+  <p *ngFor="let log of logEvents">
+    <ion-text [color]="getLogColor(log)">[{{ log.level }}]</ion-text>
+    {{ getLogDescription(log) }}
+  </p>
+</div>

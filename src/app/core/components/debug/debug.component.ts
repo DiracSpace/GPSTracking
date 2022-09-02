@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { disposeSubscription } from 'src/app/utils/angular';
-import { Debugger, DebugLogEvent } from './debugger.service';
+import { Debugger, DebugLevel, DebugLogEvent } from './debugger.service';
 
 @Component({
     selector: 'app-debug',
@@ -9,19 +9,27 @@ import { Debugger, DebugLogEvent } from './debugger.service';
     styleUrls: ['./debug.component.scss']
 })
 export class DebugComponent implements OnInit, OnDestroy {
-    private logEvents: DebugLogEvent[] = [];
-    private logsSubs: Subscription;
+    logEvents: DebugLogEvent[] = [];
+    showLogsContainer = true;
 
-    constructor(private debug: Debugger) {}
+    private _logsSubs: Subscription;
+
+    private readonly _logColors = new Map<DebugLevel, string>([
+        [DebugLevel.Info, 'primary'],
+        [DebugLevel.Warning, 'warning'],
+        [DebugLevel.Error, 'danger']
+    ]);
+
+    constructor(private logger: Debugger) {}
 
     ngOnInit() {
-        this.logsSubs = this.debug.watchLogs.subscribe((log) => {
+        this._logsSubs = this.logger.watchLogs.subscribe((log) => {
             this.logEvents.push(log);
         });
     }
 
     ngOnDestroy(): void {
-        disposeSubscription(this.logsSubs);
+        disposeSubscription(this._logsSubs);
     }
 
     get logs(): string[] {
@@ -29,5 +37,22 @@ export class DebugComponent implements OnInit, OnDestroy {
             const logsJoined = log.objects.join(' ');
             return `[${log.level}] ${logsJoined}`;
         });
+    }
+
+    onClearClicked() {
+        this.logEvents = [];
+    }
+
+    onToggleClicked() {
+        this.showLogsContainer = !this.showLogsContainer;
+    }
+
+    getLogColor(log: DebugLogEvent): string {
+        return this._logColors.get(log.level);
+    }
+
+    getLogDescription(log: DebugLogEvent): string {
+        const logsJoined = log.objects.join(' ');
+        return logsJoined;
     }
 }
