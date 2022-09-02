@@ -4,9 +4,6 @@ import { Component, OnInit } from '@angular/core';
 import { Logger, LogLevel } from './logger';
 import { Platform } from '@ionic/angular';
 import { ApiService } from './api';
-import { User } from './views';
-import { enableIndexedDbPersistence } from '@angular/fire/firestore';
-import { getDatabase, provideDatabase } from '@angular/fire/database';
 
 const logger = new Logger({
     level: LogLevel.Debug,
