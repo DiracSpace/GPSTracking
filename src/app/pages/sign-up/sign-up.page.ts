@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Navigation } from 'src/app/navigation';
-import { EntityConverter, User, UserEmail } from 'src/app/views';
+import { ToastsService } from 'src/app/services/toasts.service';
+import { User } from 'src/app/views';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -47,7 +48,7 @@ export class SignUpPage implements OnInit {
 
     constructor(
         private loadingController: LoadingController,
-        private toasts: ToastController,
+        private toasts: ToastsService,
         private forms: FormBuilder,
         private nav: Navigation,
         private api: ApiService
@@ -89,13 +90,9 @@ export class SignUpPage implements OnInit {
                 email,
                 password
             );
-        } catch (err) {
+        } catch (error) {
             await loadingDialog.dismiss();
-            const toast = await this.toasts.create({
-                message: err,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             this.resetForm();
             return;
         }

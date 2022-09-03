@@ -1,10 +1,5 @@
 import { ApiService } from 'src/app/api/ApiService.service';
-import {
-    AlertController,
-    LoadingController,
-    Platform,
-    ToastController
-} from '@ionic/angular';
+import { AlertController, LoadingController, Platform } from '@ionic/angular';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Navigation } from 'src/app/navigation';
@@ -20,6 +15,7 @@ import { guid } from 'src/app/utils';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { repeatWhen, takeUntil } from 'rxjs/operators';
 import { ScannerPermissions } from '../scanner/scanner-permissions.service';
+import { ToastsColorCodes, ToastsService } from 'src/app/services/toasts.service';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -40,7 +36,7 @@ export class HomePage implements OnInit, OnDestroy {
     loading = false;
     scanning = false;
     user = new User();
-    
+
     private idleInterval: Observable<number>;
     closeIdleIntervalObservable() {
         if (this.idleInterval) {
@@ -58,19 +54,19 @@ export class HomePage implements OnInit, OnDestroy {
             this.listenSubscription = null;
         }
     }
-    
+
     constructor(
+        private androidPermissionsUtils: AndroidPermissionsUtils,
+        private androidPermissions: AndroidPermissions,
+        private scannerPermissions: ScannerPermissions,
         private loadingController: LoadingController,
-        private toasts: ToastController,
+        private geolocation: Geolocation,
+        private alerts: AlertController,
+        private toasts: ToastsService,
+        private platform: Platform,
         private nav: Navigation,
         private api: ApiService,
-        private debug: Debugger,
-        private platform: Platform,
-        private androidPermissions: AndroidPermissions,
-        private androidPermissionsUtils: AndroidPermissionsUtils,
-        private alerts: AlertController,
-        private geolocation: Geolocation,
-        private scannerPermissions: ScannerPermissions
+        private debug: Debugger
     ) {}
 
     ngOnInit(): void {
@@ -113,7 +109,6 @@ export class HomePage implements OnInit, OnDestroy {
         await loadingDialog.present();
         await this.api.auth.signOut();
         await loadingDialog.dismiss();
-        this.nav.login.go();
     }
 
     async onQrSrcObtained(qrSrc: Blob) {
@@ -153,11 +148,7 @@ export class HomePage implements OnInit, OnDestroy {
             await this.api.users.updateAsync(this.user.uid, this.user);
         } catch (error) {
             await loadingDialog.dismiss();
-            const toast = await this.toasts.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, "danger");
         }
 
         await loadingDialog.dismiss();
@@ -198,12 +189,8 @@ export class HomePage implements OnInit, OnDestroy {
 
         if (!user) {
             await loadingDialog.dismiss();
-
-            const toast = await this.toasts.create({
-                message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
-                duration: 800
-            });
-            await toast.present();
+            let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
+            await this.toasts.presentToastAsync(message, "danger");
 
             this.api.auth.signOut();
             this.nav.login.go();
@@ -267,11 +254,7 @@ export class HomePage implements OnInit, OnDestroy {
             await this.api.location.createAsync(location);
         } catch (error) {
             await loadingDialog.dismiss();
-            const toast = await this.toasts.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, "danger");
         }
 
         await loadingDialog.dismiss();

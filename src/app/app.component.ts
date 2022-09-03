@@ -6,7 +6,7 @@ import { Platform } from '@ionic/angular';
 import { ApiService } from './api';
 
 const logger = new Logger({
-    level: LogLevel.Debug,
+    level: LogLevel.Off,
     source: 'AppComponent'
 });
 

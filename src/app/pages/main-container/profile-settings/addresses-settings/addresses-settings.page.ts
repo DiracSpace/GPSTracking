@@ -7,6 +7,7 @@ import {
     RequiredPropError
 } from 'src/app/errors';
 import { Logger, LogLevel } from 'src/app/logger';
+import { ToastsService } from 'src/app/services/toasts.service';
 import { State } from 'src/app/state';
 import { guid } from 'src/app/utils';
 import { wait } from 'src/app/utils/time';
@@ -15,7 +16,7 @@ import { getAddressDescription } from 'src/app/views/User/UserAddress';
 
 const logger = new Logger({
     source: 'AddressesSettingsPage',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Component({
@@ -30,9 +31,8 @@ export class AddressesSettingsPage implements OnInit {
 
     constructor(
         private loadingController: LoadingController,
-        private toastController: ToastController,
-        private api: ApiService,
-        private state: State
+        private toasts: ToastsService,
+        private api: ApiService
     ) {}
 
     ngOnInit() {
@@ -87,13 +87,8 @@ export class AddressesSettingsPage implements OnInit {
                 address
             );
         } catch (error) {
-            logger.log('error:', error);
             await loadingDialog.dismiss();
-            const toast = await this.toastController.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, "danger");
             return;
         }
 
@@ -114,13 +109,8 @@ export class AddressesSettingsPage implements OnInit {
             logger.log('address:', address);
             await this.api.users.updateArrayAsync('addresses', this.user.uid, address);
         } catch (error) {
-            logger.log('error:', error);
             await loadingDialog.dismiss();
-            const toast = await this.toastController.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, "danger");
             return;
         }
 
@@ -140,13 +130,9 @@ export class AddressesSettingsPage implements OnInit {
         const user = await this.api.auth.currentUser;
 
         if (!user) {
+            let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
             await loadingDialog.dismiss();
-
-            const toast = await this.toastController.create({
-                message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(message, "warning");
             return;
         }
 

@@ -9,7 +9,7 @@ import { ApiService } from 'src/app/api';
 
 const logger = new Logger({
     source: 'QrCodeViewerComponent',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 export interface QrCodeDownloadDetails {

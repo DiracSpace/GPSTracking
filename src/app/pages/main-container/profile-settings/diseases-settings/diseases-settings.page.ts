@@ -1,11 +1,11 @@
 import { User, UserDiseaseDetail } from 'src/app/views';
 import { Component, OnInit } from '@angular/core';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
-import { State } from 'src/app/state';
 import { Logger, LogLevel } from 'src/app/logger';
 import { guid } from 'src/app/utils';
 import { NotImplementedError } from 'src/app/errors';
+import { ToastsService } from 'src/app/services/toasts.service';
 
 const logger = new Logger({
     source: 'DiseasesSettingsPage',
@@ -23,9 +23,8 @@ export class DiseasesSettingsPage implements OnInit {
 
     constructor(
         private loadingController: LoadingController,
-        private toastController: ToastController,
-        private api: ApiService,
-        private state: State
+        private toasts: ToastsService,
+        private api: ApiService
     ) {}
 
     ngOnInit() {
@@ -78,13 +77,8 @@ export class DiseasesSettingsPage implements OnInit {
                 disease
             );
         } catch (error) {
-            logger.log('error:', error);
             await loadingDialog.dismiss();
-            const toast = await this.toastController.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
@@ -103,11 +97,7 @@ export class DiseasesSettingsPage implements OnInit {
         } catch (error) {
             logger.log('error:', error);
             await loadingDialog.dismiss();
-            const toast = await this.toastController.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
@@ -123,13 +113,10 @@ export class DiseasesSettingsPage implements OnInit {
         const user = await this.api.auth.currentUser;
 
         if (!user) {
+            let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
             await loadingDialog.dismiss();
-
-            const toast = await this.toastController.create({
-                message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(message, 'warning');
+            await this.api.auth.signOut();
             return;
         }
 

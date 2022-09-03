@@ -1,15 +1,15 @@
 import { User, UserAlergyDetail } from 'src/app/views';
 import { Component, OnInit } from '@angular/core';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
-import { State } from 'src/app/state';
 import { Logger, LogLevel } from 'src/app/logger';
 import { guid } from 'src/app/utils';
 import { NotImplementedError } from 'src/app/errors';
+import { ToastsService } from 'src/app/services/toasts.service';
 
 const logger = new Logger({
     source: 'AlergiesSettingsPage',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Component({
@@ -23,9 +23,8 @@ export class AlergiesSettingsPage implements OnInit {
 
     constructor(
         private loadingController: LoadingController,
-        private toastController: ToastController,
-        private api: ApiService,
-        private state: State
+        private toasts: ToastsService,
+        private api: ApiService
     ) {}
 
     ngOnInit() {
@@ -82,13 +81,8 @@ export class AlergiesSettingsPage implements OnInit {
                 alergy
             );
         } catch (error) {
-            logger.log('error:', error);
             await loadingDialog.dismiss();
-            const toast = await this.toastController.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
@@ -109,13 +103,8 @@ export class AlergiesSettingsPage implements OnInit {
             logger.log('alergy:', alergy);
             await this.api.users.updateArrayAsync('alergies', this.user.uid, alergy);
         } catch (error) {
-            logger.log('error:', error);
             await loadingDialog.dismiss();
-            const toast = await this.toastController.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
@@ -131,13 +120,10 @@ export class AlergiesSettingsPage implements OnInit {
         const user = await this.api.auth.currentUser;
 
         if (!user) {
+            let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
             await loadingDialog.dismiss();
-
-            const toast = await this.toastController.create({
-                message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(message, 'warning');
+            await this.api.auth.signOut();
             return;
         }
 
