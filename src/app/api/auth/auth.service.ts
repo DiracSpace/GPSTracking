@@ -7,23 +7,26 @@ import {
 import { Logger, LogLevel } from 'src/app/logger';
 import { Injectable } from '@angular/core';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
+import { wait } from 'src/app/utils/time';
+import { Router } from '@angular/router';
 
 const logger = new Logger({
     source: 'AuthService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private afAuth = getAuth();
 
-    constructor() {
-        this.afAuth.onAuthStateChanged((user) => {
+    constructor(private router: Router) {
+        this.afAuth.onAuthStateChanged(async (user) => {
             if (user) {
                 // User is signed in
                 logger.log('User is signed in!');
             } else {
                 logger.log("User isn't signed in!");
+                await this.signOut();
             }
         });
     }
@@ -49,8 +52,10 @@ export class AuthService {
     }
     /* #endregion */
 
-    signOut() {
-        return this.afAuth.signOut();
+    async signOut(): Promise<void> {
+        wait(500);
+        await this.afAuth.signOut();
+        this.router.navigateByUrl('/login');
     }
 
     async createUserWithEmailAndPasswordAsync(email: string, password: string) {

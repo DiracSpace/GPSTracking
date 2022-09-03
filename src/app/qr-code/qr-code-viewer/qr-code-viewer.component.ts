@@ -6,7 +6,7 @@ import { formatToBlobName } from 'src/app/views/User/User';
 
 const logger = new Logger({
     source: 'QrCodeViewerComponent',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Component({

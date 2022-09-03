@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import {
     ArgumentNullError,
@@ -7,14 +7,13 @@ import {
     RequiredPropError
 } from 'src/app/errors';
 import { Logger, LogLevel } from 'src/app/logger';
-import { State } from 'src/app/state';
+import { ToastsService } from 'src/app/services/toasts.service';
 import { guid } from 'src/app/utils';
-import { wait } from 'src/app/utils/time';
 import { PhoneNumberOwnerTypes, User, UserPhoneNumber } from 'src/app/views';
 
 const logger = new Logger({
     source: 'PhoneNumbersSettingsPage',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Component({
@@ -28,9 +27,8 @@ export class PhoneNumbersSettingsPage implements OnInit {
 
     constructor(
         private loadingController: LoadingController,
-        private toastController: ToastController,
-        private api: ApiService,
-        private state: State
+        private toasts: ToastsService,
+        private api: ApiService
     ) {}
 
     ngOnInit() {
@@ -79,13 +77,8 @@ export class PhoneNumbersSettingsPage implements OnInit {
                 phoneNumber
             );
         } catch (error) {
-            logger.log('error:', error);
             await loadingDialog.dismiss();
-            const toast = await this.toastController.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
@@ -106,13 +99,8 @@ export class PhoneNumbersSettingsPage implements OnInit {
                 phoneNumber
             );
         } catch (error) {
-            logger.log('error:', error);
             await loadingDialog.dismiss();
-            const toast = await this.toastController.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
@@ -154,20 +142,24 @@ export class PhoneNumbersSettingsPage implements OnInit {
         });
         await loadingDialog.present();
 
-        const user = await this.api.auth.currentUser;
-
-        if (!user) {
+        let authUser = null;
+        try {
+            authUser = await this.api.auth.getCurrentUserAsync();
+        } catch (error) {
             await loadingDialog.dismiss();
-
-            const toast = await this.toastController.create({
-                message: 'No se pudo autenticar. Por favor vuelva a iniciar sesión',
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
-        this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
+        if (!authUser) {
+            let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
+            await loadingDialog.dismiss();
+            await this.toasts.presentToastAsync(message, 'warning');
+            await this.api.auth.signOut();
+            return;
+        }
+
+        this.user = await this.api.users.getByUidOrDefaultAsync(authUser.uid);
 
         await loadingDialog.dismiss();
     }

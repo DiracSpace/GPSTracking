@@ -1,8 +1,8 @@
 import { ApiService } from 'src/app/api/ApiService.service';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
 import { Component, OnInit } from '@angular/core';
-import { State } from 'src/app/state';
 import { User } from 'src/app/views';
+import { ToastsService } from 'src/app/services/toasts.service';
 
 @Component({
     selector: 'app-names-settings',
@@ -15,9 +15,8 @@ export class NamesSettingsPage implements OnInit {
 
     constructor(
         private loadingController: LoadingController,
-        private toasts: ToastController,
-        private api: ApiService,
-        private state: State
+        private toasts: ToastsService,
+        private api: ApiService
     ) {}
 
     ngOnInit() {
@@ -72,14 +71,10 @@ export class NamesSettingsPage implements OnInit {
             await this.api.users.updateAsync(this.user.uid, this.user);
         } catch (error) {
             await loadingDialog.dismiss();
-            const toast = await this.toasts.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
-        
+
         await loadingDialog.dismiss();
     }
 
@@ -95,11 +90,14 @@ export class NamesSettingsPage implements OnInit {
             authUser = await this.api.auth.getCurrentUserAsync();
         } catch (error) {
             await loadingDialog.dismiss();
-            const toast = await this.toasts.create({
-                message: error,
-                duration: 800
-            });
-            await toast.present();
+            await this.toasts.presentToastAsync(error, 'danger');
+            return;
+        }
+
+        if (!authUser) {
+            let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
+            await this.toasts.presentToastAsync(message, 'warning');
+            await this.api.auth.signOut();
             return;
         }
 
