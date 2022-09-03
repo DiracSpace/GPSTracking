@@ -37,6 +37,9 @@ export class HomePage implements OnInit, OnDestroy {
     scanning = false;
     user = new User();
 
+    private platformName: string = null;
+    hasPlatformFinishedLoading: boolean = false;
+
     private idleInterval: Observable<number>;
     closeIdleIntervalObservable() {
         if (this.idleInterval) {
@@ -67,7 +70,18 @@ export class HomePage implements OnInit, OnDestroy {
         private nav: Navigation,
         private api: ApiService,
         private debug: Debugger
-    ) {}
+    ) {
+        platform.ready().then((result: string) => {
+            this.platformName = result;
+
+            debug.info('Platform ready:', result);
+            logger.log('result:', result);
+
+            debug.info('Platform name:', this.platformName);
+            logger.log('this.platformName:', this.platformName);
+            this.hasPlatformFinishedLoading = true;
+        });
+    }
 
     ngOnInit(): void {
         this.loadAsync();
@@ -148,7 +162,7 @@ export class HomePage implements OnInit, OnDestroy {
             await this.api.users.updateAsync(this.user.uid, this.user);
         } catch (error) {
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, "danger");
+            await this.toasts.presentToastAsync(error, 'danger');
         }
 
         await loadingDialog.dismiss();
@@ -167,15 +181,36 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     async onLocationClicked() {
+        if (!this.platformName) {
+            let message = 'No se pudo determinar el tipo dispositivo.';
+            await this.toasts.presentToastAsync(message, 'warning');
+            return;
+        }
+
+        if (this.platformName.includes('dom') || this.platformName == 'dom') {
+            await this.requestLocationAndSaveAsync();
+        } else if (
+            this.platformName.includes('cordova') ||
+            this.platformName == 'cordova'
+        ) {
+            await this.requestLocationForAndroidAsync();
+        }
+    }
+
+    private async requestLocationAndSaveAsync() {
+        const geoposition = await this.getMyLocationAsync();
+        const { latitude, longitude } = geoposition.coords;
+        await this.savingLocationInFirebaseAsync(latitude, longitude);
+    }
+
+    private async requestLocationForAndroidAsync() {
         const permissionsVerified = await this.verifyPermissionForGpsAsync();
 
         if (!permissionsVerified) {
             return;
         }
 
-        const geoposition = await this.getMyLocationAsync();
-        const { latitude, longitude } = geoposition.coords;
-        await this.savingLocationInFirebaseAsync(latitude, longitude);
+        await this.requestLocationAndSaveAsync();
     }
 
     private async loadAsync() {
@@ -190,7 +225,7 @@ export class HomePage implements OnInit, OnDestroy {
         if (!user) {
             await loadingDialog.dismiss();
             let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
-            await this.toasts.presentToastAsync(message, "danger");
+            await this.toasts.presentToastAsync(message, 'danger');
 
             this.api.auth.signOut();
             this.nav.login.go();
@@ -254,7 +289,7 @@ export class HomePage implements OnInit, OnDestroy {
             await this.api.location.createAsync(location);
         } catch (error) {
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, "danger");
+            await this.toasts.presentToastAsync(error, 'danger');
         }
 
         await loadingDialog.dismiss();
