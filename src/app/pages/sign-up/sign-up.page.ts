@@ -5,6 +5,7 @@ import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Navigation } from 'src/app/navigation';
 import { ToastsService } from 'src/app/services/toasts.service';
+import { ValidationService } from 'src/app/services/validation.service';
 import { User } from 'src/app/views';
 import { environment } from 'src/environments/environment';
 
@@ -17,7 +18,10 @@ export class SignUpPage implements OnInit {
     showForm: 'email' | 'password' = 'email';
 
     emailForm = this.forms.group({
-        email: new FormControl('', [Validators.required])
+        email: new FormControl('', [
+            Validators.required,
+            ValidationService.emailValidator
+        ])
     });
 
     emailValidationMessages: ValidationErrorMessage[] = [
@@ -27,10 +31,15 @@ export class SignUpPage implements OnInit {
         }
     ];
 
-    passwordForm = this.forms.group({
-        password: new FormControl('', [Validators.required]),
-        passwordConfirm: new FormControl('', [Validators.required])
-    });
+    passwordForm = this.forms.group(
+        {
+            password: new FormControl('', [Validators.required]),
+            passwordConfirm: new FormControl('', [Validators.required])
+        },
+        {
+            validators: [ValidationService.passwordCompareValidator]
+        }
+    );
 
     passwordValidationMessages: ValidationErrorMessage[] = [
         {
@@ -113,6 +122,7 @@ export class SignUpPage implements OnInit {
 
     onBackClicked() {
         this.showForm = 'email';
+        this.resetForm();
     }
 
     private resetForm() {
