@@ -115,12 +115,21 @@ export class HomePage implements OnInit, OnDestroy {
     /* #endregion */
 
     async onLogoutClicked() {
-        const loadingDialog = await this.loadingController.create({
-            message: 'Cerrando Sesión'
-        });
-        await loadingDialog.present();
-        await this.api.auth.signOut();
-        await loadingDialog.dismiss();
+        const confirmation = await this.toasts.presentAlertAsync(
+            'Confirmación',
+            'Está por cerrar su sesión',
+            '¿Desea salir de su sesión?',
+            'yes'
+        );
+        
+        if (confirmation) {
+            const loadingDialog = await this.loadingController.create({
+                message: 'Cerrando Sesión'
+            });
+            await loadingDialog.present();
+            await this.api.auth.signOut();
+            await loadingDialog.dismiss();
+        }
     }
 
     async onQrSrcObtained(qrSrc: Blob) {
@@ -292,7 +301,7 @@ export class HomePage implements OnInit, OnDestroy {
         }
 
         await loadingDialog.dismiss();
-        await this.toasts.presentToastAsync("¡Se guardó existosamente su ubicación!")
+        await this.toasts.presentToastAsync('¡Se guardó existosamente su ubicación!');
     }
 
     private async verifyPermissionForGpsAsync(): Promise<boolean> {
