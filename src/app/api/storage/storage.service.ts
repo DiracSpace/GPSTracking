@@ -15,7 +15,7 @@ import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 
 const logger = new Logger({
     source: 'StorageService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Injectable({ providedIn: 'root' })

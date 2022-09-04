@@ -4,7 +4,7 @@ import { AbstractControl, FormGroup, ValidationErrors } from '@angular/forms';
 
 const logger = new Logger({
     source: 'ValidationService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Injectable({ providedIn: 'root' })

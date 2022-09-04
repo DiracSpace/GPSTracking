@@ -1,0 +1,7 @@
+// TODO: don't like this, but it works.
+:host ::ng-deep .center {
+    img {
+        display: block;
+        margin: 0 auto;
+    }
+}

@@ -26,7 +26,7 @@ import { Injectable } from '@angular/core';
 
 const logger = new Logger({
     source: 'UserService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 const COLLECTION_NAME = 'users';
