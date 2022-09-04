@@ -1,14 +1,5 @@
-<ng-container *ngFor="let validation of messages">
-    <p
-        class="m-0"
-        style="font-size: 0.9rem"
-        *ngIf="
-            formControl.hasError(validation.type) &&
-            (formControl.dirty || formControl.touched)
-        "
-    >
-        <ion-text color="danger">
-            {{ validation.message }}
-        </ion-text>
-    </p>
-</ng-container>
+<p class="m-0" style="font-size: 0.9rem" *ngIf="hasValidationErrorMessage">
+    <ion-text color="danger">
+        {{ formControlValidationErrorMessage ?? formGroupValidationErrorMessage }}
+    </ion-text>
+</p>

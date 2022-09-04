@@ -3,8 +3,15 @@ import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
+import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
 import { ToastsService } from 'src/app/services/toasts.service';
+import { ValidationService } from 'src/app/services/validation.service';
+
+const logger = new Logger({
+    source: 'LoginPage',
+    level: LogLevel.Off
+});
 
 @Component({
     selector: 'app-login',
@@ -15,7 +22,10 @@ export class LoginPage implements OnInit {
     showForm: 'email' | 'password' = 'email';
 
     emailForm = this.forms.group({
-        email: new FormControl('', [Validators.required])
+        email: new FormControl('', [
+            Validators.required,
+            ValidationService.emailValidator
+        ])
     });
 
     emailValidationMessages: ValidationErrorMessage[] = [
@@ -26,7 +36,10 @@ export class LoginPage implements OnInit {
     ];
 
     passwordForm = this.forms.group({
-        password: new FormControl('', [Validators.required])
+        password: new FormControl('', [
+            Validators.required,
+            ValidationService.passwordValidator
+        ])
     });
 
     passwordValidationMessages: ValidationErrorMessage[] = [
@@ -59,14 +72,20 @@ export class LoginPage implements OnInit {
     }
 
     async onEmailFormSubmit() {
+        logger.log("this.emailForm.valid:", this.emailForm.valid);
         if (!this.emailForm.valid) {
+            logger.log("emailForm not valid!");
+            this.resetForm();
             return;
         }
         this.showForm = 'password';
     }
 
     async onPasswordFormSubmit() {
+        logger.log("this.passwordForm.valid:", this.passwordForm.valid);
         if (!this.passwordForm.valid) {
+            logger.log("passwordForm not valid!");
+            this.resetForm();
             return;
         }
 
@@ -79,21 +98,25 @@ export class LoginPage implements OnInit {
         await loadingDialog.present();
 
         try {
+            logger.log("signing up!");
             await this.api.auth.signInWithEmailAndPassword(email, password);
+            logger.log("signed up!");
         } catch (error) {
+            logger.log("error:", error);
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, "danger");
+            await this.toasts.presentToastAsync(error, 'danger');
             this.resetForm();
             return;
         }
 
         await loadingDialog.dismiss();
-        this.resetForm();
-        this.nav.mainContainer.home.go();
+        logger.log("navigating to home");
+        await this.nav.mainContainer.home.go();
     }
 
     onBackClicked() {
         this.showForm = 'email';
+        this.resetForm();
     }
 
     private resetForm() {
