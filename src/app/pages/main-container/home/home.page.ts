@@ -15,7 +15,7 @@ import { guid } from 'src/app/utils';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { repeatWhen, takeUntil } from 'rxjs/operators';
 import { ScannerPermissions } from '../scanner/scanner-permissions.service';
-import { ToastsColorCodes, ToastsService } from 'src/app/services/toasts.service';
+import { ToastsService } from 'src/app/services/toasts.service';
 import { ContextService } from 'src/app/services/context.service';
 
 const logger = new Logger({
@@ -195,12 +195,6 @@ export class HomePage implements OnInit, OnDestroy {
         }
     }
 
-    private async requestLocationAndSaveAsync() {
-        const geoposition = await this.getMyLocationAsync();
-        const { latitude, longitude } = geoposition.coords;
-        await this.savingLocationInFirebaseAsync(latitude, longitude);
-    }
-
     private async requestLocationForAndroidAsync() {
         const permissionsVerified = await this.verifyPermissionForGpsAsync();
 
@@ -209,6 +203,12 @@ export class HomePage implements OnInit, OnDestroy {
         }
 
         await this.requestLocationAndSaveAsync();
+    }
+
+    private async requestLocationAndSaveAsync() {
+        const geoposition = await this.getMyLocationAsync();
+        const { latitude, longitude } = geoposition.coords;
+        await this.savingLocationInFirebaseAsync(latitude, longitude);
     }
 
     private async loadAsync() {
@@ -292,6 +292,7 @@ export class HomePage implements OnInit, OnDestroy {
         }
 
         await loadingDialog.dismiss();
+        await this.toasts.presentToastAsync("¡Se guardó existosamente su ubicación!")
     }
 
     private async verifyPermissionForGpsAsync(): Promise<boolean> {
