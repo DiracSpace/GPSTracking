@@ -6,7 +6,7 @@ import { Logger, LogLevel } from 'src/app/logger';
 
 const logger = new Logger({
     source: 'FormControlErrorComponent',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Component({

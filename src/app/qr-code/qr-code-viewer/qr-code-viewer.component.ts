@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import {
+    Component,
+    EventEmitter,
+    Input,
+    OnDestroy,
+    OnInit,
+    Output,
+    ViewChild
+} from '@angular/core';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { formatToBlobName } from 'src/app/views/User/User';
@@ -6,6 +14,8 @@ import { SafeUrl } from '@angular/platform-browser';
 import { Logger, LogLevel } from 'src/app/logger';
 import { LoadingController, Platform, ToastController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
+import { ContextService } from 'src/app/services/context.service';
+import { Subscription } from 'rxjs';
 
 const logger = new Logger({
     source: 'QrCodeViewerComponent',
@@ -22,21 +32,23 @@ export interface QrCodeDownloadDetails {
     templateUrl: './qr-code-viewer.component.html',
     styleUrls: ['./qr-code-viewer.component.scss']
 })
-export class QrCodeViewerComponent implements OnInit {
+export class QrCodeViewerComponent implements OnInit, OnDestroy {
     @ViewChild('qrCodeElement', { static: false })
     qrCodeElement: any;
 
-    @Input() qrCodeInformation: string = '';
     @Output() qrCodeSrcEmitter = new EventEmitter<Blob>();
 
     hasPlatformFinishedLoading: boolean = false;
 
     private platformName: string = null;
     private qrDownloadDetails: QrCodeDownloadDetails = null;
+    private qrImgSrcSubscription: Subscription;
+    qrCodeInformation: string = null;
 
     constructor(
         private loadingController: LoadingController,
         private toastController: ToastController,
+        private context: ContextService,
         private debug: Debugger,
         private api: ApiService,
         platform: Platform
@@ -54,11 +66,29 @@ export class QrCodeViewerComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.qrImgSrcSubscription = this.context.qrImgSrc
+            .watch()
+            .subscribe((value: string) => {
+                logger.log('value:', value);
+                this.qrCodeInformation = value;
+            });
+
         logger.log('this.qrCodeInformation:', this.qrCodeInformation);
         this.debug.info('this.qrCodeInformation:', this.qrCodeInformation);
 
         logger.log('this.platformName:', this.platformName);
         this.debug.info('this.platformName:', this.platformName);
+    }
+
+    ngOnDestroy(): void {
+        if (this.qrImgSrcSubscription) {
+            this.qrImgSrcSubscription.unsubscribe();
+            this.qrImgSrcSubscription = null;
+        }
+    }
+
+    get hasQrInformation(): boolean {
+        return this.qrCodeInformation != null;
     }
 
     get hasFirebase(): boolean {

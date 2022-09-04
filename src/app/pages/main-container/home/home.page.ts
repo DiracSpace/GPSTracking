@@ -16,6 +16,7 @@ import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { repeatWhen, takeUntil } from 'rxjs/operators';
 import { ScannerPermissions } from '../scanner/scanner-permissions.service';
 import { ToastsColorCodes, ToastsService } from 'src/app/services/toasts.service';
+import { ContextService } from 'src/app/services/context.service';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -64,6 +65,7 @@ export class HomePage implements OnInit, OnDestroy {
         private scannerPermissions: ScannerPermissions,
         private loadingController: LoadingController,
         private geolocation: Geolocation,
+        private context: ContextService,
         private alerts: AlertController,
         private toasts: ToastsService,
         private platform: Platform,
@@ -94,10 +96,6 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     /* #region getters */
-    get qrCodeInformation() {
-        return this.user.qrCodeUrl;
-    }
-
     get qrCodeSrc() {
         return this.user.qrCodeBase64;
     }
@@ -233,6 +231,7 @@ export class HomePage implements OnInit, OnDestroy {
         }
 
         this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
+        this.context.qrImgSrc.set(this.user.qrCodeUrl);
         logger.log('this.user:', this.user);
 
         await loadingDialog.dismiss();

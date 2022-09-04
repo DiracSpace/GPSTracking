@@ -25,7 +25,6 @@
             <h4 class="ion-text-center ion-margin-bottom">Hola {{username}}</h4>
             <app-qr-code-viewer
                 *ngIf="viewCode"
-                [qrCodeInformation]="qrCodeInformation"
                 (qrCodeSrcEmitter)="onQrSrcObtained($event)"
             ></app-qr-code-viewer>
             <div
