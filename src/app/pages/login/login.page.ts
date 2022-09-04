@@ -105,7 +105,6 @@ export class LoginPage implements OnInit {
             logger.log("error:", error);
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');
-            this.resetForm();
             return;
         }
 
