@@ -63,30 +63,41 @@ export class AlergiesSettingsPage implements OnInit {
         const index = this.alergies.indexOf(alergy);
 
         if (index == -1) {
-            throw new NotImplementedError('Could not find alergy to delete', caller);
+            let message = 'Could not find alergy to delete';
+            await this.toasts.presentToastAsync(message, 'danger');
+            throw new NotImplementedError(message, caller);
         }
 
-        this.alergies.splice(index, 1);
+        const confirmation = await this.toasts.presentAlertAsync(
+            'Confirmación',
+            'Está por eliminar información',
+            '¿Desea eliminar este dato?',
+            'yes'
+        );
 
-        const loadingDialog = await this.loadingController.create({
-            message: 'Eliminando...'
-        });
-        await loadingDialog.present();
+        if (confirmation) {
+            this.alergies.splice(index, 1);
 
-        try {
-            logger.log('alergy:', alergy);
-            await this.api.users.removeArrayElementAsync(
-                'alergies',
-                this.user.uid,
-                alergy
-            );
-        } catch (error) {
+            const loadingDialog = await this.loadingController.create({
+                message: 'Eliminando...'
+            });
+            await loadingDialog.present();
+
+            try {
+                logger.log('alergy:', alergy);
+                await this.api.users.removeArrayElementAsync(
+                    'alergies',
+                    this.user.uid,
+                    alergy
+                );
+            } catch (error) {
+                await loadingDialog.dismiss();
+                await this.toasts.presentToastAsync(error, 'danger');
+                return;
+            }
+
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, 'danger');
-            return;
         }
-
-        await loadingDialog.dismiss();
     }
 
     async onSaveClicked(alergy: UserAlergyDetail) {
@@ -109,6 +120,7 @@ export class AlergiesSettingsPage implements OnInit {
         }
 
         await loadingDialog.dismiss();
+        await this.toasts.presentToastAsync('¡Se guardó existosamente!');
     }
 
     private async loadAsync() {

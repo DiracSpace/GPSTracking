@@ -1,16 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
-import {
-    ArgumentNullError,
-    NotImplementedError,
-    RequiredPropError
-} from 'src/app/errors';
+import { NotImplementedError, RequiredPropError } from 'src/app/errors';
 import { Logger, LogLevel } from 'src/app/logger';
 import { ToastsService } from 'src/app/services/toasts.service';
-import { State } from 'src/app/state';
 import { guid } from 'src/app/utils';
-import { wait } from 'src/app/utils/time';
 import { AddressTypeTypes, MexicoStates, User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
 
@@ -69,30 +63,41 @@ export class AddressesSettingsPage implements OnInit {
         const index = this.addresses.indexOf(address);
 
         if (index == -1) {
-            throw new NotImplementedError('Could not find address to delete', caller);
+            let message = 'Could not find address to delete';
+            await this.toasts.presentToastAsync(message, 'danger');
+            throw new NotImplementedError(message, caller);
         }
 
-        this.addresses.splice(index, 1);
+        const confirmation = await this.toasts.presentAlertAsync(
+            'Confirmación',
+            'Está por eliminar información',
+            '¿Desea eliminar este dato?',
+            'yes'
+        );
 
-        const loadingDialog = await this.loadingController.create({
-            message: 'Eliminando...'
-        });
-        await loadingDialog.present();
+        if (confirmation) {
+            this.addresses.splice(index, 1);
 
-        try {
-            logger.log('address:', address);
-            await this.api.users.removeArrayElementAsync(
-                'addresses',
-                this.user.uid,
-                address
-            );
-        } catch (error) {
+            const loadingDialog = await this.loadingController.create({
+                message: 'Eliminando...'
+            });
+            await loadingDialog.present();
+
+            try {
+                logger.log('address:', address);
+                await this.api.users.removeArrayElementAsync(
+                    'addresses',
+                    this.user.uid,
+                    address
+                );
+            } catch (error) {
+                await loadingDialog.dismiss();
+                await this.toasts.presentToastAsync(error, 'danger');
+                return;
+            }
+
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, "danger");
-            return;
         }
-
-        await loadingDialog.dismiss();
     }
 
     async onSaveClicked(address: UserAddress) {
@@ -110,11 +115,12 @@ export class AddressesSettingsPage implements OnInit {
             await this.api.users.updateArrayAsync('addresses', this.user.uid, address);
         } catch (error) {
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, "danger");
+            await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
         await loadingDialog.dismiss();
+        await this.toasts.presentToastAsync('¡Se guardó existosamente!');
     }
 
     getAddressDescription(address: UserAddress) {
@@ -132,7 +138,7 @@ export class AddressesSettingsPage implements OnInit {
         if (!user) {
             let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(message, "warning");
+            await this.toasts.presentToastAsync(message, 'warning');
             return;
         }
 

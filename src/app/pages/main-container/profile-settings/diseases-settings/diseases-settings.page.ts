@@ -55,34 +55,49 @@ export class DiseasesSettingsPage implements OnInit {
     }
 
     async onDeleteClicked(disease: UserDiseaseDetail) {
+        if (!disease) {
+            return;
+        }
+        
         const caller = 'onDeleteClicked';
         const index = this.diseases.indexOf(disease);
 
         if (index == -1) {
-            throw new NotImplementedError('Could not find disease to delete', caller);
+            let message = 'Could not find disease to delete';
+            await this.toasts.presentToastAsync(message, 'danger');
+            throw new NotImplementedError(message, caller);
         }
 
-        this.diseases.splice(index, 1);
+        const confirmation = await this.toasts.presentAlertAsync(
+            'Confirmación',
+            'Está por eliminar información',
+            '¿Desea eliminar este dato?',
+            'yes'
+        );
 
-        const loadingDialog = await this.loadingController.create({
-            message: 'Eliminando...'
-        });
-        await loadingDialog.present();
+        if (confirmation) {
+            this.diseases.splice(index, 1);
 
-        try {
-            logger.log('disease:', disease);
-            await this.api.users.removeArrayElementAsync(
-                'diseases',
-                this.user.uid,
-                disease
-            );
-        } catch (error) {
+            const loadingDialog = await this.loadingController.create({
+                message: 'Eliminando...'
+            });
+            await loadingDialog.present();
+
+            try {
+                logger.log('disease:', disease);
+                await this.api.users.removeArrayElementAsync(
+                    'diseases',
+                    this.user.uid,
+                    disease
+                );
+            } catch (error) {
+                await loadingDialog.dismiss();
+                await this.toasts.presentToastAsync(error, 'danger');
+                return;
+            }
+
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, 'danger');
-            return;
         }
-
-        await loadingDialog.dismiss();
     }
 
     async onSaveClicked(disease: UserDiseaseDetail) {
@@ -102,6 +117,7 @@ export class DiseasesSettingsPage implements OnInit {
         }
 
         await loadingDialog.dismiss();
+        await this.toasts.presentToastAsync('¡Se guardó existosamente!');
     }
 
     private async loadAsync() {

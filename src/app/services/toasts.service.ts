@@ -58,7 +58,7 @@ export class ToastsService {
     /**
      * Creates a simple alert message that
      * returns true if user accepts confirmation.
-     * 
+     *
      * @param header Title of alert message
      * @param subHeader Subtitle of alert message
      * @param message Message to notify user

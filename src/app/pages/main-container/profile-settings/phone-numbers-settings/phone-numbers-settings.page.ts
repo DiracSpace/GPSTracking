@@ -50,39 +50,51 @@ export class PhoneNumbersSettingsPage implements OnInit {
     }
 
     async onDeleteClick(phoneNumber: UserPhoneNumber) {
+        if (!phoneNumber) {
+            return;
+        }
+
         const caller = 'onDeleteClick';
         RequiredPropError.throwIfNull(this.phoneNumbers, 'phoneNumbers', caller);
 
         const index = this.phoneNumbers.indexOf(phoneNumber);
 
         if (index == -1) {
-            throw new NotImplementedError(
-                'Could not find phone number to delete',
-                caller
-            );
+            let message = 'Could not find phone number to delete';
+            await this.toasts.presentToastAsync(message, 'danger');
+            throw new NotImplementedError(message, caller);
         }
 
-        this.phoneNumbers.splice(index, 1);
+        const confirmation = await this.toasts.presentAlertAsync(
+            'Confirmación',
+            'Está por eliminar información',
+            '¿Desea eliminar este dato?',
+            'yes'
+        );
 
-        const loadingDialog = await this.loadingController.create({
-            message: 'Eliminando...'
-        });
-        await loadingDialog.present();
+        if (confirmation) {
+            this.phoneNumbers.splice(index, 1);
 
-        try {
-            logger.log('phoneNumber:', phoneNumber);
-            await this.api.users.removeArrayElementAsync(
-                'phoneNumbers',
-                this.user.uid,
-                phoneNumber
-            );
-        } catch (error) {
+            const loadingDialog = await this.loadingController.create({
+                message: 'Eliminando...'
+            });
+            await loadingDialog.present();
+
+            try {
+                logger.log('phoneNumber:', phoneNumber);
+                await this.api.users.removeArrayElementAsync(
+                    'phoneNumbers',
+                    this.user.uid,
+                    phoneNumber
+                );
+            } catch (error) {
+                await loadingDialog.dismiss();
+                await this.toasts.presentToastAsync(error, 'danger');
+                return;
+            }
+
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, 'danger');
-            return;
         }
-
-        await loadingDialog.dismiss();
     }
 
     async onSaveClicked(phoneNumber: UserPhoneNumber) {
@@ -105,6 +117,7 @@ export class PhoneNumbersSettingsPage implements OnInit {
         }
 
         await loadingDialog.dismiss();
+        await this.toasts.presentToastAsync('¡Se guardó existosamente!');
     }
 
     getPhoneNumberDescription(phoneNumber: UserPhoneNumber): string {

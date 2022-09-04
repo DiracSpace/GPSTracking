@@ -301,7 +301,7 @@ export class HomePage implements OnInit, OnDestroy {
         }
 
         await loadingDialog.dismiss();
-        await this.toasts.presentToastAsync('¡Se guardó existosamente su ubicación!');
+        await this.toasts.presentToastAsync('¡Se guardó existosamente!');
     }
 
     private async verifyPermissionForGpsAsync(): Promise<boolean> {
