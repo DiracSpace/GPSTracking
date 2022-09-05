@@ -12,10 +12,19 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { formatToBlobName } from 'src/app/views/User/User';
 import { SafeUrl } from '@angular/platform-browser';
 import { Logger, LogLevel } from 'src/app/logger';
-import { LoadingController, Platform, ToastController } from '@ionic/angular';
+import {
+    AlertController,
+    LoadingController,
+    Platform,
+    ToastController
+} from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { ContextService } from 'src/app/services/context.service';
 import { Subscription } from 'rxjs';
+import { handleAndDecode } from 'src/app/utils/promises';
+import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
+import { AlertUtils, ToastsService } from 'src/app/services';
+import { NotImplementedError, RequiredPropError } from 'src/app/errors';
 
 const logger = new Logger({
     source: 'QrCodeViewerComponent',
@@ -51,7 +60,10 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
         private context: ContextService,
         private debug: Debugger,
         private api: ApiService,
-        platform: Platform
+        private platform: Platform,
+        private alerts: AlertController,
+        private alertUtils: AlertUtils,
+        private toastUtils: ToastsService
     ) {
         platform.ready().then((result: string) => {
             this.platformName = result;
@@ -131,14 +143,16 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
     }
 
     async onDownloadClicked() {
-        logger.log('this.platformName:', this.platformName);
+        const caller = 'onDownloadClicked';
         this.debug.info('this.platformName:', this.platformName);
+        RequiredPropError.throwIfNull(this.platformName, 'platformName', caller);
 
-        if (!this.platformName) {
-            throw "Platform name hasn't been obtained!";
+        const { error } = await handleAndDecode(this.setQrCodeDownloadDetailsAsync());
+
+        if (error) {
+            await this.alertUtils.error('No se pudo descargar', error);
+            return;
         }
-
-        await this.setQrCodeDownloadDetailsAsync();
 
         if (this.platformName.includes('dom') || this.platformName == 'dom') {
             await this.trySaveQrWebAsync();
@@ -147,39 +161,33 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
             this.platformName == 'cordova'
         ) {
             await this.trySaveQrAndroidAsync();
+        } else {
+            throw new NotImplementedError(
+                `Unsupported platform "${this.platformName}"`,
+                caller
+            );
         }
     }
 
     private async setQrCodeDownloadDetailsAsync(): Promise<void> {
-        try {
-            const { uid } = await this.api.auth.currentUser;
-            const fileName = formatToBlobName(uid);
-            let blob: Blob = null;
+        const { uid } = await this.api.auth.currentUser;
+        const fileName = formatToBlobName(uid);
+        let blob: Blob = null;
 
-            if (this.hasFirebase) {
-                blob = await this.api.storage.getBlobFromStorage(fileName);
-            } else {
-                blob = this.getBlob();
-            }
-
-            this.qrDownloadDetails = {
-                fileName: fileName,
-                blob: blob
-            };
-        } catch (error) {
-            logger.log('error:', error);
-            this.debug.error('error:', error);
-            const toast = await this.toastController.create({
-                message: 'No se pudo descargar, por favor intente más tarde.',
-                duration: 800
-            });
-            await toast.present();
+        if (this.hasFirebase) {
+            blob = await this.api.storage.getBlobFromStorage(fileName);
+        } else {
+            blob = this.getBlob();
         }
+
+        this.qrDownloadDetails = {
+            fileName: fileName,
+            blob: blob
+        };
     }
 
     private async trySaveQrWebAsync() {
-        logger.log('Downloading on desktop!');
-        this.debug.info('Downloading on desktop!');
+        this.debug.info('trySaveQrWebAsync...');
 
         const loadingDialog = await this.loadingController.create({
             message: 'Guardando el código QR'
@@ -188,37 +196,23 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
 
         try {
             this.checkQrDownloadDetails();
-
             const url = window.URL.createObjectURL(this.qrDownloadDetails.blob);
             const link = document.createElement('a');
             link.href = url;
             link.download = this.qrDownloadDetails.fileName;
             link.click();
+            await this.toastUtils.success('Código QR guardado');
         } catch (error) {
+            const errorDetails = decodeErrorDetails(error);
+            this.debug.error(errorDetails.toString());
+            await this.alertUtils.error('No se pudo descargar', errorDetails);
+        } finally {
             await loadingDialog.dismiss();
-
-            logger.log('error:', error);
-            this.debug.error('error:', error);
-
-            const toast = await this.toastController.create({
-                message: 'No se pudo descargar, por favor intente más tarde.',
-                duration: 800
-            });
-            await toast.present();
         }
-
-        await loadingDialog.dismiss();
-
-        const toast = await this.toastController.create({
-            message: '¡El código QR se guardó con éxito!',
-            duration: 1500
-        });
-        await toast.present();
     }
 
     private async trySaveQrAndroidAsync() {
-        logger.log('Downloading on android!');
-        this.debug.info('Downloading on android!');
+        this.debug.info('trySaveQrAndroidAsync...');
 
         const loadingDialog = await this.loadingController.create({
             message: 'Guardando el código QR'
@@ -227,7 +221,6 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
 
         try {
             this.checkQrDownloadDetails();
-
             const base64 = await this.convertBlobToBase64Async(
                 this.qrDownloadDetails.blob
             );
@@ -236,26 +229,14 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
                 data: base64,
                 directory: Directory.Documents
             });
+            await this.toastUtils.success('Código QR guardado');
         } catch (error) {
+            const errorDetails = decodeErrorDetails(error);
+            this.debug.error(errorDetails.toString());
+            await this.alertUtils.error('No se pudo descargar', errorDetails);
+        } finally {
             await loadingDialog.dismiss();
-
-            logger.log('error:', error);
-            this.debug.error('error:', error);
-
-            const toast = await this.toastController.create({
-                message: 'No se pudo descargar, por favor intente más tarde.',
-                duration: 800
-            });
-            await toast.present();
         }
-
-        await loadingDialog.dismiss();
-
-        const toast = await this.toastController.create({
-            message: '¡El código QR se guardó con éxito!',
-            duration: 1500
-        });
-        await toast.present();
     }
 
     private checkQrDownloadDetails() {

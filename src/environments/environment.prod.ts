@@ -19,6 +19,6 @@ export const environment = {
         default: 'https://gpstracking-d1f5c.web.app',
         fallback: 'https://gpstracking-d1f5c.firebaseapp.com'
     },
-    showDebug: false,
+    showDebug: true,
     environmentName: 'production'
 };

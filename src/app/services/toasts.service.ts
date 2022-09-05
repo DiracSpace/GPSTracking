@@ -55,6 +55,34 @@ export class ToastsService {
         await toast.present();
     }
 
+    async success(
+        message: string,
+        options?: { duration?: number }
+    ): Promise<HTMLIonToastElement> {
+        const toast = await this.toastsController.create({
+            color: 'success',
+            message,
+            duration: options?.duration ?? 1500
+        });
+
+        await toast.present();
+        return toast;
+    }
+
+    async error(
+        message: string,
+        options?: { duration?: number }
+    ): Promise<HTMLIonToastElement> {
+        const toast = await this.toastsController.create({
+            color: 'danger',
+            message,
+            duration: options?.duration
+        });
+
+        await toast.present();
+        return toast;
+    }
+
     /**
      * Creates a simple alert message that
      * returns true if user accepts confirmation.
