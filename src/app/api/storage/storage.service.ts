@@ -23,7 +23,7 @@ export class StorageService {
     private readonly afStorage = getStorage();
 
     private readonly resumableTaskSubject = new BehaviorSubject<number>(0);
-    public readonly progress = {
+    public progress = {
         get: () => this.resumableTaskSubject.value,
         set: (value: number) => this.resumableTaskSubject.next(value),
         watch: () => this.resumableTaskSubject.asObservable()

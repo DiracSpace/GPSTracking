@@ -1,10 +1,20 @@
 import { FirebaseEntityConverter, Location } from 'src/app/views';
 import {
+    collection,
     doc,
+    DocumentData,
     DocumentReference,
     DocumentSnapshot,
     Firestore,
-    setDoc
+    getDocs,
+    getDocsFromCache,
+    limit,
+    orderBy,
+    query,
+    QuerySnapshot,
+    setDoc,
+    where,
+    WhereFilterOp
 } from '@angular/fire/firestore';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Injectable } from '@angular/core';
@@ -68,6 +78,29 @@ export class LocationService {
 
             await setDoc(locationDocRef, entity);
         }
+    }
+
+    async countAllLocationsByUserId(entityId: string): Promise<number> {
+        const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
+        const locationWhereQuery = where('uid', '==', entityId);
+        const locationQuery = query(locationCollectionRef, locationWhereQuery);
+
+        let querySnapshot: QuerySnapshot<DocumentData> = null;
+
+        try {
+            logger.log("trying to get from cache ...");
+            querySnapshot = await getDocsFromCache(locationQuery);
+        } catch (error) {
+            logger.log("error:", error);
+        }
+
+        if (!querySnapshot) {
+            logger.log("no cached data, querying!");
+            querySnapshot = await getDocs(locationQuery);
+        }
+
+        logger.log("cached data exists!");
+        return querySnapshot.size ?? 0;
     }
 
     /**
@@ -155,7 +188,7 @@ export class LocationService {
             try {
                 let locationRegisteredDate = new Date(
                     snapshotData.dateRegistered
-                ).getDate();
+                ).getTime();
                 var timestampDifference = Math.abs(
                     new Date().getTime() - locationRegisteredDate
                 );
@@ -172,7 +205,7 @@ export class LocationService {
             logger.log('hoursPassedSinceLastRegistered:', hoursPassedSinceLastRegistered);
             this.debug.info(hoursPassedSinceLastRegistered);
 
-            return hoursPassedSinceLastRegistered > HOURS_PASSED_THRESHOLD;
+            return Math.floor(hoursPassedSinceLastRegistered) > HOURS_PASSED_THRESHOLD;
         }
 
         return true;

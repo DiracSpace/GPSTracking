@@ -1,0 +1,17 @@
+<ion-tab-bar slot="bottom">
+    <ion-tab-button tab="locations">
+        <ion-icon name="location-outline"></ion-icon>
+        <ion-label>Ubicaciones</ion-label>
+        <ion-badge>{{ locations }}</ion-badge>
+    </ion-tab-button>
+
+    <ion-tab-button tab="configurations" (click)="onConfiguracionesClicked()">
+        <ion-icon name="cog-outline"></ion-icon>
+        <ion-label>Configuraciones del Perfil</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="profile" (click)="onPerfilClicked()">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        <ion-label>Perfil</ion-label>
+    </ion-tab-button>
+</ion-tab-bar>

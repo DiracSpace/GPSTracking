@@ -6,6 +6,8 @@ import {
     UrlTree
 } from '@angular/router';
 import { Observable } from 'rxjs';
+import { ApiService } from 'src/app/api';
+import { AuthService } from 'src/app/api/auth/auth.service';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Navigation } from 'src/app/navigation';
 
@@ -13,23 +15,25 @@ import { Navigation } from 'src/app/navigation';
     providedIn: 'root'
 })
 export class ProfileCompletionGuard implements CanActivate {
-    constructor(private debug: Debugger, private nav: Navigation) {}
+    constructor(
+        private debug: Debugger,
+        private nav: Navigation,
+        private api: ApiService
+    ) {}
 
     async canActivate(
         route: ActivatedRouteSnapshot,
         state: RouterStateSnapshot
     ): Promise<boolean> {
-        this.debug.info(
-            'Checking is user has completed his/her first steps...'
-        );
-        // TODO Check user profile
-        const hasCompletedProfile = true;
+        this.debug.info('Checking is user has completed his/her first steps...');
+        const { uid } = await this.api.auth.currentUser;
+        const profileHasMissingValues =
+            await this.api.users.userProfileHasMissingValuesAsync(uid);
 
-        if (!hasCompletedProfile) {
-            this.debug.info(
-                'The user has not completed his/her first steps :0'
-            );
-            this.nav.mainContainer.firstSteps.go();
+        this.debug.info('profileHasMissingValues', profileHasMissingValues);
+        if (profileHasMissingValues) {
+            this.debug.info('User is authenticated, but missing profile information');
+            this.nav.mainContainer.profileSettings.go();
             return false;
         }
 

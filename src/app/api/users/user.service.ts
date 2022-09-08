@@ -23,6 +23,7 @@ import { FirebaseEntityConverter, User } from 'src/app/views';
 import { Logger, LogLevel } from 'src/app/logger';
 import { setDoc } from '@firebase/firestore';
 import { Injectable } from '@angular/core';
+import { Debugger } from 'src/app/core/components/debug/debugger.service';
 
 const logger = new Logger({
     source: 'UserService',
@@ -33,7 +34,7 @@ const COLLECTION_NAME = 'users';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-    constructor(private afStore: Firestore) {}
+    constructor(private afStore: Firestore, private debug: Debugger) {}
 
     async createAsync(entity: User): Promise<void> {
         // TODO: handle error in UI
@@ -73,6 +74,26 @@ export class UserService {
         }
 
         batch.commit();
+    }
+
+    async userProfileHasMissingValuesAsync(entityId: string): Promise<boolean> {
+        let user: User = null;
+
+        try {
+            user = await this.getByUidOrDefaultAsync(entityId);
+        } catch (error) {
+            logger.log('error:', error);
+            this.debug.error('error:', error);
+        }
+
+        return (
+            !user ||
+            !user.username ||
+            !user.firstName ||
+            !user.middleName ||
+            !user.lastNameFather ||
+            !user.lastNameMother
+        );
     }
 
     /**

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ApiService } from 'src/app/api';
 import { Navigation } from 'src/app/navigation';
+import { ToastsService } from 'src/app/services';
 
 @Component({
     selector: 'app-profile-settings',
@@ -31,9 +33,28 @@ export class ProfileSettingsPage implements OnInit {
         }
     ];
 
-    constructor(private nav: Navigation, private router: Router) {}
+    constructor(
+        private toasts: ToastsService,
+        private nav: Navigation,
+        private router: Router,
+        private api: ApiService
+    ) {}
 
     ngOnInit() {}
+
+    async onHomeClicked() {
+        const { uid } = await this.api.auth.currentUser;
+        const profileHasMissingValues =
+            await this.api.users.userProfileHasMissingValuesAsync(uid);
+
+        if (!profileHasMissingValues) {
+            this.nav.mainContainer.home.go();
+            return;
+        }
+
+        let message = '¡Aún no ha completado su perfil!';
+        await this.toasts.presentToastAsync(message, 'danger');
+    }
 
     onFormItemClicked(item: FormItem) {
         this.router.navigateByUrl(item.route);

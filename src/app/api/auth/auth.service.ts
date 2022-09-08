@@ -9,21 +9,34 @@ import { Injectable } from '@angular/core';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 import { wait } from 'src/app/utils/time';
 import { Router } from '@angular/router';
+import { Debugger } from 'src/app/core/components/debug/debugger.service';
+import { BehaviorSubject } from 'rxjs';
 
 const logger = new Logger({
     source: 'AuthService',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
     private afAuth = getAuth();
 
-    constructor(private router: Router) {
+    private readonly authSubject = new BehaviorSubject<boolean>(false);
+    public readonly isAuthenticated = {
+        get: () => this.authSubject.value,
+        watch: () => this.authSubject.asObservable()
+    };
+
+    private authentication = {
+        set: (value: boolean) => this.authSubject.next(value)
+    };
+
+    constructor(private router: Router, private debug: Debugger) {
         this.afAuth.onAuthStateChanged(async (user) => {
             if (user) {
                 // User is signed in
                 logger.log('User is signed in!');
+                this.authentication.set(true);
             } else {
                 logger.log("User isn't signed in!");
                 await this.signOut();
@@ -55,6 +68,7 @@ export class AuthService {
     async signOut(): Promise<void> {
         wait(500);
         await this.afAuth.signOut();
+        this.authentication.set(false);
         this.router.navigateByUrl('/login');
     }
 

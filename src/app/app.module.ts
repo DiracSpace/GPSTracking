@@ -40,8 +40,8 @@ const logger = new Logger({
         CoreModule,
         FormsModule,
         ReactiveFormsModule,
-        provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideAuth(() => getAuth()),
+        provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideDatabase(() => getDatabase()),
         provideFirestore(() => {
             const firestore = getFirestore();

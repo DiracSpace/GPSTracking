@@ -1,16 +1,11 @@
 <ion-header>
     <ion-toolbar>
-        <ion-buttons slot="start">
-            <ion-button (click)="onLogoutClicked()">
-                <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
-            </ion-button>
-        </ion-buttons>
         <ion-title>
             <app-logo size="sm"></app-logo>
         </ion-title>
         <ion-buttons slot="end">
-            <ion-button (click)="onEditProfileClicked()">
-                <ion-icon slot="icon-only" name="settings-outline"></ion-icon>
+            <ion-button (click)="onLogoutClicked()">
+                <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
             </ion-button>
         </ion-buttons>
     </ion-toolbar>
@@ -34,16 +29,18 @@
                 <ion-button (click)="onScanClicked()">Escanear</ion-button>
             </div>
         </div>
-
-        <ion-fab
-            *ngIf="hasPlatformFinishedLoading"
-            vertical="bottom"
-            horizontal="end"
-            slot="fixed"
-        >
-            <ion-fab-button (click)="onLocationClicked()">
-                <ion-icon name="location-outline"></ion-icon>
-            </ion-fab-button>
-        </ion-fab>
     </ng-container>
+
+    <ion-fab
+        *ngIf="hasPlatformFinishedLoading"
+        vertical="bottom"
+        horizontal="end"
+        slot="fixed"
+    >
+        <ion-fab-button (click)="onLocationClicked()">
+            <ion-icon name="location-outline"></ion-icon>
+        </ion-fab-button>
+    </ion-fab>
 </ion-content>
+
+<app-bottom-navigation></app-bottom-navigation>

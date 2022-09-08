@@ -17,6 +17,7 @@ import { repeatWhen, takeUntil } from 'rxjs/operators';
 import { ScannerPermissions } from '../scanner/scanner-permissions.service';
 import { ToastsService } from 'src/app/services/toasts.service';
 import { ContextService } from 'src/app/services/context.service';
+import { userLocations } from 'src/app/core/components/bottom-navigation/bottom-navigation.component';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -121,7 +122,7 @@ export class HomePage implements OnInit, OnDestroy {
             '¿Desea salir de su sesión?',
             'yes'
         );
-        
+
         if (confirmation) {
             const loadingDialog = await this.loadingController.create({
                 message: 'Cerrando Sesión'
@@ -175,10 +176,6 @@ export class HomePage implements OnInit, OnDestroy {
         await loadingDialog.dismiss();
     }
 
-    onEditProfileClicked() {
-        this.nav.mainContainer.profileSettings.go();
-    }
-
     onScanClicked() {
         this.nav.mainContainer.scanner.go();
     }
@@ -228,6 +225,8 @@ export class HomePage implements OnInit, OnDestroy {
         await loadingDialog.present();
 
         const user = await this.api.auth.currentUser;
+        const locations = await this.api.location.countAllLocationsByUserId(user.uid);
+        userLocations.set(locations);
 
         if (!user) {
             await loadingDialog.dismiss();
