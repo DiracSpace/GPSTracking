@@ -284,11 +284,18 @@ export class HomePage implements OnInit, OnDestroy {
         });
         await loadingDialog.present();
         try {
+            const geocodingResult = await this.api.location.requestGeocodingFromOpenStreetMap(
+                longitude,
+                latitude
+            );
+            logger.log('geocodingResult:', geocodingResult);
+
             const location: Location = {
                 id: guid(),
                 uid: this.user.uid,
                 latitude: latitude,
                 longitude: longitude,
+                displayName: geocodingResult.display_name,
                 fromBackground: fromBackground,
                 dateRegistered: new Date()
             };
