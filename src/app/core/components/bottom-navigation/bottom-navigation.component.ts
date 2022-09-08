@@ -23,6 +23,11 @@ export class BottomNavigationComponent implements OnInit {
         return userLocations.get();
     }
 
+    async onUbicacionesClicked() {
+        const { uid } = await this.auth.currentUser;
+        this.nav.locations(uid).go();
+    }
+
     onConfiguracionesClicked() {
         this.nav.mainContainer.profileSettings.go();
     }

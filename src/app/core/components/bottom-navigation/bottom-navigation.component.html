@@ -1,5 +1,5 @@
 <ion-tab-bar slot="bottom">
-    <ion-tab-button tab="locations">
+    <ion-tab-button tab="locations" (click)="onUbicacionesClicked()">
         <ion-icon name="location-outline"></ion-icon>
         <ion-label>Ubicaciones</ion-label>
         <ion-badge>{{ locations }}</ion-badge>
