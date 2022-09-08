@@ -24,6 +24,8 @@ import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx
 import { ErrorHandlerService } from './services/error-handler.service';
 import { Logger, LogLevel } from './logger';
 
+import { HttpClientModule } from '@angular/common/http';
+
 const logger = new Logger({
     source: 'AppModule',
     level: LogLevel.Debug
@@ -40,6 +42,7 @@ const logger = new Logger({
         CoreModule,
         FormsModule,
         ReactiveFormsModule,
+        HttpClientModule,
         provideAuth(() => getAuth()),
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideDatabase(() => getDatabase()),

@@ -23,6 +23,9 @@ export const environment = {
         default: 'https://gpstracking-d1f5c.web.app',
         fallback: 'https://gpstracking-d1f5c.firebaseapp.com'
     },
+    openstreetmap: {
+        reverseGeocodingDomain: 'https://nominatim.openstreetmap.org/reverse'
+    },
     showDebug: false,
     environmentName: 'default'
 };

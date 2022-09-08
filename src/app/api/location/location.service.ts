@@ -1,4 +1,3 @@
-import { FirebaseEntityConverter, Location } from 'src/app/views';
 import {
     collection,
     doc,
@@ -8,18 +7,18 @@ import {
     Firestore,
     getDocs,
     getDocsFromCache,
-    limit,
-    orderBy,
     query,
     QuerySnapshot,
     setDoc,
-    where,
-    WhereFilterOp
+    where
 } from '@angular/fire/firestore';
 import { Logger, LogLevel } from 'src/app/logger';
+import { FirebaseEntityConverter, Location, ReverseGeocodingResult } from 'src/app/views';
 import { Injectable } from '@angular/core';
 import { getDocFromCache } from '@firebase/firestore';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
+import { HttpClient, HttpParams, HttpRequest } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 
 const logger = new Logger({
     source: 'LocationService',
@@ -33,9 +32,16 @@ const DAYS_PASSED_THRESHOLD = 1;
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
-    constructor(private afStore: Firestore, private debug: Debugger) {}
+    constructor(
+        private afStore: Firestore,
+        private debug: Debugger,
+        private http: HttpClient
+    ) {}
 
-    async createAsync(entity: Location, checkThreshold: boolean = true): Promise<void> {
+    async createAsync(
+        entity: Location,
+        checkThreshold: boolean = true
+    ): Promise<boolean> {
         if (!entity) {
             throw 'No entity provided!';
         }
@@ -67,17 +73,34 @@ export class LocationService {
                 logger.log('Interval passed! Creating ... ');
                 this.debug.info('Interval passed! Creating ... ');
 
+                const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
+                    entity.longitude,
+                    entity.latitude
+                );
+                logger.log('geocodingResult:', geocodingResult);
+                entity.displayName = geocodingResult.display_name;
+
                 await setDoc(locationDocRef, entity);
             } else {
                 logger.log("Interval hasn't passed! Returning ... ");
                 this.debug.info("Interval hasn't passed! Returning ... ");
+                return false;
             }
         } else {
             logger.log('Not checking threshold, creating ...');
             this.debug.info('Not checking threshold, creating ...');
 
+            const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
+                entity.longitude,
+                entity.latitude
+            );
+            logger.log('geocodingResult:', geocodingResult);
+            entity.displayName = geocodingResult.display_name;
+
             await setDoc(locationDocRef, entity);
         }
+
+        return true;
     }
 
     async countAllLocationsByUserId(entityId: string): Promise<number> {
@@ -88,18 +111,18 @@ export class LocationService {
         let querySnapshot: QuerySnapshot<DocumentData> = null;
 
         try {
-            logger.log("trying to get from cache ...");
+            logger.log('trying to get from cache ...');
             querySnapshot = await getDocsFromCache(locationQuery);
         } catch (error) {
-            logger.log("error:", error);
+            logger.log('error:', error);
         }
 
         if (!querySnapshot) {
-            logger.log("no cached data, querying!");
+            logger.log('no cached data, querying!');
             querySnapshot = await getDocs(locationQuery);
         }
 
-        logger.log("cached data exists!");
+        logger.log('cached data exists!');
         return querySnapshot.size ?? 0;
     }
 
@@ -235,5 +258,24 @@ export class LocationService {
         logger.log('Exists in cache!');
         this.debug.info('Exists in cache!');
         return cachedDocSnap;
+    }
+
+    async requestGeocodingFromOpenStreetMap(longitude: number, latitude: number) {
+        let httpQueryParams = new HttpParams();
+        httpQueryParams = httpQueryParams.append('format', 'json');
+        httpQueryParams = httpQueryParams.append('lat', latitude);
+        httpQueryParams = httpQueryParams.append('lon', longitude);
+
+        const completeUrl = new HttpRequest(
+            'GET',
+            environment.openstreetmap.reverseGeocodingDomain,
+            {
+                params: httpQueryParams
+            }
+        );
+
+        return await this.http
+            .get<ReverseGeocodingResult>(completeUrl.urlWithParams)
+            .toPromise();
     }
 }

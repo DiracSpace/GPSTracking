@@ -5,6 +5,8 @@ export class Location {
     longitude: number;
     latitude: number;
 
+    displayName?: string;
+
     fromBackground: boolean;
     dateRegistered: Date;
 }

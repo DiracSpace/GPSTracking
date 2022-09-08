@@ -9,6 +9,9 @@ export { User } from './User/User';
 /* #endregion */
 
 export { Location } from './Location/Location';
+export { ReverseGeocodingResult } from './OpenStreetMaps/ReverseGeocodingResult.interface';
+export { ReverseGeocodingAddress } from './OpenStreetMaps/ReverseGeocodingAddress.interface';
+
 
 export {
     FirebaseEntityConverter,
