@@ -25,6 +25,7 @@ import { ErrorHandlerService } from './services/error-handler.service';
 import { Logger, LogLevel } from './logger';
 
 import { HttpClientModule } from '@angular/common/http';
+import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 
 const logger = new Logger({
     source: 'AppModule',
@@ -38,6 +39,7 @@ const logger = new Logger({
         IonicModule.forRoot({
             mode: 'ios'
         }),
+        LeafletModule,
         AppRoutingModule,
         CoreModule,
         FormsModule,
