@@ -1,0 +1,57 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-back-button></ion-back-button>
+        </ion-buttons>
+        <ion-title>Historial de Ubicaciones</ion-title>
+        <ion-buttons slot="end">
+            <ion-button (click)="loadAsync(false)">
+                <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content scroll="false">
+    <div class="ion-padding">
+        <h2 class="locationtitle">Más recientes</h2>
+
+        <ion-slides class="ion-margin-bottom" pager="true" [options]="slideOpts">
+            <ion-slide *ngFor="let location of userLocations">
+                <div class="box">
+                    <app-location
+                        [longitude]="location.longitude"
+                        [latitude]="location.latitude"
+                    ></app-location>
+                </div>
+            </ion-slide>
+        </ion-slides>
+    </div>
+
+    <h4 class="ion-padding locationtitle">Historial Completo</h4>
+    <ion-accordion-group>
+        <ion-accordion *ngFor="let location of userLocations" [value]="location.id">
+            <ion-item slot="header" color="light">
+                <ion-label
+                    >{{ getAccordianShortAddress(location.city, location.state)
+                    }}</ion-label
+                >
+            </ion-item>
+            <div slot="content">
+                <app-location
+                    [longitude]="location.longitude"
+                    [latitude]="location.latitude"
+                ></app-location>
+                <div id="buttons" class="d-flex ion-justify-content-end">
+                    <ion-button
+                        color="danger"
+                        fill="outline"
+                        class="ion-margin-end"
+                        (click)="deleteLocationClicked(location)"
+                        >Eliminar</ion-button
+                    >
+                </div>
+            </div>
+        </ion-accordion>
+    </ion-accordion-group>
+</ion-content>

@@ -42,4 +42,5 @@ export class Navigation {
     };
 
     user = (uid: string) => NavigationItem(this.router, `/user/${uid}`);
+    locations = (uid: string) => NavigationItem(this.router, `/user-locations/${uid}`);
 }
