@@ -8,6 +8,7 @@ import {
     getDocs,
     getDocsFromCache,
     query,
+    QueryDocumentSnapshot,
     QuerySnapshot,
     setDoc,
     where
@@ -22,7 +23,7 @@ import { environment } from 'src/environments/environment';
 
 const logger = new Logger({
     source: 'LocationService',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 const COLLECTION_NAME = 'locations';
@@ -78,7 +79,13 @@ export class LocationService {
                     entity.latitude
                 );
                 logger.log('geocodingResult:', geocodingResult);
+
                 entity.displayName = geocodingResult.display_name;
+                entity.postcode = geocodingResult.address.postcode;
+                entity.country = geocodingResult.address.country;
+                entity.state = geocodingResult.address.state;
+                entity.city = geocodingResult.address.city;
+                entity.road = geocodingResult.address.road;
 
                 await setDoc(locationDocRef, entity);
             } else {
@@ -103,7 +110,37 @@ export class LocationService {
         return true;
     }
 
-    async countAllLocationsByUserId(entityId: string): Promise<number> {
+    async getAllLocationsByUserIdAsync(
+        entityId: string,
+        checkCache: boolean = true
+    ): Promise<Location[]> {
+        const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
+        const locationWhereQuery = where('uid', '==', entityId);
+        const locationQuery = query(locationCollectionRef, locationWhereQuery);
+
+        let querySnapshot: QuerySnapshot<DocumentData> = null;
+
+        if (checkCache) {
+            try {
+                logger.log('trying to get from cache ...');
+                querySnapshot = await getDocsFromCache(locationQuery);
+                logger.log('cached data exists!');
+            } catch (error) {
+                logger.log('error:', error);
+            }
+        }
+
+        if (!querySnapshot) {
+            logger.log('no cached data, querying!');
+            querySnapshot = await getDocs(locationQuery);
+        }
+        
+        return querySnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) =>
+            FirebaseEntityConverter<Location>().fromFirestore(doc)
+        );
+    }
+
+    async countAllLocationsByUserIdAsync(entityId: string): Promise<number> {
         const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
         const locationWhereQuery = where('uid', '==', entityId);
         const locationQuery = query(locationCollectionRef, locationWhereQuery);

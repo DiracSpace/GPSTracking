@@ -225,7 +225,7 @@ export class HomePage implements OnInit, OnDestroy {
         await loadingDialog.present();
 
         const user = await this.api.auth.currentUser;
-        const locations = await this.api.location.countAllLocationsByUserId(user.uid);
+        const locations = await this.api.location.countAllLocationsByUserIdAsync(user.uid);
         userLocations.set(locations);
 
         if (!user) {

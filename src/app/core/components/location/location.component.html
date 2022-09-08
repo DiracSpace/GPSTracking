@@ -1,0 +1,12 @@
+<ion-card>
+    <ion-card-header class="ion-no-padding">
+        <div class="maps-container" *ngIf="areOptionsReady">
+            <div
+                class="map-card"
+                leaflet
+                [leafletOptions]="options"
+                (leafletMapReady)="onMapReady($event)"
+            ></div>
+        </div>
+    </ion-card-header>
+</ion-card>

@@ -1,0 +1,34 @@
+.container {
+    flex-direction: column;
+    padding: 0 10px;
+    row-gap: 10px;
+    display: flex;
+}
+
+ion-slides {
+    width: 100%;
+    height: 260px;
+}
+
+ion-slide {
+    width: 100%;
+    height: 100%;
+}
+
+.box {
+    height: 100%;
+    width: 100%;
+}
+
+.locationtitle {
+    margin: -4px 0 -5px;
+    line-height: 26px;
+    font-weight: 300;
+    font-size: 22px;
+}
+
+.locationdirection {
+    text-overflow: unset;
+    white-space: pre-wrap;
+    font-size: 12px;
+}

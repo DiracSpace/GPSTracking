@@ -7,13 +7,15 @@ import { IonicModule } from '@ionic/angular';
 import { UserLocationsPageRoutingModule } from './user-locations-routing.module';
 
 import { UserLocationsPage } from './user-locations.page';
+import { CoreModule } from 'src/app/core/core.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    UserLocationsPageRoutingModule
+    UserLocationsPageRoutingModule,
+    CoreModule,
   ],
   declarations: [UserLocationsPage]
 })
