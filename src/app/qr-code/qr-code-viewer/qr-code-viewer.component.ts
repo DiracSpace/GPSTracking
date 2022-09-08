@@ -56,12 +56,10 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
 
     constructor(
         private loadingController: LoadingController,
-        private toastController: ToastController,
         private context: ContextService,
         private debug: Debugger,
         private api: ApiService,
-        private platform: Platform,
-        private alerts: AlertController,
+        platform: Platform,
         private alertUtils: AlertUtils,
         private toastUtils: ToastsService
     ) {
@@ -135,7 +133,7 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
         return img.src;
     }
 
-    onChangeURL(url: SafeUrl) {
+    onChangeURL() {
         if (this.qrCodeElement) {
             const blob = this.getBlob();
             this.qrCodeSrcEmitter.emit(blob);
