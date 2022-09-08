@@ -15,7 +15,7 @@ import { guid } from 'src/app/utils';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { repeatWhen, takeUntil } from 'rxjs/operators';
 import { ScannerPermissions } from '../scanner/scanner-permissions.service';
-import { ToastsService } from 'src/app/services/toasts.service';
+import { ToastsColorCodes, ToastsService } from 'src/app/services/toasts.service';
 import { ContextService } from 'src/app/services/context.service';
 import { userLocations } from 'src/app/core/components/bottom-navigation/bottom-navigation.component';
 
@@ -284,30 +284,33 @@ export class HomePage implements OnInit, OnDestroy {
         });
         await loadingDialog.present();
         try {
-            const geocodingResult = await this.api.location.requestGeocodingFromOpenStreetMap(
-                longitude,
-                latitude
-            );
-            logger.log('geocodingResult:', geocodingResult);
-
             const location: Location = {
                 id: guid(),
                 uid: this.user.uid,
                 latitude: latitude,
                 longitude: longitude,
-                displayName: geocodingResult.display_name,
                 fromBackground: fromBackground,
                 dateRegistered: new Date()
             };
 
-            await this.api.location.createAsync(location);
+            const hasCreatedLocation = await this.api.location.createAsync(location);
+            let message: string = '¡Se guardó existosamente!';
+            let colorCode: ToastsColorCodes = 'success';
+            let duration = 800;
+
+            if (!hasCreatedLocation) {
+                message =
+                    'Aún no ha pasado el tiempo de espera para que vuelvas a registrar esta ubicación';
+                colorCode = 'warning';
+                duration = 2000;
+            }
+
+            await loadingDialog.dismiss();
+            await this.toasts.presentToastAsync(message, colorCode, duration);
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');
         }
-
-        await loadingDialog.dismiss();
-        await this.toasts.presentToastAsync('¡Se guardó existosamente!');
     }
 
     private async verifyPermissionForGpsAsync(): Promise<boolean> {
