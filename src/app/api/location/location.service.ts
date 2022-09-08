@@ -22,7 +22,7 @@ import { environment } from 'src/environments/environment';
 
 const logger = new Logger({
     source: 'LocationService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 const COLLECTION_NAME = 'locations';

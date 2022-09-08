@@ -18,7 +18,7 @@ export class UserPage implements OnInit {
     constructor(
         private loadingController: LoadingController,
         private api: ApiService,
-        private activeatedRoute: ActivatedRoute
+        private activatedRoute: ActivatedRoute
     ) {}
 
     ngOnInit() {
@@ -28,7 +28,7 @@ export class UserPage implements OnInit {
     }
 
     get userId(): string | undefined {
-        const userId = this.activeatedRoute.snapshot.params.id;
+        const userId = this.activatedRoute.snapshot.params.id;
         return userId;
     }
 
