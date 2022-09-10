@@ -32,16 +32,7 @@ export class AuthService {
     };
 
     constructor(private router: Router, private debug: Debugger) {
-        this.afAuth.onAuthStateChanged(async (user) => {
-            if (user) {
-                // User is signed in
-                logger.log('User is signed in!');
-                this.authentication.set(true);
-            } else {
-                logger.log("User isn't signed in!");
-                await this.signOut();
-            }
-        });
+        this.initAuthDetection();
     }
 
     /* #region userInformation */
@@ -65,6 +56,22 @@ export class AuthService {
     }
     /* #endregion */
 
+    async initAuthDetection(): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            this.afAuth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    // User is signed in
+                    logger.log('User is signed in!');
+                    this.authentication.set(true);
+                    resolve(true);
+                } else {
+                    logger.log("User isn't signed in!");
+                    await this.signOut();
+                }
+            });
+        })
+    }
+    
     async signOut(): Promise<void> {
         wait(500);
         await this.afAuth.signOut();

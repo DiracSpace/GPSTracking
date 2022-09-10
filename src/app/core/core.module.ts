@@ -9,6 +9,7 @@ import { LoadingImgComponent } from './components/loading-img/loading-img.compon
 import { BottomNavigationComponent } from './components/bottom-navigation/bottom-navigation.component';
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
 import { LocationComponent } from './components/location/location.component';
+import { AvatarComponent } from './components/avatar/avatar.component';
 
 const ModuleComponents = [
     // Add components that should be re-usable inside this module only
@@ -21,7 +22,8 @@ const ExportedComponents = [
     LogoImgComponent,
     LoadingImgComponent,
     BottomNavigationComponent,
-    LocationComponent
+    LocationComponent,
+    AvatarComponent
     // Add components that should be re-usable from another module
 ];
 

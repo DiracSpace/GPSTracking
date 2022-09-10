@@ -24,10 +24,11 @@ import { Logger, LogLevel } from 'src/app/logger';
 import { setDoc } from '@firebase/firestore';
 import { Injectable } from '@angular/core';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
+import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 
 const logger = new Logger({
     source: 'UserService',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 const COLLECTION_NAME = 'users';
@@ -127,7 +128,13 @@ export class UserService {
 
         if (!userSnapshot) {
             logger.log('Fetching data!');
-            userSnapshot = await getDoc(userDocRef);
+            try {
+                userSnapshot = await getDoc(userDocRef);
+            } catch (error) {
+                logger.log('error:', error);
+                const message = HandleFirebaseError(error);
+                throw message;
+            }
         }
 
         return userSnapshot.data();
@@ -140,7 +147,9 @@ export class UserService {
         try {
             cachedDocSnap = await getDocFromCache(userDocRef);
         } catch (error) {
-            logger.log('error.code:', error.code);
+            logger.log('error:', error);
+            const message = HandleFirebaseError(error);
+            throw message;
         }
 
         if (!cachedDocSnap) return null;
