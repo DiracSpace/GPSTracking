@@ -4,11 +4,10 @@ import { Logger, LogLevel } from 'src/app/logger';
 import { ToastsService } from 'src/app/services';
 import { ApiService } from 'src/app/api';
 import { Location } from 'src/app/views';
-import { Navigation } from 'src/app/navigation';
 
 const logger = new Logger({
     source: 'UserLocationsPage',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Component({
@@ -38,7 +37,6 @@ export class UserLocationsPage implements OnInit {
     constructor(
         private loadingController: LoadingController,
         private toasts: ToastsService,
-        private nav: Navigation,
         private api: ApiService
     ) {}
 
@@ -50,12 +48,8 @@ export class UserLocationsPage implements OnInit {
         return `${city}, ${state}`;
     }
 
-    onHomeClicked() {
-        this.nav.mainContainer.home.go();
-    }
-
     deleteLocationClicked(location: Location) {
-        logger.log("location:", location);
+        logger.log('location:', location);
     }
 
     async loadAsync(checkCache: boolean = true) {
@@ -70,6 +64,9 @@ export class UserLocationsPage implements OnInit {
             this.userLocations = await this.api.location.getAllLocationsByUserIdAsync(
                 uid,
                 checkCache
+            );
+            this.userLocations.forEach(
+                (location: Location) => (location._isAccordianHidden = true)
             );
         } catch (error) {
             await loadingDialog.dismiss();

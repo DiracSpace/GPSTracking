@@ -30,7 +30,11 @@
 
     <h4 class="ion-padding locationtitle">Historial Completo</h4>
     <ion-accordion-group>
-        <ion-accordion *ngFor="let location of userLocations" [value]="location.id">
+        <ion-accordion
+            *ngFor="let location of userLocations"
+            [value]="location.id"
+            (click)="location._isAccordianHidden = !location._isAccordianHidden"
+        >
             <ion-item slot="header" color="light">
                 <ion-label
                     >{{ getAccordianShortAddress(location.city, location.state)
@@ -39,6 +43,7 @@
             </ion-item>
             <div slot="content">
                 <app-location
+                    [hidden]="location._isAccordianHidden"
                     [longitude]="location.longitude"
                     [latitude]="location.latitude"
                 ></app-location>
