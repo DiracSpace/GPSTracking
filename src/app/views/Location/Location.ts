@@ -15,4 +15,6 @@ export class Location {
 
     fromBackground: boolean;
     dateRegistered: Date;
+
+    _isAccordianHidden?: boolean;
 }
