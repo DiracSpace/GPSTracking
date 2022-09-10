@@ -17,6 +17,7 @@ export class User {
     email: string;
 
     photoUrl: string;
+    bannerUrl: string;
     qrCodeUrl: string;
     qrCodeBase64: string;
 

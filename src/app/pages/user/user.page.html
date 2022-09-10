@@ -14,5 +14,26 @@
 </ion-header>
 
 <ion-content>
-    <p>somethin</p>
+    <ng-container *ngIf="invalidContent && !loading">
+        <h1>{{ invalidContentMessage }}</h1>
+    </ng-container>
+    <ng-container *ngIf="!invalidContent  && !loading">
+        <div>
+            <div class="user-profile-card">
+                <div class="user-avatar-display">
+                    <div class="avatar-icon">
+                        <img [src]="userAvatarImg" alt="avatar" />
+                        <ion-icon name="add-circle"></ion-icon>
+                    </div>
+                </div>
+                <div class="user-profile-banner">
+                    <img [src]="userBannerImg" alt="banner" />
+                </div>
+                <div class="user-profile-content">
+                    <h2>{{ fullName }}</h2>
+                    <p>{{ user.email }}</p>
+                </div>
+            </div>
+        </div>
+    </ng-container>
 </ion-content>

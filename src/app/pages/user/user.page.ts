@@ -6,6 +6,7 @@ import { Logger, LogLevel } from 'src/app/logger';
 import { wait } from 'src/app/utils/time';
 import { User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
+import { Assets } from 'src/assets';
 
 const logger = new Logger({
     source: 'UserPage',
@@ -33,9 +34,39 @@ export class UserPage implements OnInit {
         }
     }
 
+    get invalidContent() {
+        return !this.userId || !this.user;
+    }
+    
+    get invalidContentMessage() {
+        if (!this.userId) {
+            return 'Bad URL or no UserId provided';
+        }
+
+        if (!this.user) {
+            return 'User not found';
+        }
+    }
+
     get userId(): string | undefined {
         const userId = this.activatedRoute.snapshot.params.id;
         return userId;
+    }
+
+    get userBannerImg() {
+        if (!this.user.bannerUrl) {
+            return Assets.banner;
+        }
+
+        return this.user.bannerUrl;
+    }
+
+    get userAvatarImg() {
+        if (!this.user.photoUrl) {
+            return Assets.avatar;
+        }
+
+        return this.user.photoUrl;
     }
 
     get fullName(): string {
