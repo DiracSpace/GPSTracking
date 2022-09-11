@@ -2,15 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
-import { Logger, LogLevel } from 'src/app/logger';
 import { wait } from 'src/app/utils/time';
 import { User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
-
-const logger = new Logger({
-    source: 'UserPage',
-    level: LogLevel.Debug
-})
 
 @Component({
     selector: 'app-user',
@@ -72,7 +66,6 @@ export class UserPage implements OnInit {
         await loadingDialog.present();
         await wait(500);
         this.user = await this.api.users.getByUidOrDefaultAsync(this.userId);
-        logger.log("this.user:", this.user);
         await loadingDialog.dismiss();
         this.loading = false;
     }

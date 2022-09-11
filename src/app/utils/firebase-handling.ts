@@ -1,5 +1,3 @@
-import { FirestoreError } from '@angular/fire/firestore';
-import { StorageError } from '@angular/fire/storage';
 import { Logger, LogLevel } from '../logger';
 
 const logger = new Logger({
@@ -14,14 +12,14 @@ const logger = new Logger({
  * @param error
  * @returns
  */
-export function HandleFirebaseError(error: FirestoreError | StorageError): string {
+export function HandleFirebaseError(error: any): string {
     if (!error) {
         throw 'No error provided!';
     }
 
     let message = '';
 
-    switch (error.code as string) {
+    switch (error.code) {
         case 'storage/unknown':
             message = `El servicio de almacenamiento no está en funcionamiento.`;
             logger.log(message);

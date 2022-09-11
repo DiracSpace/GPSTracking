@@ -6,6 +6,7 @@ import {
 } from '@angular/router';
 import { AuthService } from 'src/app/api/auth/auth.service';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
+import { wait } from 'src/app/utils/time';
 
 @Injectable({
     providedIn: 'root'
@@ -18,8 +19,9 @@ export class TokenGuard implements CanActivate {
         state: RouterStateSnapshot
     ): Promise<boolean> {
         this.debug.info("Checking user's token...");
-        const isAuthenticated = await this.auth.initAuthDetection();
-        this.debug.info('isAuthenticated: ', isAuthenticated)
+        wait(800);
+        const isAuthenticated = this.auth.isAuthenticated.get();
+        this.debug.info('this.auth.isAuthenticated.get(): ', isAuthenticated);
         return isAuthenticated;
     }
 }
