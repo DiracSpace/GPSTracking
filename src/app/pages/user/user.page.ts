@@ -2,9 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
+import { Logger, LogLevel } from 'src/app/logger';
 import { wait } from 'src/app/utils/time';
 import { User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
+import { Assets } from 'src/assets';
+
+const logger = new Logger({
+    source: 'UserPage',
+    level: LogLevel.Debug
+})
 
 @Component({
     selector: 'app-user',
@@ -27,9 +34,39 @@ export class UserPage implements OnInit {
         }
     }
 
+    get invalidContent() {
+        return !this.userId || !this.user;
+    }
+    
+    get invalidContentMessage() {
+        if (!this.userId) {
+            return 'Bad URL or no UserId provided';
+        }
+
+        if (!this.user) {
+            return 'User not found';
+        }
+    }
+
     get userId(): string | undefined {
         const userId = this.activatedRoute.snapshot.params.id;
         return userId;
+    }
+
+    get userBannerImg() {
+        if (!this.user.bannerUrl) {
+            return Assets.banner;
+        }
+
+        return this.user.bannerUrl;
+    }
+
+    get userAvatarImg() {
+        if (!this.user.photoUrl) {
+            return Assets.avatar;
+        }
+
+        return this.user.photoUrl;
     }
 
     get fullName(): string {
@@ -66,6 +103,7 @@ export class UserPage implements OnInit {
         await loadingDialog.present();
         await wait(500);
         this.user = await this.api.users.getByUidOrDefaultAsync(this.userId);
+        logger.log("this.user:", this.user);
         await loadingDialog.dismiss();
         this.loading = false;
     }

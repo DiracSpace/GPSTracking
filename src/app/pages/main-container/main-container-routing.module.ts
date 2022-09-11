@@ -9,7 +9,7 @@ const routes: Routes = [
     {
         path: '',
         component: MainContainerPage,
-        // canActivate: [TokenGuard], having trouble waiting for firebase init, comment for now
+        canActivate: [TokenGuard],
         children: [
             {
                 path: '',

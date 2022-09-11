@@ -115,6 +115,10 @@ export class HomePage implements OnInit, OnDestroy {
 
     /* #endregion */
 
+    onProfileClicked() {
+        this.nav.user(this.user.uid).go();
+    }
+
     async onLogoutClicked() {
         const confirmation = await this.toasts.presentAlertAsync(
             'Confirmación',
