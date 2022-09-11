@@ -14,5 +14,58 @@
 </ion-header>
 
 <ion-content>
-    <p>somethin</p>
+    <ng-container *ngIf="!userId">
+        <p>Bad URL</p>
+    </ng-container>
+    <ng-container *ngIf="userId">
+        <ng-container *ngIf="!loading">
+            <ng-container *ngIf="!user">
+                <p>User not found</p>
+            </ng-container>
+            <ng-container *ngIf="user">
+                <div class="ion-padding">
+                    <div class="ion-margin-bottom">
+                        <p class="fw-bold m-0">Correo electrónico</p>
+                        <p class="m-0">{{user.email}}</p>
+                    </div>
+                    <div class="ion-margin-bottom">
+                        <p class="fw-bold m-0">Nombre completo</p>
+                        <p class="m-0">{{fullName}}</p>
+                    </div>
+                </div>
+                <ion-list *ngIf="user.phoneNumbers">
+                    <ion-list-header>
+                        <ion-label>Números Telefónicos</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let phoneNumber of user.phoneNumbers">
+                        <ion-label>{{phoneNumber.number}}</ion-label>
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.addresses">
+                    <ion-list-header>
+                        <ion-label>Direcciones</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let address of user.addresses">
+                        <ion-label>{{getAddressDescription(address)}}</ion-label>
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.diseases">
+                    <ion-list-header>
+                        <ion-label>Enfermedades</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let disease of user.diseases">
+                        <ion-label>{{disease.name}}</ion-label>
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.alergies">
+                    <ion-list-header>
+                        <ion-label>Alergias</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let alergy of user.alergies">
+                        <ion-label>{{alergy.name}}</ion-label>
+                    </ion-item>
+                </ion-list>
+            </ng-container>
+        </ng-container>
+    </ng-container>
 </ion-content>

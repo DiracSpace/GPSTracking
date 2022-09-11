@@ -1,15 +1,12 @@
 <ion-header>
     <ion-toolbar>
-        <ion-buttons slot="start">
-            <ion-button (click)="onLogoutClicked()">
-                <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
-            </ion-button>
-        </ion-buttons>
         <ion-title>
             <app-logo size="sm"></app-logo>
         </ion-title>
         <ion-buttons slot="end">
-            <app-avatar height="32px" width="32px" (clicked)="onProfileClicked()"></app-avatar>
+            <ion-button (click)="onLogoutClicked()">
+                <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+            </ion-button>
         </ion-buttons>
     </ion-toolbar>
 </ion-header>
