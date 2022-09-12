@@ -7,6 +7,8 @@ import { Capacitor } from '@capacitor/core';
 import { Injectable } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { UserPhoto } from '../views';
+import { user } from '@angular/fire/auth';
+import { formatDate } from '../utils/time';
 
 const logger = new Logger({
     source: 'PhotoService',
@@ -16,12 +18,51 @@ const logger = new Logger({
 @Injectable({ providedIn: 'root' })
 export class PhotoService {
     private readonly PHOTO_STORAGE: string = 'photos';
+    private areCachedPhotosLoaded: boolean = false;
     private photos: UserPhoto[] = [];
 
     constructor(private platform: Platform, private contextService: ContextService) {}
 
     get savedPhotos() {
         return this.photos;
+    }
+
+    get photoStorage() {
+        return this.PHOTO_STORAGE;
+    }
+
+    get savedPhotosLoaded() {
+        return this.areCachedPhotosLoaded;
+    }
+
+    public async loadSaved(): Promise<void> {
+        logger.log('Loading Pictures!');
+        // Retrieve cached photo array data
+        const photoList = await Preferences.get({ key: this.photoStorage });
+        this.photos = JSON.parse(photoList.value) || [];
+
+        try {
+            // If running on the web...
+            if (!this.platform.is('hybrid')) {
+                // Display the photo by reading into base64 format
+                for (let photo of this.photos) {
+                    // Read each saved photo's data from the Filesystem
+                    const readFile = await Filesystem.readFile({
+                        path: photo.filepath,
+                        directory: Directory.Data
+                    });
+
+                    // Web platform only: Load the photo as base64 data
+                    photo.webViewPath = `data:image/jpeg;base64,${readFile.data}`;
+                }
+            }
+        } catch (error) {
+            logger.log('error:', error);
+            this.areCachedPhotosLoaded = false;
+        }
+
+        logger.log('loaded!');
+        this.areCachedPhotosLoaded = this.savedPhotos.length > 0;
     }
 
     async takePictureAsync() {
@@ -42,7 +83,7 @@ export class PhotoService {
             const savedImgFile = await this.savePictureAsync(capturedPhoto);
             this.photos.unshift(savedImgFile);
             Preferences.set({
-                key: this.PHOTO_STORAGE,
+                key: this.photoStorage,
                 value: JSON.stringify(this.photos)
             });
         }
@@ -50,66 +91,58 @@ export class PhotoService {
 
     // Save picture to file on device
     private async savePictureAsync(cameraPhoto: Photo): Promise<UserPhoto> {
+        let formattedDate = new Date().toISOString();
+        const fileName = `${this.contextService.photoName.get()}${formattedDate}.jpeg`;
+        
+        let userPhoto: UserPhoto = new UserPhoto();
+
         if (!cameraPhoto) {
             throw 'No cameraPhoto provided!';
         }
 
-        // Convert photo to base64 format, required by Filesystem API to save
-        const base64Data = await this.readAsBase64Async(cameraPhoto);
+        if (!cameraPhoto.webPath) {
+            throw 'No webPath provided!';
+        }
 
-        // Write the file to the data directory
-        const fileName = this.contextService.photoName.get();
+        if (!fileName) {
+            throw 'No fileName provided!';
+        }
+
+        userPhoto.blob = await this.getBlob(cameraPhoto.webPath);
+        const base64 = await this.convertBlobToBase64Async(userPhoto.blob);
         const savedFile = await Filesystem.writeFile({
             path: fileName,
-            data: base64Data,
+            data: base64,
             directory: Directory.Data
         });
 
-        if (!savedFile) {
-            throw 'FileSystem did not provide file!';
-        }
-
-        let userPhoto: UserPhoto = null;
         if (this.platform.is('hybrid')) {
-            // Display the new image by rewriting the 'file://' path to HTTP
-            // Details: https://ionicframework.com/docs/building/webview#file-protocol
-            userPhoto = {
-                filepath: savedFile.uri,
-                webViewPath: Capacitor.convertFileSrc(savedFile.uri)
-            };
+            userPhoto.webViewPath = Capacitor.convertFileSrc(savedFile.uri);
+            userPhoto.filepath = savedFile.uri;
         } else {
-            // Use webPath to display the new image instead of base64 since it's
-            // already loaded into memory
-            userPhoto = {
-                filepath: fileName,
-                webViewPath: cameraPhoto.webPath
-            };
+            userPhoto.webViewPath = cameraPhoto.webPath;
+            userPhoto.filepath = fileName;
         }
 
+        logger.log("userPhoto:", userPhoto);
         return userPhoto;
     }
 
-    // Read camera photo into base64 format based on the platform the app is running on
-    private async readAsBase64Async(cameraPhoto: Photo): Promise<string> {
-        if (!cameraPhoto) {
-            throw 'No cameraPhoto provided!';
+    private async getBlob(webPath: string) {
+        if (!webPath) {
+            throw 'No webPath provided!';
         }
 
-        // "hybrid" will detect Cordova or Capacitor
-        if (this.platform.is('hybrid')) {
-            // Read the file into base64 format
-            const file = await Filesystem.readFile({
-                path: cameraPhoto.path
-            });
+        // Fetch the photo, read as a blob, then convert to base64 format
+        let response = await fetch(webPath);
+        let blob = await response.blob();
 
-            return file.data;
-        } else {
-            // Fetch the photo, read as a blob, then convert to base64 format
-            const response = await fetch(cameraPhoto.webPath!);
-            const blob = await response.blob();
-
-            return await this.convertBlobToBase64Async(blob);
+        if (!response || !blob) {
+            throw 'No response data!';
         }
+
+        logger.log("blob:", blob);
+        return blob;
     }
 
     private convertBlobToBase64Async(blob: Blob): Promise<string> {

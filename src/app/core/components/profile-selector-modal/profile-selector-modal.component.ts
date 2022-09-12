@@ -5,6 +5,9 @@ import { OverlayEventDetail } from '@ionic/core';
 import { IonModal } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { skip } from 'rxjs/operators';
+import { PhotoService } from 'src/app/services/photo.service';
+import { UserPhoto } from 'src/app/views';
+import { StorageService } from 'src/app/api/storage/storage.service';
 
 const logger = new Logger({
     source: 'ProfileSelectorModalComponent',
@@ -31,20 +34,41 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
         }
     }
 
-    constructor(private context: ContextService) {}
+    constructor(
+        private context: ContextService,
+        private photoService: PhotoService,
+        private storageService: StorageService
+    ) {}
 
     ngOnInit() {
         this.modalStateSubscription = this.context.profileSelectorModal
             .watch()
             .pipe(skip(1))
-            .subscribe((value: boolean) => {
+            .subscribe(async (value: boolean) => {
                 logger.log('value:', value);
                 this.modal.isOpen = value;
+
+                if (this.modal.isOpen) {
+                    await this.photoService.loadSaved();
+                }
             });
     }
 
     ngOnDestroy(): void {
         this.removeModalStateSubscription();
+    }
+
+    get hasContent() {
+        return this.photoService.savedPhotosLoaded;
+    }
+
+    get photos() {
+        return this.photoService.savedPhotos;
+    }
+
+    onClickSet(photo: UserPhoto) {
+        logger.log('photo:', photo);
+        this.context.profileSelectorModal.set(false);
     }
 
     cancel() {

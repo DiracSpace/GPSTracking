@@ -158,9 +158,8 @@ export class UserPage implements OnInit {
         if (!this.user) {
             throw 'No user was found!';
         }
-
-        let formattedDate = formatDate(new Date().toString());
-        let photoName = `ProfilePicture_${this.user.uid}_${formattedDate}.jpeg`;
+        
+        let photoName = `ProfilePicture_${this.user.uid}_`;
         this.context.photoName.set(photoName);
         
         logger.log("this.context.photoName.get():", this.context.photoName.get());
