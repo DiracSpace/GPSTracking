@@ -94,9 +94,9 @@ export class AddressesSettingsPage implements OnInit {
                 await loadingDialog.dismiss();
                 await this.toasts.presentToastAsync(error, 'danger');
                 return;
+            } finally {
+                await loadingDialog.dismiss();
             }
-
-            await loadingDialog.dismiss();
         }
     }
 

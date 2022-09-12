@@ -14,7 +14,7 @@ import { BehaviorSubject } from 'rxjs';
 
 const logger = new Logger({
     source: 'AuthService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Injectable({ providedIn: 'root' })

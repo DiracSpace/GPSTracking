@@ -1,14 +1,15 @@
 import {
     collection,
+    deleteDoc,
     doc,
     DocumentData,
     DocumentReference,
     DocumentSnapshot,
     Firestore,
-    getDocs,
+    getDoc,
     getDocsFromCache,
+    getDocsFromServer,
     query,
-    QueryDocumentSnapshot,
     QuerySnapshot,
     setDoc,
     where
@@ -20,10 +21,11 @@ import { getDocFromCache } from '@firebase/firestore';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { HttpClient, HttpParams, HttpRequest } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 
 const logger = new Logger({
     source: 'LocationService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 const COLLECTION_NAME = 'locations';
@@ -47,11 +49,15 @@ export class LocationService {
             throw 'No entity provided!';
         }
 
-        const locationDocName = `${entity.longitude}-${entity.latitude}`;
+        if (!entity.geohash) {
+            throw 'No unique location identifier provided!';
+        }
+
+        logger.log('entity:', entity);
         const locationDocRef = doc(
             this.afStore,
             COLLECTION_NAME,
-            locationDocName
+            entity.geohash
         ).withConverter(FirebaseEntityConverter<Location>());
 
         if (checkThreshold) {
@@ -74,20 +80,7 @@ export class LocationService {
                 logger.log('Interval passed! Creating ... ');
                 this.debug.info('Interval passed! Creating ... ');
 
-                const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
-                    entity.longitude,
-                    entity.latitude
-                );
-                logger.log('geocodingResult:', geocodingResult);
-
-                entity.displayName = geocodingResult.display_name;
-                entity.postcode = geocodingResult.address.postcode;
-                entity.country = geocodingResult.address.country;
-                entity.state = geocodingResult.address.state;
-                entity.city = geocodingResult.address.city;
-                entity.road = geocodingResult.address.road;
-
-                await setDoc(locationDocRef, entity);
+                return await this.createIfNotExistsAsync(entity, locationDocRef);
             } else {
                 logger.log("Interval hasn't passed! Returning ... ");
                 this.debug.info("Interval hasn't passed! Returning ... ");
@@ -97,70 +90,112 @@ export class LocationService {
             logger.log('Not checking threshold, creating ...');
             this.debug.info('Not checking threshold, creating ...');
 
-            const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
-                entity.longitude,
-                entity.latitude
-            );
-            logger.log('geocodingResult:', geocodingResult);
-            entity.displayName = geocodingResult.display_name;
+            return await this.createIfNotExistsAsync(entity, locationDocRef);
+        }
+    }
 
+    async deleteAsync(entityId: string) {
+        const locationDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
+            FirebaseEntityConverter<Location>()
+        );
+
+        try {
+            await deleteDoc(locationDocRef);
+        } catch (error) {
+            logger.log('error:', error);
+            const message = HandleFirebaseError(error);
+            throw message;
+        }
+    }
+
+    async createIfNotExistsAsync(
+        entity: Location,
+        locationDocRef: DocumentReference<Location>
+    ): Promise<boolean> {
+        entity = await this.addGeocodingDataToEntityAsync(entity);
+
+        const canCreateLocation = await this.getByDisplayNameAsync(entity.displayName);
+        logger.log("canCreateLocation:", canCreateLocation);
+
+        if (canCreateLocation) {
+            logger.log("Creating location!");
             await setDoc(locationDocRef, entity);
         }
 
-        return true;
+        return canCreateLocation;
     }
 
-    async getAllLocationsByUserIdAsync(
-        entityId: string,
+    async getByGeohashAsync(
+        geohash: string,
         checkCache: boolean = true
-    ): Promise<Location[]> {
-        const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
-        const locationWhereQuery = where('uid', '==', entityId);
-        const locationQuery = query(locationCollectionRef, locationWhereQuery);
+    ): Promise<Location> {
+        if (!geohash || geohash.length == 0) {
+            throw 'No geohash provided!';
+        }
 
+        const locationDocRef = doc(this.afStore, COLLECTION_NAME, geohash).withConverter(
+            FirebaseEntityConverter<Location>()
+        );
+        let locationSnapshot: DocumentSnapshot<Location> = null;
+
+        logger.log('checkCache:', checkCache);
+        if (checkCache) {
+            locationSnapshot = await this.tryToGetFromCacheAsync(locationDocRef);
+        }
+
+        if (!locationSnapshot) {
+            logger.log('Fetching data!');
+            try {
+                locationSnapshot = await getDoc(locationDocRef);
+            } catch (error) {
+                let message = HandleFirebaseError(error);
+                throw message;
+            }
+        }
+
+        return locationSnapshot.data();
+    }
+
+    private async getByDisplayNameAsync(
+        displayName: string,
+        checkCache: boolean = true
+    ): Promise<boolean> {
+        if (!displayName || displayName.length == 0) {
+            throw 'No displayName provided!';
+        }
+
+        const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
+        const locationWhereQuery = where('displayName', '==', displayName);
+        const locationQuery = query(locationCollectionRef, locationWhereQuery);
         let querySnapshot: QuerySnapshot<DocumentData> = null;
 
         if (checkCache) {
             try {
-                logger.log('trying to get from cache ...');
+                logger.log('Trying to get from cache ... ');
+                this.debug.info('Trying to get from cache ... ');
                 querySnapshot = await getDocsFromCache(locationQuery);
-                logger.log('cached data exists!');
             } catch (error) {
                 logger.log('error:', error);
+                this.debug.error('error:', error);
+                let message = HandleFirebaseError(error);
+                throw message;
             }
         }
 
         if (!querySnapshot) {
-            logger.log('no cached data, querying!');
-            querySnapshot = await getDocs(locationQuery);
-        }
-        
-        return querySnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) =>
-            FirebaseEntityConverter<Location>().fromFirestore(doc)
-        );
-    }
-
-    async countAllLocationsByUserIdAsync(entityId: string): Promise<number> {
-        const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
-        const locationWhereQuery = where('uid', '==', entityId);
-        const locationQuery = query(locationCollectionRef, locationWhereQuery);
-
-        let querySnapshot: QuerySnapshot<DocumentData> = null;
-
-        try {
-            logger.log('trying to get from cache ...');
-            querySnapshot = await getDocsFromCache(locationQuery);
-        } catch (error) {
-            logger.log('error:', error);
+            try {
+                logger.log('Trying to get from server ... ');
+                this.debug.info('Trying to get from server ... ');
+                querySnapshot = await getDocsFromServer(locationQuery);
+            } catch (error) {
+                logger.log('error:', error);
+                this.debug.error('error:', error);
+                let message = HandleFirebaseError(error);
+                throw message;
+            }
         }
 
-        if (!querySnapshot) {
-            logger.log('no cached data, querying!');
-            querySnapshot = await getDocs(locationQuery);
-        }
-
-        logger.log('cached data exists!');
-        return querySnapshot.size ?? 0;
+        return querySnapshot.size == 0;
     }
 
     /**
@@ -297,7 +332,24 @@ export class LocationService {
         return cachedDocSnap;
     }
 
-    async requestGeocodingFromOpenStreetMap(longitude: number, latitude: number) {
+    private async addGeocodingDataToEntityAsync(entity: Location): Promise<Location> {
+        const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
+            entity.longitude,
+            entity.latitude
+        );
+        logger.log('geocodingResult:', geocodingResult);
+
+        entity.displayName = geocodingResult.display_name;
+        entity.postcode = geocodingResult.address.postcode;
+        entity.country = geocodingResult.address.country;
+        entity.state = geocodingResult.address.state;
+        entity.city = geocodingResult.address.city;
+        entity.road = geocodingResult.address.road;
+
+        return entity;
+    }
+
+    private async requestGeocodingFromOpenStreetMap(longitude: number, latitude: number) {
         let httpQueryParams = new HttpParams();
         httpQueryParams = httpQueryParams.append('format', 'json');
         httpQueryParams = httpQueryParams.append('lat', latitude);

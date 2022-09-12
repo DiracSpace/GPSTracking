@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { Logger, LogLevel } from 'src/app/logger';
+import { ContextService } from 'src/app/services/context.service';
 import { wait } from 'src/app/utils/time';
 import { User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
@@ -24,8 +25,9 @@ export class UserPage implements OnInit {
 
     constructor(
         private loadingController: LoadingController,
+        private activatedRoute: ActivatedRoute,
+        private context: ContextService,
         private api: ApiService,
-        private activatedRoute: ActivatedRoute
     ) {}
 
     ngOnInit() {
@@ -93,6 +95,10 @@ export class UserPage implements OnInit {
 
     getAddressDescription(address: UserAddress) {
         return getAddressDescription(address);
+    }
+
+    onClickPromptImagePermissions() {
+        this.context.openCloseProfileSelectorModal();
     }
 
     private async loadUserAsync() {

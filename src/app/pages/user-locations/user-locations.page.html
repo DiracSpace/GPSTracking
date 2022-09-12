@@ -12,12 +12,16 @@
     </ion-toolbar>
 </ion-header>
 
-<ion-content scroll="false">
-    <div class="ion-padding">
+<ion-content scroll="false" *ngIf="!isLoading">
+    <app-no-content
+        *ngIf="!hasUserLocationContent && !hasUserRecentLocationContent"
+    ></app-no-content>
+
+    <div *ngIf="hasUserRecentLocationContent" class="ion-padding">
         <h2 class="locationtitle">Más recientes</h2>
 
         <ion-slides class="ion-margin-bottom" pager="true" [options]="slideOpts">
-            <ion-slide *ngFor="let location of userLocations">
+            <ion-slide *ngFor="let location of recentLocations">
                 <div class="box">
                     <app-location
                         [longitude]="location.longitude"
@@ -28,31 +32,32 @@
         </ion-slides>
     </div>
 
-    <h4 class="ion-padding locationtitle">Historial Completo</h4>
-    <ion-accordion-group>
+    <h4 *ngIf="hasUserLocationContent" class="ion-padding locationtitle">
+        Historial Completo
+    </h4>
+    <ion-accordion-group *ngIf="hasUserLocationContent">
         <ion-accordion
-            *ngFor="let location of userLocations"
-            [value]="location.id"
-            (click)="location._isAccordianHidden = !location._isAccordianHidden"
+            *ngFor="let userLocation of userLocations"
+            [value]="userLocation.geohash"
+            (click)="onClickLoadLocationDataAsync(userLocation)"
         >
             <ion-item slot="header" color="light">
-                <ion-label
-                    >{{ getAccordianShortAddress(location.city, location.state)
-                    }}</ion-label
-                >
+                <ion-label>{{ userLocation.shortDisplayName }}</ion-label>
             </ion-item>
             <div slot="content">
+                <ion-spinner
+                    *ngIf="userLocation._isLoadingLocationData"
+                    class="ion-padding"
+                    name="crescent"
+                ></ion-spinner>
                 <app-location
-                    [hidden]="location._isAccordianHidden"
-                    [longitude]="location.longitude"
-                    [latitude]="location.latitude"
+                    *ngIf="!userLocation._isLoadingLocationData"
+                    [hidden]="userLocation._isAccordianHidden"
+                    [longitude]="userLocation._location.longitude"
+                    [latitude]="userLocation._location.latitude"
                 ></app-location>
                 <div id="buttons" class="d-flex ion-justify-content-end">
-                    <ion-button
-                        color="danger"
-                        fill="outline"
-                        class="ion-margin-end"
-                        (click)="deleteLocationClicked(location)"
+                    <ion-button color="danger" fill="outline" class="ion-margin-end"
                         >Eliminar</ion-button
                     >
                 </div>
