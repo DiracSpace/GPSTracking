@@ -13,6 +13,7 @@ export { ReverseGeocodingAddress } from './OpenStreetMaps/ReverseGeocodingAddres
 export { UserLocation } from './UserLocation/UserLocation';
 export { Location } from './Location/Location';
 
+export { UserPhoto } from './UserPhoto/UserPhoto.interface';
 
 export {
     FirebaseEntityConverter,
