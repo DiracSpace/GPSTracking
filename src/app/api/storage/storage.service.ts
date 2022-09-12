@@ -21,6 +21,7 @@ const logger = new Logger({
 @Injectable({ providedIn: 'root' })
 export class StorageService {
     private readonly afStorage = getStorage();
+    private readonly PROFILE_STORAGE: string = 'profile-pictures';
 
     private readonly resumableTaskSubject = new BehaviorSubject<number>(0);
     public progress = {
@@ -32,6 +33,10 @@ export class StorageService {
     resumableTask: UploadTask = null;
 
     constructor() {}
+
+    get directory() {
+        return this.PROFILE_STORAGE;
+    }
 
     pauseTask(): boolean {
         if (!this.resumableTask) {
@@ -85,7 +90,7 @@ export class StorageService {
                 (error: StorageError) => {
                     logger.log('error:', error);
                     const message = HandleFirebaseError(error);
-                    throw message;
+                    reject(message);
                 },
                 async () => {
                     const taskRef = this.resumableTask.snapshot.ref;

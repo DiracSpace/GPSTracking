@@ -36,4 +36,10 @@ export class ContextService {
             this.profileSelectorModal.set(true);
         }
     }
+
+    private readonly PhotoNameSubject = new BehaviorSubject<string>(null);
+    photoName = {
+        get: () => this.PhotoNameSubject.value,
+        set: (value: string) => this.PhotoNameSubject.next(value),
+    }
 }
