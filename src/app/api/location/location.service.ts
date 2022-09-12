@@ -1,5 +1,6 @@
 import {
     collection,
+    deleteDoc,
     doc,
     DocumentData,
     DocumentReference,
@@ -20,6 +21,7 @@ import { getDocFromCache } from '@firebase/firestore';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { HttpClient, HttpParams, HttpRequest } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 
 const logger = new Logger({
     source: 'LocationService',
@@ -47,11 +49,15 @@ export class LocationService {
             throw 'No entity provided!';
         }
 
-        const locationDocName = `${entity.longitude}-${entity.latitude}`;
+        if (!entity.geohash) {
+            throw 'No unique location identifier provided!';
+        }
+
+        logger.log("entity:", entity);
         const locationDocRef = doc(
             this.afStore,
             COLLECTION_NAME,
-            locationDocName
+            entity.geohash
         ).withConverter(FirebaseEntityConverter<Location>());
 
         if (checkThreshold) {
@@ -74,18 +80,7 @@ export class LocationService {
                 logger.log('Interval passed! Creating ... ');
                 this.debug.info('Interval passed! Creating ... ');
 
-                const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
-                    entity.longitude,
-                    entity.latitude
-                );
-                logger.log('geocodingResult:', geocodingResult);
-
-                entity.displayName = geocodingResult.display_name;
-                entity.postcode = geocodingResult.address.postcode;
-                entity.country = geocodingResult.address.country;
-                entity.state = geocodingResult.address.state;
-                entity.city = geocodingResult.address.city;
-                entity.road = geocodingResult.address.road;
+                entity = await this.addGeocodingDataToEntityAsync(entity);
 
                 await setDoc(locationDocRef, entity);
             } else {
@@ -97,17 +92,26 @@ export class LocationService {
             logger.log('Not checking threshold, creating ...');
             this.debug.info('Not checking threshold, creating ...');
 
-            const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
-                entity.longitude,
-                entity.latitude
-            );
-            logger.log('geocodingResult:', geocodingResult);
-            entity.displayName = geocodingResult.display_name;
+            entity = await this.addGeocodingDataToEntityAsync(entity);
 
             await setDoc(locationDocRef, entity);
         }
 
         return true;
+    }
+
+    async deleteAsync(entityId: string) {
+        const locationDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
+            FirebaseEntityConverter<Location>()
+        );
+
+        try {
+            await deleteDoc(locationDocRef);
+        } catch (error) {
+            logger.log('error:', error);
+            const message = HandleFirebaseError(error);
+            throw message;
+        }
     }
 
     async getAllLocationsByUserIdAsync(
@@ -134,7 +138,7 @@ export class LocationService {
             logger.log('no cached data, querying!');
             querySnapshot = await getDocs(locationQuery);
         }
-        
+
         return querySnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) =>
             FirebaseEntityConverter<Location>().fromFirestore(doc)
         );
@@ -297,7 +301,24 @@ export class LocationService {
         return cachedDocSnap;
     }
 
-    async requestGeocodingFromOpenStreetMap(longitude: number, latitude: number) {
+    private async addGeocodingDataToEntityAsync(entity: Location): Promise<Location> {
+        const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
+            entity.longitude,
+            entity.latitude
+        );
+        logger.log('geocodingResult:', geocodingResult);
+
+        entity.displayName = geocodingResult.display_name;
+        entity.postcode = geocodingResult.address.postcode;
+        entity.country = geocodingResult.address.country;
+        entity.state = geocodingResult.address.state;
+        entity.city = geocodingResult.address.city;
+        entity.road = geocodingResult.address.road;
+
+        return entity;
+    }
+
+    private async requestGeocodingFromOpenStreetMap(longitude: number, latitude: number) {
         let httpQueryParams = new HttpParams();
         httpQueryParams = httpQueryParams.append('format', 'json');
         httpQueryParams = httpQueryParams.append('lat', latitude);

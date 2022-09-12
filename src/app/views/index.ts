@@ -8,9 +8,10 @@ export { UserEmail } from './User/UserEmail';
 export { User } from './User/User';
 /* #endregion */
 
-export { Location } from './Location/Location';
 export { ReverseGeocodingResult } from './OpenStreetMaps/ReverseGeocodingResult.interface';
 export { ReverseGeocodingAddress } from './OpenStreetMaps/ReverseGeocodingAddress.interface';
+export { UserLocation } from './UserLocation/UserLocation';
+export { Location } from './Location/Location';
 
 
 export {

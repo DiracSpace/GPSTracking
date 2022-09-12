@@ -1,5 +1,7 @@
+import { geohashForLocation } from 'geofire-common';
+
 export class Location {
-    uid: string;
+    geohash?: string;
     id: string;
 
     longitude: number;
@@ -14,7 +16,23 @@ export class Location {
     road?: string;
 
     fromBackground: boolean;
-    dateRegistered: Date;
+    dateRegistered: Date; // TODO: remove this
 
     _isAccordianHidden?: boolean;
+}
+
+export function formatToDocumentName(longitude: number, latitude: number) {
+    let message: string;
+
+    if (longitude == 0) {
+        message = 'Wrong longitude format.';
+        throw message;
+    }
+
+    if (latitude == 0) {
+        message = 'Wrong latitude format.';
+        throw message;
+    }
+
+    return geohashForLocation([latitude, longitude]);
 }

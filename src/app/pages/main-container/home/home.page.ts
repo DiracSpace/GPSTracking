@@ -3,7 +3,7 @@ import { AlertController, LoadingController, Platform } from '@ionic/angular';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Navigation } from 'src/app/navigation';
-import { Location, User } from 'src/app/views';
+import { Location, User, UserLocation } from 'src/app/views';
 import { formatToBlobName } from 'src/app/views/User/User';
 import { AndroidPermissionsUtils } from 'src/app/services/android-permissions-utils.service';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
@@ -18,6 +18,7 @@ import { ScannerPermissions } from '../scanner/scanner-permissions.service';
 import { ToastsColorCodes, ToastsService } from 'src/app/services/toasts.service';
 import { ContextService } from 'src/app/services/context.service';
 import { userLocations } from 'src/app/core/components/bottom-navigation/bottom-navigation.component';
+import { formatToDocumentName } from 'src/app/views/Location/Location';
 
 const logger = new Logger({
     source: 'HomePage',
@@ -202,6 +203,9 @@ export class HomePage implements OnInit, OnDestroy {
             this.platformName == 'cordova'
         ) {
             await this.requestLocationForAndroidAsync();
+        } else {
+            let message = 'No se pudo determinar el tipo dispositivo.';
+            await this.toasts.presentToastAsync(message, 'warning');
         }
     }
 
@@ -288,16 +292,18 @@ export class HomePage implements OnInit, OnDestroy {
         });
         await loadingDialog.present();
         try {
+            const geohash = formatToDocumentName(longitude, latitude);
             const location: Location = {
                 id: guid(),
-                uid: this.user.uid,
+                geohash: geohash,
                 latitude: latitude,
                 longitude: longitude,
                 fromBackground: fromBackground,
                 dateRegistered: new Date()
             };
 
-            const hasCreatedLocation = await this.api.location.createAsync(location);
+            logger.log("location:", location);
+            const hasCreatedLocation = await this.api.location.createAsync(location, false);
             let message: string = '¡Se guardó existosamente!';
             let colorCode: ToastsColorCodes = 'success';
             let duration = 800;
@@ -307,6 +313,10 @@ export class HomePage implements OnInit, OnDestroy {
                     'Aún no ha pasado el tiempo de espera para que vuelvas a registrar esta ubicación';
                 colorCode = 'warning';
                 duration = 2000;
+            }
+
+            if (hasCreatedLocation) {
+                await this.api.userLocation.bindLocationToUserAsync(geohash, this.user.uid, false);
             }
 
             await loadingDialog.dismiss();
@@ -420,6 +430,7 @@ export class HomePage implements OnInit, OnDestroy {
 
             return geoposition;
         } catch (error) {
+            logger.log("error:", error);
             const errorDetails = decodeErrorDetails(error);
             await this.showErrorAlertAsync(errorDetails);
             throw error;

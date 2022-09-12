@@ -4,10 +4,11 @@ import { Logger, LogLevel } from 'src/app/logger';
 import { ToastsService } from 'src/app/services';
 import { ApiService } from 'src/app/api';
 import { Location } from 'src/app/views';
+import { formatToDocumentName } from 'src/app/views/Location/Location';
 
 const logger = new Logger({
     source: 'UserLocationsPage',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 @Component({
@@ -44,12 +45,55 @@ export class UserLocationsPage implements OnInit {
         this.loadAsync();
     }
 
+    get hasContent() {
+        return this.userLocations.length > 0;
+    }
+
     getAccordianShortAddress(city: string, state: string) {
         return `${city}, ${state}`;
     }
 
-    deleteLocationClicked(location: Location) {
-        logger.log('location:', location);
+    async deleteLocationClicked(location: Location) {
+        if (!location) {
+            return;
+        }
+
+        let message: string;
+        const index = this.userLocations.indexOf(location);
+
+        if (index == -1) {
+            message = 'No se pudo eliminar la ubicación';
+            await this.toasts.presentToastAsync(message, 'danger');
+            return;
+        }
+
+        const confirmation = await this.toasts.presentAlertAsync(
+            'Confirmación',
+            'Está por eliminar información',
+            '¿Desea eliminar este dato?',
+            'yes'
+        );
+
+        if (confirmation) {
+            await this.deleteLocationAsync(location.geohash);
+            this.userLocations.splice(index, 1);
+        }
+    }
+
+    private async deleteLocationAsync(entityId: string) {
+        const loadingDialog = await this.loadingController.create({
+            message: 'Eliminando...'
+        });
+        await loadingDialog.present();
+
+        try {
+            await this.api.location.deleteAsync(entityId);
+        } catch (error) {
+            await loadingDialog.dismiss();
+            await this.toasts.presentToastAsync(error, 'danger');
+        } finally {
+            await loadingDialog.dismiss();
+        }
     }
 
     async loadAsync(checkCache: boolean = true) {
@@ -65,6 +109,7 @@ export class UserLocationsPage implements OnInit {
                 uid,
                 checkCache
             );
+            logger.log("this.userLocations:", this.userLocations);
             this.userLocations.forEach(
                 (location: Location) => (location._isAccordianHidden = true)
             );
