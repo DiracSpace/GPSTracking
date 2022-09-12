@@ -17,8 +17,6 @@ export class Location {
 
     fromBackground: boolean;
     dateRegistered: Date; // TODO: remove this
-
-    _isAccordianHidden?: boolean;
 }
 
 export function formatToDocumentName(longitude: number, latitude: number) {

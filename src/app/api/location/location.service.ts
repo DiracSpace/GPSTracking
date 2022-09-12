@@ -6,10 +6,10 @@ import {
     DocumentReference,
     DocumentSnapshot,
     Firestore,
-    getDocs,
+    getDoc,
     getDocsFromCache,
+    getDocsFromServer,
     query,
-    QueryDocumentSnapshot,
     QuerySnapshot,
     setDoc,
     where
@@ -25,7 +25,7 @@ import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 
 const logger = new Logger({
     source: 'LocationService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 const COLLECTION_NAME = 'locations';
@@ -53,7 +53,7 @@ export class LocationService {
             throw 'No unique location identifier provided!';
         }
 
-        logger.log("entity:", entity);
+        logger.log('entity:', entity);
         const locationDocRef = doc(
             this.afStore,
             COLLECTION_NAME,
@@ -80,9 +80,7 @@ export class LocationService {
                 logger.log('Interval passed! Creating ... ');
                 this.debug.info('Interval passed! Creating ... ');
 
-                entity = await this.addGeocodingDataToEntityAsync(entity);
-
-                await setDoc(locationDocRef, entity);
+                return await this.createIfNotExistsAsync(entity, locationDocRef);
             } else {
                 logger.log("Interval hasn't passed! Returning ... ");
                 this.debug.info("Interval hasn't passed! Returning ... ");
@@ -92,12 +90,8 @@ export class LocationService {
             logger.log('Not checking threshold, creating ...');
             this.debug.info('Not checking threshold, creating ...');
 
-            entity = await this.addGeocodingDataToEntityAsync(entity);
-
-            await setDoc(locationDocRef, entity);
+            return await this.createIfNotExistsAsync(entity, locationDocRef);
         }
-
-        return true;
     }
 
     async deleteAsync(entityId: string) {
@@ -114,57 +108,94 @@ export class LocationService {
         }
     }
 
-    async getAllLocationsByUserIdAsync(
-        entityId: string,
-        checkCache: boolean = true
-    ): Promise<Location[]> {
-        const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
-        const locationWhereQuery = where('uid', '==', entityId);
-        const locationQuery = query(locationCollectionRef, locationWhereQuery);
+    async createIfNotExistsAsync(
+        entity: Location,
+        locationDocRef: DocumentReference<Location>
+    ): Promise<boolean> {
+        entity = await this.addGeocodingDataToEntityAsync(entity);
 
+        const canCreateLocation = await this.getByDisplayNameAsync(entity.displayName);
+        logger.log("canCreateLocation:", canCreateLocation);
+
+        if (canCreateLocation) {
+            logger.log("Creating location!");
+            await setDoc(locationDocRef, entity);
+        }
+
+        return canCreateLocation;
+    }
+
+    async getByGeohashAsync(
+        geohash: string,
+        checkCache: boolean = true
+    ): Promise<Location> {
+        if (!geohash || geohash.length == 0) {
+            throw 'No geohash provided!';
+        }
+
+        const locationDocRef = doc(this.afStore, COLLECTION_NAME, geohash).withConverter(
+            FirebaseEntityConverter<Location>()
+        );
+        let locationSnapshot: DocumentSnapshot<Location> = null;
+
+        logger.log('checkCache:', checkCache);
+        if (checkCache) {
+            locationSnapshot = await this.tryToGetFromCacheAsync(locationDocRef);
+        }
+
+        if (!locationSnapshot) {
+            logger.log('Fetching data!');
+            try {
+                locationSnapshot = await getDoc(locationDocRef);
+            } catch (error) {
+                let message = HandleFirebaseError(error);
+                throw message;
+            }
+        }
+
+        return locationSnapshot.data();
+    }
+
+    private async getByDisplayNameAsync(
+        displayName: string,
+        checkCache: boolean = true
+    ): Promise<boolean> {
+        if (!displayName || displayName.length == 0) {
+            throw 'No displayName provided!';
+        }
+
+        const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
+        const locationWhereQuery = where('displayName', '==', displayName);
+        const locationQuery = query(locationCollectionRef, locationWhereQuery);
         let querySnapshot: QuerySnapshot<DocumentData> = null;
 
         if (checkCache) {
             try {
-                logger.log('trying to get from cache ...');
+                logger.log('Trying to get from cache ... ');
+                this.debug.info('Trying to get from cache ... ');
                 querySnapshot = await getDocsFromCache(locationQuery);
-                logger.log('cached data exists!');
             } catch (error) {
                 logger.log('error:', error);
+                this.debug.error('error:', error);
+                let message = HandleFirebaseError(error);
+                throw message;
             }
         }
 
         if (!querySnapshot) {
-            logger.log('no cached data, querying!');
-            querySnapshot = await getDocs(locationQuery);
+            try {
+                logger.log('Trying to get from server ... ');
+                this.debug.info('Trying to get from server ... ');
+                querySnapshot = await getDocsFromServer(locationQuery);
+            } catch (error) {
+                logger.log('error:', error);
+                this.debug.error('error:', error);
+                let message = HandleFirebaseError(error);
+                throw message;
+            }
         }
 
-        return querySnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) =>
-            FirebaseEntityConverter<Location>().fromFirestore(doc)
-        );
-    }
-
-    async countAllLocationsByUserIdAsync(entityId: string): Promise<number> {
-        const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
-        const locationWhereQuery = where('uid', '==', entityId);
-        const locationQuery = query(locationCollectionRef, locationWhereQuery);
-
-        let querySnapshot: QuerySnapshot<DocumentData> = null;
-
-        try {
-            logger.log('trying to get from cache ...');
-            querySnapshot = await getDocsFromCache(locationQuery);
-        } catch (error) {
-            logger.log('error:', error);
-        }
-
-        if (!querySnapshot) {
-            logger.log('no cached data, querying!');
-            querySnapshot = await getDocs(locationQuery);
-        }
-
-        logger.log('cached data exists!');
-        return querySnapshot.size ?? 0;
+        return querySnapshot.size == 0;
     }
 
     /**

@@ -3,7 +3,7 @@ import { LoadingController } from '@ionic/angular';
 import { Logger, LogLevel } from 'src/app/logger';
 import { ToastsService } from 'src/app/services';
 import { ApiService } from 'src/app/api';
-import { Location } from 'src/app/views';
+import { Location, UserLocation } from 'src/app/views';
 import { formatToDocumentName } from 'src/app/views/Location/Location';
 
 const logger = new Logger({
@@ -17,7 +17,8 @@ const logger = new Logger({
     styleUrls: ['./user-locations.page.scss']
 })
 export class UserLocationsPage implements OnInit {
-    userLocations: Location[] = [];
+    userLocations: UserLocation[] = [];
+    recentLocations: Location[] = [];
     isLoading: boolean = false;
 
     slideOpts = {
@@ -45,15 +46,32 @@ export class UserLocationsPage implements OnInit {
         this.loadAsync();
     }
 
-    get hasContent() {
+    get hasUserLocationContent() {
         return this.userLocations.length > 0;
     }
 
-    getAccordianShortAddress(city: string, state: string) {
-        return `${city}, ${state}`;
+    get hasUserRecentLocationContent() {
+        return this.recentLocations.length > 0;
     }
 
-    async deleteLocationClicked(location: Location) {
+    async onClickLoadLocationDataAsync(location: UserLocation) {
+        location._isLoadingLocationData = true;
+        location._location = await this.getUserLocationData(location.geohash);
+        location._isAccordianHidden = !location._isAccordianHidden;
+        location._isLoadingLocationData = false;
+    }
+
+    private async getUserLocationData(geohash: string): Promise<Location> {
+        try {
+            const location = await this.api.location.getByGeohashAsync(geohash);
+            logger.log("location:", location);
+            return location;
+        } catch (error) {
+            await this.toasts.presentToastAsync(error, 'danger');
+        }
+    }
+
+    async deleteLocationClicked(location: UserLocation) {
         if (!location) {
             return;
         }
@@ -75,7 +93,7 @@ export class UserLocationsPage implements OnInit {
         );
 
         if (confirmation) {
-            await this.deleteLocationAsync(location.geohash);
+            // TODO: remove binding between user and location
             this.userLocations.splice(index, 1);
         }
     }
@@ -87,7 +105,6 @@ export class UserLocationsPage implements OnInit {
         await loadingDialog.present();
 
         try {
-            await this.api.location.deleteAsync(entityId);
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');
@@ -105,14 +122,13 @@ export class UserLocationsPage implements OnInit {
 
         try {
             const { uid } = await this.api.auth.currentUser;
-            this.userLocations = await this.api.location.getAllLocationsByUserIdAsync(
-                uid,
-                checkCache
+            this.userLocations = await this.api.userLocation.getUsersLocationsAsync(
+                checkCache,
+                false,
+                uid
             );
-            logger.log("this.userLocations:", this.userLocations);
-            this.userLocations.forEach(
-                (location: Location) => (location._isAccordianHidden = true)
-            );
+            logger.log('this.userLocations:', this.userLocations);
+            this.userLocations.forEach((location) => (location._isAccordianHidden = true));
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');

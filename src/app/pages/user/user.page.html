@@ -23,7 +23,10 @@
                 <div class="user-avatar-display">
                     <div class="avatar-icon">
                         <img [src]="userAvatarImg" alt="avatar" />
-                        <ion-icon name="add-circle"></ion-icon>
+                        <ion-icon
+                            name="add-circle"
+                            (click)="onClickPromptImagePermissions()"
+                        ></ion-icon>
                     </div>
                 </div>
                 <div class="user-profile-banner">
@@ -37,3 +40,5 @@
         </div>
     </ng-container>
 </ion-content>
+
+<app-profile-selector-modal></app-profile-selector-modal>

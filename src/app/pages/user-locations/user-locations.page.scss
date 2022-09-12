@@ -32,3 +32,10 @@ ion-slide {
     white-space: pre-wrap;
     font-size: 12px;
 }
+
+ion-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}

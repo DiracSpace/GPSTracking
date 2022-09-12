@@ -46,10 +46,12 @@ const logger = new Logger({
         provideAuth(() => getAuth()),
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideDatabase(() => getDatabase()),
+        provideStorage(() => getStorage()),
         provideFirestore(() => {
             const firestore = getFirestore();
             try {
                 enableIndexedDbPersistence(firestore);
+                logger.log("Cache active!");
             } catch (error) {
                 let message = '';
 
@@ -72,8 +74,7 @@ const logger = new Logger({
             }
 
             return firestore;
-        }),
-        provideStorage(() => getStorage())
+        })
     ],
     providers: [
         { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },

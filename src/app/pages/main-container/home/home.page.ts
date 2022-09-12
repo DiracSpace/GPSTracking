@@ -22,7 +22,7 @@ import { formatToDocumentName } from 'src/app/views/Location/Location';
 
 const logger = new Logger({
     source: 'HomePage',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 // 1 hour = 3600000
@@ -225,16 +225,21 @@ export class HomePage implements OnInit, OnDestroy {
         await this.savingLocationInFirebaseAsync(latitude, longitude);
     }
 
-    private async loadAsync() {
+    async loadAsync(checkCache: boolean = true) {
         this.loading = true;
         const loadingDialog = await this.loadingController.create({
             message: 'Cargando tu perfíl'
         });
         await loadingDialog.present();
 
+        logger.log('checkCache:', checkCache);
         const user = await this.api.auth.currentUser;
-        const locations = await this.api.location.countAllLocationsByUserIdAsync(user.uid);
-        userLocations.set(locations);
+        const locations = await this.api.userLocation.getUsersLocationsAsync(
+            checkCache,
+            false,
+            user.uid
+        );
+        userLocations.set(locations.length);
 
         if (!user) {
             await loadingDialog.dismiss();
@@ -302,8 +307,10 @@ export class HomePage implements OnInit, OnDestroy {
                 dateRegistered: new Date()
             };
 
-            logger.log("location:", location);
-            const hasCreatedLocation = await this.api.location.createAsync(location, false);
+            logger.log('location:', location);
+            const hasCreatedLocation = await this.api.location.createAsync(location);
+            logger.log("hasCreatedLocation:", hasCreatedLocation);
+            
             let message: string = '¡Se guardó existosamente!';
             let colorCode: ToastsColorCodes = 'success';
             let duration = 800;
@@ -316,7 +323,15 @@ export class HomePage implements OnInit, OnDestroy {
             }
 
             if (hasCreatedLocation) {
-                await this.api.userLocation.bindLocationToUserAsync(geohash, this.user.uid, false);
+                const createdLocation = await this.api.location.getByGeohashAsync(
+                    geohash
+                );
+                let shortDisplayName = `${createdLocation.city}, ${createdLocation.state}`;
+                await this.api.userLocation.bindLocationToUserAsync(
+                    shortDisplayName,
+                    geohash,
+                    this.user.uid
+                );
             }
 
             await loadingDialog.dismiss();
@@ -430,7 +445,7 @@ export class HomePage implements OnInit, OnDestroy {
 
             return geoposition;
         } catch (error) {
-            logger.log("error:", error);
+            logger.log('error:', error);
             const errorDetails = decodeErrorDetails(error);
             await this.showErrorAlertAsync(errorDetails);
             throw error;
