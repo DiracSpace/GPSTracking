@@ -48,12 +48,12 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
     }
 
     cancel() {
-		this.context.profileSelectorModal.set(false);
+        this.context.profileSelectorModal.set(false);
         this.modal.dismiss(null, 'cancel');
     }
 
     confirm() {
-		this.context.profileSelectorModal.set(false);
+        this.context.profileSelectorModal.set(false);
         this.modal.dismiss(this.name, 'confirm');
     }
 

@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 
 const logger = new Logger({
     source: 'ContextService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Injectable({ providedIn: 'root' })
