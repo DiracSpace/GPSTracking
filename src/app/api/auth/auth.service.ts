@@ -69,11 +69,11 @@ export class AuthService {
                     await this.signOut();
                 }
             });
-        })
+        });
     }
-    
+
     async signOut(): Promise<void> {
-        wait(500);
+        wait(500); // TODO Why is this necessary?
         await this.afAuth.signOut();
         this.authentication.set(false);
         this.router.navigateByUrl('/login');

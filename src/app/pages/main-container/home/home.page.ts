@@ -226,34 +226,43 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     async loadAsync(checkCache: boolean = true) {
+        this.debug.info('Loading user profile...');
+
         this.loading = true;
         const loadingDialog = await this.loadingController.create({
             message: 'Cargando tu perfíl'
         });
         await loadingDialog.present();
 
-        logger.log('checkCache:', checkCache);
+        this.debug.info('checkCache:', checkCache);
+
         const user = await this.api.auth.currentUser;
+        this.debug.info('user:', user);
+
         const locations = await this.api.userLocation.getUsersLocationsAsync(
             checkCache,
             false,
             user.uid
         );
+        this.debug.info('locations:', locations);
+
         userLocations.set(locations.length);
+        this.debug.info('userLocations.set');
 
         if (!user) {
+            this.debug.info('User not found!');
             await loadingDialog.dismiss();
             let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
             await this.toasts.presentToastAsync(message, 'danger');
-
-            this.api.auth.signOut();
+            await this.api.auth.signOut();
             this.nav.login.go();
             return;
         }
 
+        this.debug.info('Getting user...');
         this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
+        this.debug.info('this.user:', this.user);
         this.context.qrImgSrc.set(this.user.qrCodeUrl);
-        logger.log('this.user:', this.user);
 
         await loadingDialog.dismiss();
         this.loading = false;
@@ -309,8 +318,8 @@ export class HomePage implements OnInit, OnDestroy {
 
             logger.log('location:', location);
             const hasCreatedLocation = await this.api.location.createAsync(location);
-            logger.log("hasCreatedLocation:", hasCreatedLocation);
-            
+            logger.log('hasCreatedLocation:', hasCreatedLocation);
+
             let message: string = '¡Se guardó existosamente!';
             let colorCode: ToastsColorCodes = 'success';
             let duration = 800;

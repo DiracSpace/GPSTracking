@@ -25,6 +25,8 @@ import { setDoc } from '@firebase/firestore';
 import { Injectable } from '@angular/core';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
+import { decodeErrorDetails } from 'src/app/utils/errors';
+import { handleAndDecode } from 'src/app/utils/promises';
 
 const logger = new Logger({
     source: 'UserService',
@@ -112,18 +114,33 @@ export class UserService {
         entityId: string,
         searchCache: boolean = true
     ): Promise<User> {
+        this.debug.info('getByUidOrDefaultAsync', entityId, searchCache);
+
         if (entityId == null || entityId.length == 0) {
+            this.debug.info('Invalid uid');
             return null;
         }
 
         const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
             FirebaseEntityConverter<User>()
         );
+        this.debug.info('userDocRef', userDocRef);
+
         let userSnapshot: DocumentSnapshot<User> = null;
 
-        logger.log('searchCache:', searchCache);
         if (searchCache) {
-            userSnapshot = await this.tryToGetFromCacheAsync(userDocRef);
+            this.debug.info('Setting userSnapshot...');
+
+            const { error: cacheError, result: cacheResult } = await handleAndDecode(
+                this.tryToGetFromCacheAsync(userDocRef)
+            );
+
+            if (cacheError) {
+                this.debug.error(cacheError.toString());
+            } else {
+                userSnapshot = cacheResult;
+                this.debug.info('Found userSnapshot:', userSnapshot);
+            }
         }
 
         if (!userSnapshot) {
@@ -141,13 +158,15 @@ export class UserService {
     }
 
     private async tryToGetFromCacheAsync(userDocRef: DocumentReference<User>) {
-        logger.log('Trying to get from cache ... ');
+        this.debug.info('tryToGetFromCacheAsync...');
         let cachedDocSnap: DocumentSnapshot<User> = null;
 
         try {
             cachedDocSnap = await getDocFromCache(userDocRef);
+            this.debug.info('cachedDocSnap', cachedDocSnap);
         } catch (error) {
-            logger.log('error:', error);
+            const errorDetails = decodeErrorDetails(error);
+            this.debug.error(errorDetails.toString());
             const message = HandleFirebaseError(error);
             throw message;
         }
