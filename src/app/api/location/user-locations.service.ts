@@ -8,6 +8,7 @@ import {
     DocumentReference,
     DocumentSnapshot,
     Firestore,
+    getDoc,
     getDocFromCache,
     getDocFromServer,
     getDocsFromCache,
@@ -23,17 +24,74 @@ import { FirebaseEntityConverter, UserLocation } from 'src/app/views';
 import { Injectable } from '@angular/core';
 import { setDoc } from '@firebase/firestore';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
+import { NotImplementedError } from 'src/app/errors';
 
 const logger = new Logger({
     source: 'UserLocationService',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 const COLLECTION_NAME = 'userlocations';
+const HOURS_PASSED_THRESHOLD = 0;
+const DAYS_PASSED_THRESHOLD = 1;
 
 @Injectable({ providedIn: 'root' })
 export class UserLocationService {
     constructor(private afStore: Firestore, private debug: Debugger) {}
+
+    async hasLocationBeenRegisteredRecentlyAsync(
+        entity: UserLocation,
+        checkHours: boolean = true,
+        checkDays: boolean = false
+    ): Promise<boolean> {
+        if (!entity) {
+            return false;
+        }
+
+        if (entity.datesRegistered?.length == 0) {
+            return false;
+        }
+
+        if (checkHours) {
+            logger.log('Checking hours!');
+            this.debug.info('Checking hours!');
+
+            let latestDate = entity.datesRegistered.sort().slice(-1)[0];
+            latestDate = new Date(latestDate);
+            logger.log('latestDate:', latestDate);
+
+            // Null sanity check
+            if (!latestDate) {
+                // TODO: could this possible? If yes, then just create new date
+                return false;
+            }
+
+            // We get the time passed since last registered
+            let timestampDifference = Math.abs(
+                new Date().getTime() - latestDate.getTime()
+            );
+
+            let hoursPassedSinceLastRegistered = Math.floor(
+                timestampDifference / 1000 / 3600
+            );
+
+            logger.log('hoursPassedSinceLastRegistered:', hoursPassedSinceLastRegistered);
+            this.debug.info(
+                'hoursPassedSinceLastRegistered:',
+                hoursPassedSinceLastRegistered
+            );
+
+            // Checking if N hours have passed before making new request to firebase
+            return HOURS_PASSED_THRESHOLD > hoursPassedSinceLastRegistered;
+        }
+
+        if (checkDays) {
+            throw new NotImplementedError();
+        }
+
+        // By default, just create a new date
+        return false;
+    }
 
     async getUsersLocationsAsync(
         checkCache: boolean = true,
@@ -91,18 +149,31 @@ export class UserLocationService {
         );
     }
 
-    async bindLocationToUserAsync(
-        shortDisplayName: string,
+    async createAsync(entity: UserLocation) {
+        if (!entity) {
+            throw 'No entity provided!';
+        }
+
+        if (!entity.geohash || entity.geohash.length == 0) {
+            throw 'No unique location identifier provided in entity!';
+        }
+
+        const userLocationDocRef = doc(
+            this.afStore,
+            COLLECTION_NAME,
+            entity.geohash
+        ).withConverter(FirebaseEntityConverter<UserLocation>());
+
+        await setDoc(userLocationDocRef, entity);
+    }
+
+    async getRelationByGeohashOrDefaultAsync(
         geohash: string,
         uid: string,
         checkCache: boolean = true
     ) {
-        if (!geohash) {
+        if (!geohash || geohash.length == 0) {
             throw 'No geohash provided!';
-        }
-
-        if (!uid) {
-            throw 'No UserId provided!';
         }
 
         const userLocationDocRef = doc(
@@ -116,31 +187,25 @@ export class UserLocationService {
             userLocationSnapshot = await this.tryToGetFromCacheOrDefaultAsync(
                 userLocationDocRef
             );
-        } else {
-            userLocationSnapshot = await getDocFromServer(userLocationDocRef);
         }
 
-        logger.log('userLocationSnapshot:', userLocationSnapshot);
-        this.debug.info('userLocationSnapshot:', userLocationSnapshot);
-
-        if (!userLocationSnapshot || !userLocationSnapshot.exists()) {
-            logger.log('No relation between user and location found!');
-            this.debug.info('No relation between user and location found!');
-            const userLocation: UserLocation = {
-                shortDisplayName: shortDisplayName,
-                geohash: geohash,
-                uid: uid
-            };
-
-            await this.createAsync(userLocationDocRef, userLocation);
-        } else {
-            logger.log('Found relation between user and location!');
-            this.debug.info('Found relation between user and location!');
-
-            logger.log('geohash:', geohash);
-            this.debug.info('geohash:', geohash);
-            await this.updateArrayAsync('datesRegistered', geohash, new Date());
+        if (!userLocationSnapshot) {
+            logger.log('Fetching data!');
+            try {
+                userLocationSnapshot = await getDoc(userLocationDocRef);
+            } catch (error) {
+                logger.log("error:", error);
+                this.debug.error("error:", error);
+                // let invoker handle null results
+                return null;
+            }
         }
+
+        if (!userLocationSnapshot || !userLocationSnapshot.exists()) return null;
+        let userLocation = userLocationSnapshot.data();
+        if (userLocation.uid != uid) return null;
+
+        return userLocation;
     }
 
     private async tryToGetFromCacheOrDefaultAsync(
@@ -169,20 +234,6 @@ export class UserLocationService {
         this.debug.info('Exists in cache!');
 
         return cachedDocSnap;
-    }
-
-    async createAsync(
-        userLocationDocRef: DocumentReference<UserLocation>,
-        entity: UserLocation
-    ) {
-        try {
-            logger.log('Creating entity:', entity);
-            this.debug.info('Creating entity:', entity);
-            await setDoc(userLocationDocRef, entity);
-        } catch (error) {
-            let message = HandleFirebaseError(error);
-            throw message;
-        }
     }
 
     async updateArrayAsync<T>(

@@ -61,10 +61,12 @@ export class UserLocationsPage implements OnInit {
         location._isLoadingLocationData = false;
     }
 
+    // TODO: review this function based on change in service
     private async getUserLocationData(geohash: string): Promise<Location> {
         try {
-            const location = await this.api.location.getByGeohashAsync(geohash);
-            logger.log("location:", location);
+            logger.log("geohash:", geohash);
+            const location = await this.api.location.getByGeohashOrDefaultAsync(geohash);
+            logger.log('location:', location);
             return location;
         } catch (error) {
             await this.toasts.presentToastAsync(error, 'danger');
@@ -128,7 +130,9 @@ export class UserLocationsPage implements OnInit {
                 uid
             );
             logger.log('this.userLocations:', this.userLocations);
-            this.userLocations.forEach((location) => (location._isAccordianHidden = true));
+            this.userLocations.forEach(
+                (location) => (location._isAccordianHidden = true)
+            );
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');

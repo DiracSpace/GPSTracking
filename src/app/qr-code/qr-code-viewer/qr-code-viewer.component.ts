@@ -28,7 +28,7 @@ import { NotImplementedError, RequiredPropError } from 'src/app/errors';
 
 const logger = new Logger({
     source: 'QrCodeViewerComponent',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 export interface QrCodeDownloadDetails {
