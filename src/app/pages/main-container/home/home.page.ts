@@ -22,7 +22,7 @@ import { formatToDocumentName } from 'src/app/views/Location/Location';
 
 const logger = new Logger({
     source: 'HomePage',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 // 1 hour = 3600000
@@ -291,6 +291,10 @@ export class HomePage implements OnInit, OnDestroy {
         longitude: number,
         fromBackground: boolean = false
     ) {
+        let message: string = '¡Se guardó existosamente!';
+        let colorCode: ToastsColorCodes = 'success';
+        let duration = 800;
+
         if (!latitude || latitude == 0) {
             logger.log('No latitude provided!');
             return;
@@ -307,47 +311,117 @@ export class HomePage implements OnInit, OnDestroy {
         await loadingDialog.present();
         try {
             const geohash = formatToDocumentName(longitude, latitude);
-            const location: Location = {
-                id: guid(),
-                geohash: geohash,
-                latitude: latitude,
-                longitude: longitude,
-                fromBackground: fromBackground,
-                dateRegistered: new Date()
-            };
 
-            logger.log('location:', location);
-            const hasCreatedLocation = await this.api.location.createAsync(location);
-            logger.log('hasCreatedLocation:', hasCreatedLocation);
-
-            let message: string = '¡Se guardó existosamente!';
-            let colorCode: ToastsColorCodes = 'success';
-            let duration = 800;
-
-            if (!hasCreatedLocation) {
-                message =
-                    'Aún no ha pasado el tiempo de espera para que vuelvas a registrar esta ubicación';
-                colorCode = 'warning';
-                duration = 2000;
-            }
-
-            if (hasCreatedLocation) {
-                const createdLocation = await this.api.location.getByGeohashAsync(
-                    geohash
-                );
-                let shortDisplayName = `${createdLocation.city}, ${createdLocation.state}`;
-                await this.api.userLocation.bindLocationToUserAsync(
-                    shortDisplayName,
+            // we try to get cached version first
+            let userLocationRelation =
+                await this.api.userLocation.getRelationByGeohashOrDefaultAsync(
                     geohash,
                     this.user.uid
                 );
+
+            if (!userLocationRelation) {
+                logger.log('No cached relation found! Checking server ... ');
+                await this.requestServerInformationAndUpdateAsync(
+                    geohash,
+                    latitude,
+                    longitude,
+                    fromBackground
+                );
             }
 
-            await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(message, colorCode, duration);
+            logger.log('userLocationRelation:', userLocationRelation);
+
+            let hasLocationBeenRegisteredRecently =
+                await this.api.userLocation.hasLocationBeenRegisteredRecentlyAsync(
+                    userLocationRelation
+                );
+            logger.log(
+                'hasLocationBeenRegisteredRecently:',
+                hasLocationBeenRegisteredRecently
+            );
+
+            if (hasLocationBeenRegisteredRecently) {
+                colorCode = 'warning';
+                duration = 2000;
+                message =
+                    'Aún no ha pasado el tiempo de espera para que vuelvas a registrar esta ubicación';
+            } else {
+                logger.log('Updating time');
+                await this.api.userLocation.updateArrayAsync(
+                    'datesRegistered',
+                    geohash,
+                    new Date()
+                );
+            }
         } catch (error) {
             await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, 'danger');
+            await this.toasts.presentToastAsync(error, 'danger', duration);
+            return;
+        }
+
+        await loadingDialog.dismiss();
+        await this.toasts.presentToastAsync(message, colorCode, duration);
+    }
+
+    /**
+     * This function requests data from Firebase Cloud, which does the following:
+     * * Creates location if not exists in cloud.
+     * * Creates relation between user and location if not exists in cloud.
+     *
+     * This function does *NOT* check local cache version, so any requests count
+     * to quota usage for Firebase.
+     *
+     * @param geohash - unique location identifier
+     * @param latitude
+     * @param longitude
+     * @param fromBackground - state to check if it's from background listener
+     */
+    private async requestServerInformationAndUpdateAsync(
+        geohash: string,
+        latitude: number,
+        longitude: number,
+        fromBackground: boolean = false
+    ) {
+        // We create a new entity
+        let location = {
+            id: guid(),
+            geohash: geohash,
+            latitude: latitude,
+            longitude: longitude,
+            fromBackground: fromBackground,
+            dateRegistered: new Date()
+        };
+
+        // We don't want to check cache here
+        let createdLocation = await this.api.location.createIfNotExistsAsync(
+            location,
+            false
+        );
+
+        logger.log('createdLocation:', createdLocation);
+
+        let userLocationRelation =
+            await this.api.userLocation.getRelationByGeohashOrDefaultAsync(
+                createdLocation.geohash,
+                this.user.uid,
+                false
+            );
+
+        logger.log('userLocationRelation:', userLocationRelation);
+
+        if (!userLocationRelation) {
+            // create a relation
+            logger.log('New location detected! Creating relation with User');
+            this.debug.info('New location detected! Creating relation with User');
+
+            let shortDisplayName = `${createdLocation.city}, ${createdLocation.state}`;
+            const userLocation: UserLocation = {
+                shortDisplayName: shortDisplayName,
+                uid: this.user.uid,
+                geohash: geohash
+            };
+
+            await this.api.userLocation.createAsync(userLocation);
         }
     }
 

@@ -10,6 +10,7 @@ import {
     getDocsFromCache,
     getDocsFromServer,
     query,
+    QueryDocumentSnapshot,
     QuerySnapshot,
     setDoc,
     where
@@ -25,13 +26,10 @@ import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 
 const logger = new Logger({
     source: 'LocationService',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 const COLLECTION_NAME = 'locations';
-
-const HOURS_PASSED_THRESHOLD = 2;
-const DAYS_PASSED_THRESHOLD = 1;
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
@@ -41,10 +39,23 @@ export class LocationService {
         private http: HttpClient
     ) {}
 
-    async createAsync(
+    /**
+     * Tries to find if a Location has already been registered
+     * by querying the following from the database:
+     * * Checks if a document exists by using geohash
+     * * Checks if a document exists by using displayName property
+     *
+     * If the before mentioned both fail, then a new
+     * document is created. By default, checkCache is true.
+     *
+     * @param entity
+     * @param checkCache
+     * @returns
+     */
+    async createIfNotExistsAsync(
         entity: Location,
-        checkThreshold: boolean = true
-    ): Promise<boolean> {
+        checkCache: boolean = true
+    ): Promise<Location> {
         if (!entity) {
             throw 'No entity provided!';
         }
@@ -53,45 +64,67 @@ export class LocationService {
             throw 'No unique location identifier provided!';
         }
 
-        logger.log('entity:', entity);
+        // We search by geohash first because we don't want to make
+        // an external request to OpenStreetMaps.
+        let locationByGeohash = await this.getByGeohashOrDefaultAsync(
+            entity.geohash,
+            checkCache
+        );
+
+        // We have a location registered with that geohash
+        // But these seem to differ based on longitude and
+        // latitude.
+        if (locationByGeohash) {
+            logger.log('Geohash location found!');
+            this.debug.info('Geohash location found!');
+            return locationByGeohash;
+        }
+
+        // If the entity doesn't have this property, then
+        // we make the external request.
+        if (!entity.displayName) {
+            logger.log('Requesting displayName from OpenStreetMaps!');
+            this.debug.info('Requesting displayName from OpenStreetMaps!');
+            // We have to request the new displayName from
+            // OpenStreetMaps to determine if a document is already created.
+            entity = await this.addGeocodingDataToEntityAsync(entity);
+        }
+
+        // We query the database for results based on displayName.
+        // The best case scenario is that only one document should
+        // be returned.
+        let locationsByDisplayName = await this.getByDisplayNameOrDefaultAsync(
+            entity.longitude,
+            entity.latitude,
+            entity.displayName,
+            checkCache
+        );
+
+        // There should only exist one document in list, but
+        // murphy law. Either way, we search for an exact match
+        // of DisplayName.
+        let locationByDisplayName = locationsByDisplayName.find(
+            (x) => x.displayName == entity.displayName
+        );
+
+        // We found an exact match, so we return this.
+        if (locationByDisplayName) {
+            logger.log('DisplayName location found!');
+            this.debug.info('DisplayName location found!');
+            return locationByDisplayName;
+        }
+
+        // We don't have the location based on geohash or displayName
+        logger.log('New location detected! Creating ... ');
         const locationDocRef = doc(
             this.afStore,
             COLLECTION_NAME,
             entity.geohash
         ).withConverter(FirebaseEntityConverter<Location>());
 
-        if (checkThreshold) {
-            const hasIntervalPassedBeforeCreation =
-                await this.checkIfLocationRegisteredTimeHasPassedThreshold(
-                    locationDocRef,
-                    true,
-                    false
-                );
-            logger.log(
-                'hasIntervalPassedBeforeCreation:',
-                hasIntervalPassedBeforeCreation
-            );
-            this.debug.info(
-                'hasIntervalPassedBeforeCreation:',
-                hasIntervalPassedBeforeCreation
-            );
+        await setDoc(locationDocRef, entity);
 
-            if (hasIntervalPassedBeforeCreation) {
-                logger.log('Interval passed! Creating ... ');
-                this.debug.info('Interval passed! Creating ... ');
-
-                return await this.createIfNotExistsAsync(entity, locationDocRef);
-            } else {
-                logger.log("Interval hasn't passed! Returning ... ");
-                this.debug.info("Interval hasn't passed! Returning ... ");
-                return false;
-            }
-        } else {
-            logger.log('Not checking threshold, creating ...');
-            this.debug.info('Not checking threshold, creating ...');
-
-            return await this.createIfNotExistsAsync(entity, locationDocRef);
-        }
+        return entity;
     }
 
     async deleteAsync(entityId: string) {
@@ -108,27 +141,10 @@ export class LocationService {
         }
     }
 
-    async createIfNotExistsAsync(
-        entity: Location,
-        locationDocRef: DocumentReference<Location>
-    ): Promise<boolean> {
-        entity = await this.addGeocodingDataToEntityAsync(entity);
-
-        const canCreateLocation = await this.getByDisplayNameAsync(entity.displayName);
-        logger.log("canCreateLocation:", canCreateLocation);
-
-        if (canCreateLocation) {
-            logger.log("Creating location!");
-            await setDoc(locationDocRef, entity);
-        }
-
-        return canCreateLocation;
-    }
-
-    async getByGeohashAsync(
+    async getByGeohashOrDefaultAsync(
         geohash: string,
         checkCache: boolean = true
-    ): Promise<Location> {
+    ): Promise<Location | null> {
         if (!geohash || geohash.length == 0) {
             throw 'No geohash provided!';
         }
@@ -148,20 +164,35 @@ export class LocationService {
             try {
                 locationSnapshot = await getDoc(locationDocRef);
             } catch (error) {
-                let message = HandleFirebaseError(error);
-                throw message;
+                // let invoker handle null results
+                return null;
             }
         }
 
+        if (!locationSnapshot || !locationSnapshot.exists()) return null;
         return locationSnapshot.data();
     }
 
-    private async getByDisplayNameAsync(
-        displayName: string,
+    async getByDisplayNameOrDefaultAsync(
+        longitude: number,
+        latitude: number,
+        displayName: string = '',
         checkCache: boolean = true
-    ): Promise<boolean> {
-        if (!displayName || displayName.length == 0) {
-            throw 'No displayName provided!';
+    ): Promise<Location[] | null> {
+        if (!displayName || displayName.trim().length == 0) {
+            logger.log(
+                'No displayName property provided! Requesting from OpenStreetMap ... '
+            );
+            let openStreetMapResult = await this.requestGeocodingFromOpenStreetMap(
+                longitude,
+                latitude
+            );
+
+            if (!openStreetMapResult) {
+                throw 'Could not get reverse geocode result.';
+            }
+
+            displayName = openStreetMapResult.display_name;
         }
 
         const locationCollectionRef = collection(this.afStore, COLLECTION_NAME);
@@ -195,115 +226,9 @@ export class LocationService {
             }
         }
 
-        return querySnapshot.size == 0;
-    }
-
-    /**
-     * It's not very efficient for Firebase quota to
-     * register the same location every hour, so we
-     * have to add a threshold of DAYS_PASSED_THRESHOLD
-     * in order to not register the same location every hour.
-     *
-     * This is takes into account the following:
-     *
-     * * The app is running in background in User's house.
-     * * We don't need a bunch of Location documents if the User is in one area the next N time.
-     * @param locationDocRef
-     * @param checkCache
-     * @returns
-     */
-    private async checkIfLocationRegisteredTimeHasPassedThreshold(
-        locationDocRef: DocumentReference<Location>,
-        checkHours: boolean = false,
-        checkDays: boolean = true,
-        checkCache: boolean = true
-    ): Promise<boolean> {
-        let locationSnapshot: DocumentSnapshot<Location> = null;
-
-        logger.log('checkCache:', checkCache);
-        this.debug.info('checkCache:', checkCache);
-
-        if (checkCache) {
-            locationSnapshot = await this.tryToGetFromCacheAsync(locationDocRef);
-        }
-
-        logger.log('locationSnapshot:', locationSnapshot);
-        this.debug.info('locationSnapshot:', locationSnapshot);
-
-        if (!locationSnapshot) {
-            logger.log('No location found!');
-            this.debug.info('No location found!');
-
-            // There was an error, so
-            // we return true to create the entity
-            return true;
-        }
-
-        let snapshotData = locationSnapshot.data();
-        logger.log('snapshotData:', snapshotData);
-        this.debug.info('snapshotData:', snapshotData);
-
-        if (checkDays) {
-            logger.log('checking days!');
-            this.debug.info('checking days!');
-
-            let daysPassedSinceLastRegistered: number = 0;
-
-            try {
-                let locationRegisteredDate = new Date(
-                    snapshotData.dateRegistered
-                ).getDate();
-                daysPassedSinceLastRegistered = Math.round(
-                    (new Date().getDate() - locationRegisteredDate) /
-                        (1000 * 60 * 60 * 24)
-                );
-            } catch (error) {
-                logger.log('error:', error);
-                this.debug.error(error);
-
-                // There was an error, so
-                // we return true to create the entity
-                return true;
-            }
-
-            logger.log('daysPassedSinceLastRegistered:', daysPassedSinceLastRegistered);
-            this.debug.info(
-                `daysPassedSinceLastRegistered: ${daysPassedSinceLastRegistered}`
-            );
-
-            return daysPassedSinceLastRegistered > DAYS_PASSED_THRESHOLD;
-        }
-
-        if (checkHours) {
-            logger.log('checking hours!');
-            this.debug.info('checking hours!');
-
-            let hoursPassedSinceLastRegistered: number = 0;
-
-            try {
-                let locationRegisteredDate = new Date(
-                    snapshotData.dateRegistered
-                ).getTime();
-                var timestampDifference = Math.abs(
-                    new Date().getTime() - locationRegisteredDate
-                );
-                hoursPassedSinceLastRegistered = timestampDifference / 1000 / 3600;
-            } catch (error) {
-                logger.log('error:', error);
-                this.debug.error(error);
-
-                // There was an error, so
-                // we return true to create the entity
-                return true;
-            }
-
-            logger.log('hoursPassedSinceLastRegistered:', hoursPassedSinceLastRegistered);
-            this.debug.info(hoursPassedSinceLastRegistered);
-
-            return Math.floor(hoursPassedSinceLastRegistered) > HOURS_PASSED_THRESHOLD;
-        }
-
-        return true;
+        return querySnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) =>
+            FirebaseEntityConverter<Location>().fromFirestore(doc)
+        );
     }
 
     private async tryToGetFromCacheAsync(locationDocRef: DocumentReference<Location>) {

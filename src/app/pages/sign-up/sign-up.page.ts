@@ -2,12 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
+import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
+import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
 import { ToastsService } from 'src/app/services/toasts.service';
 import { ValidationService } from 'src/app/services/validation.service';
 import { User } from 'src/app/views';
 import { environment } from 'src/environments/environment';
+
+const logger = new Logger({
+    source: 'SignUpPage',
+    level: LogLevel.Debug,
+})
 
 @Component({
     selector: 'app-sign-up',
@@ -59,6 +66,7 @@ export class SignUpPage implements OnInit {
         private loadingController: LoadingController,
         private toasts: ToastsService,
         private forms: FormBuilder,
+        private debug: Debugger,
         private nav: Navigation,
         private api: ApiService
     ) {}
@@ -113,6 +121,9 @@ export class SignUpPage implements OnInit {
         user.emailVerified = fireAuthUser.emailVerified;
         user.photoUrl = fireAuthUser.photoURL;
         user.qrCodeUrl = `${environment.domains.default}/user/${fireAuthUser.uid}`;
+
+        logger.log("user:", user);
+        this.debug.info("user:", user);
 
         this.resetForm();
         await this.api.users.createAsync(user);
