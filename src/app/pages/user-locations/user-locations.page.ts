@@ -5,6 +5,10 @@ import { ToastsService } from 'src/app/services';
 import { ApiService } from 'src/app/api';
 import { Location, UserLocation } from 'src/app/views';
 import { formatToDocumentName } from 'src/app/views/Location/Location';
+import { wait } from 'src/app/utils/time';
+import { decodeErrorDetails } from 'src/app/utils/errors';
+import { ArgumentNullError } from 'src/app/errors';
+import { DDMMYYYYHHmmssLong } from 'src/app/utils/dates';
 
 const logger = new Logger({
     source: 'UserLocationsPage',
@@ -55,21 +59,59 @@ export class UserLocationsPage implements OnInit {
     }
 
     async onClickLoadLocationDataAsync(location: UserLocation) {
+        console.log('location', location);
+        if (!location._isAccordianHidden) {
+            location._isAccordianHidden = true;
+            return;
+        }
+
         location._isLoadingLocationData = true;
-        location._location = await this.getUserLocationData(location.geohash);
-        location._isAccordianHidden = !location._isAccordianHidden;
+
+        // Show loading animation. This prevents a weird ugly UI bug when expanding accordion
+        await wait(500);
+
+        // Only loading location once
+        if (!location._location) {
+            location._location = await this.getUserLocationData(location.geohash);
+        }
+
+        location._isAccordianHidden = false;
         location._isLoadingLocationData = false;
+    }
+
+    getLocationDisplayName(userLocation: UserLocation): string {
+        const caller = 'getLocationDisplayName';
+        ArgumentNullError.throwIfNull(userLocation, 'location', caller);
+
+        if (!userLocation._location) {
+            return userLocation.shortDisplayName;
+        }
+
+        if (!userLocation._location.displayName) {
+            return `${userLocation._location.latitude} ${userLocation._location.longitude}`;
+        }
+
+        return userLocation._location.displayName;
+    }
+
+    getDateString(date: string | Date) {
+        return DDMMYYYYHHmmssLong(date, { lang: 'es' });
     }
 
     // TODO: review this function based on change in service
     private async getUserLocationData(geohash: string): Promise<Location> {
         try {
-            logger.log("geohash:", geohash);
             const location = await this.api.location.getByGeohashOrDefaultAsync(geohash);
-            logger.log('location:', location);
-            return location;
+
+            if (location) {
+                return location;
+            }
+
+            throw new Error('Could not find location');
         } catch (error) {
-            await this.toasts.presentToastAsync(error, 'danger');
+            const errorDetails = decodeErrorDetails(error);
+            await this.toasts.presentToastAsync(errorDetails.toString(), 'danger');
+            throw errorDetails;
         }
     }
 

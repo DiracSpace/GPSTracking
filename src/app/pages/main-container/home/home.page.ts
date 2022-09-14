@@ -41,7 +41,6 @@ export class HomePage implements OnInit, OnDestroy {
     user = new User();
 
     private platformName: string = null;
-    hasPlatformFinishedLoading: boolean = false;
 
     private idleInterval: Observable<number>;
     closeIdleIntervalObservable() {
@@ -83,7 +82,6 @@ export class HomePage implements OnInit, OnDestroy {
 
             debug.info('Platform name:', this.platformName);
             logger.log('this.platformName:', this.platformName);
-            this.hasPlatformFinishedLoading = true;
         });
     }
 
@@ -418,7 +416,7 @@ export class HomePage implements OnInit, OnDestroy {
             const userLocation: UserLocation = {
                 shortDisplayName: shortDisplayName,
                 geohash: createdLocation.geohash,
-                uid: this.user.uid,
+                uid: this.user.uid
             };
 
             await this.api.userLocation.createAsync(userLocation);

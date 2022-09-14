@@ -1,3 +1,5 @@
+<app-loading-img *ngIf="hasFirebase && hasQrInformation"></app-loading-img>
+
 <qrcode
     #qrCodeElement
     *ngIf="!hasFirebase && hasQrInformation"
@@ -17,8 +19,9 @@
     (qrCodeURL)="onChangeURL($event)"
 ></qrcode>
 
-<app-loading-img *ngIf="hasFirebase && hasQrInformation"></app-loading-img>
-
-<div class="d-flex ion-justify-content-center" *ngIf="hasPlatformFinishedLoading">
+<div
+    *ngIf="hasPlatformFinishedLoading && hasFirebase && hasQrInformation"
+    class="d-flex ion-justify-content-center"
+>
     <ion-button (click)="onDownloadClicked()">Guardar Imagen</ion-button>
 </div>

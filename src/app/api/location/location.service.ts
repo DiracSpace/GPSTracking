@@ -23,6 +23,7 @@ import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { HttpClient, HttpParams, HttpRequest } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
+import { ArgumentNullError } from 'src/app/errors';
 
 const logger = new Logger({
     source: 'LocationService',
@@ -145,13 +146,13 @@ export class LocationService {
         geohash: string,
         checkCache: boolean = true
     ): Promise<Location | null> {
-        if (!geohash || geohash.length == 0) {
-            throw 'No geohash provided!';
-        }
+        const caller = 'getByGeohashOrDefaultAsync';
+        ArgumentNullError.throwIfNull(geohash, 'geohash', caller);
 
         const locationDocRef = doc(this.afStore, COLLECTION_NAME, geohash).withConverter(
             FirebaseEntityConverter<Location>()
         );
+
         let locationSnapshot: DocumentSnapshot<Location> = null;
 
         logger.log('checkCache:', checkCache);
@@ -169,7 +170,10 @@ export class LocationService {
             }
         }
 
-        if (!locationSnapshot || !locationSnapshot.exists()) return null;
+        if (!locationSnapshot || !locationSnapshot.exists()) {
+            return null;
+        }
+
         return locationSnapshot.data();
     }
 

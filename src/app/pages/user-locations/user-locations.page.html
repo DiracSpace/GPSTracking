@@ -12,56 +12,80 @@
     </ion-toolbar>
 </ion-header>
 
-<ion-content scroll="false" *ngIf="!isLoading">
-    <app-no-content
-        *ngIf="!hasUserLocationContent && !hasUserRecentLocationContent"
-    ></app-no-content>
+<ion-content scroll="false">
+    <ng-container *ngIf="!isLoading">
+        <app-no-content
+            *ngIf="!hasUserLocationContent && !hasUserRecentLocationContent"
+        ></app-no-content>
 
-    <div *ngIf="hasUserRecentLocationContent" class="ion-padding">
-        <h2 class="locationtitle">Más recientes</h2>
+        <div *ngIf="hasUserRecentLocationContent" class="ion-padding">
+            <h2 class="locationtitle">Más recientes</h2>
 
-        <ion-slides class="ion-margin-bottom" pager="true" [options]="slideOpts">
-            <ion-slide *ngFor="let location of recentLocations">
-                <div class="box">
-                    <app-location
-                        [longitude]="location.longitude"
-                        [latitude]="location.latitude"
-                    ></app-location>
-                </div>
-            </ion-slide>
-        </ion-slides>
-    </div>
+            <ion-slides class="ion-margin-bottom" pager="true" [options]="slideOpts">
+                <ion-slide *ngFor="let location of recentLocations">
+                    <div class="box">
+                        <app-location
+                            [longitude]="location.longitude"
+                            [latitude]="location.latitude"
+                        ></app-location>
+                    </div>
+                </ion-slide>
+            </ion-slides>
+        </div>
 
-    <h4 *ngIf="hasUserLocationContent" class="ion-padding locationtitle">
-        Historial Completo
-    </h4>
-    <ion-accordion-group *ngIf="hasUserLocationContent">
-        <ion-accordion
-            *ngFor="let userLocation of userLocations"
-            [value]="userLocation.geohash"
-            (click)="onClickLoadLocationDataAsync(userLocation)"
-        >
-            <ion-item slot="header" color="light">
-                <ion-label>{{ userLocation.shortDisplayName }}</ion-label>
-            </ion-item>
-            <div slot="content">
-                <ion-spinner
-                    *ngIf="userLocation._isLoadingLocationData"
-                    class="ion-padding"
-                    name="crescent"
-                ></ion-spinner>
-                <app-location
-                    *ngIf="!userLocation._isLoadingLocationData"
-                    [hidden]="userLocation._isAccordianHidden"
-                    [longitude]="userLocation._location.longitude"
-                    [latitude]="userLocation._location.latitude"
-                ></app-location>
-                <div id="buttons" class="d-flex ion-justify-content-end">
-                    <ion-button color="danger" fill="outline" class="ion-margin-end"
-                        >Eliminar</ion-button
+        <!-- <h4 *ngIf="hasUserLocationContent" class="ion-padding locationtitle">
+            Historial Completo
+        </h4> -->
+
+        <ion-accordion-group *ngIf="hasUserLocationContent" [multiple]="true">
+            <ion-accordion
+                *ngFor="let userLocation of userLocations"
+                [disabled]="userLocation._isLoadingLocationData"
+                [value]="userLocation.uid"
+            >
+                <ion-item
+                    slot="header"
+                    color="light"
+                    (click)="onClickLoadLocationDataAsync(userLocation)"
+                >
+                    <ion-label>{{ userLocation.shortDisplayName }}</ion-label>
+                </ion-item>
+                <div slot="content">
+                    <div
+                        *ngIf="userLocation._isLoadingLocationData"
+                        style="padding: 100px"
                     >
+                        <ion-spinner name="crescent"></ion-spinner>
+                    </div>
+                    <ng-container *ngIf="!userLocation._isLoadingLocationData">
+                        <div class="ion-padding-horizontal ion-padding-top">
+                            <p style="font-size: 0.9rem; margin-top: 0">
+                                {{getLocationDisplayName(userLocation)}}
+                            </p>
+                            <ng-container
+                                *ngIf="userLocation.datesRegistered && userLocation.datesRegistered.length > 0"
+                            >
+                                <p class="fw-bold m-0">Fechas Registradas</p>
+                                <ul class="ion-padding-start">
+                                    <li *ngFor="let date of userLocation.datesRegistered">
+                                        {{getDateString(date)}}
+                                    </li>
+                                </ul>
+                            </ng-container>
+                        </div>
+                        <app-location
+                            [hidden]="userLocation._isAccordianHidden"
+                            [longitude]="userLocation._location.longitude"
+                            [latitude]="userLocation._location.latitude"
+                        ></app-location>
+                        <div id="buttons" class="d-flex ion-justify-content-end">
+                            <!-- <ion-button color="danger" fill="outline" class="ion-margin-end"
+                              >Eliminar</ion-button>
+                          -->
+                        </div>
+                    </ng-container>
                 </div>
-            </div>
-        </ion-accordion>
-    </ion-accordion-group>
+            </ion-accordion>
+        </ion-accordion-group>
+    </ng-container>
 </ion-content>

@@ -11,7 +11,7 @@
     <ion-accordion-group [multiple]="true">
         <ion-accordion *ngFor="let disease of diseases" [value]="disease.id">
             <ion-item slot="header" color="light">
-                <ion-label>Enfermedad</ion-label>
+                <ion-label>{{getDiseaseDescription(disease)}}</ion-label>
             </ion-item>
             <div slot="content">
                 <ion-item id="nombre" class="ion-margin-bottom">

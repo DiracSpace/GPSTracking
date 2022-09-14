@@ -7,28 +7,30 @@
     </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" *ngIf="!loading">
-    <ion-item id="firstName" class="ion-margin-bottom">
-        <ion-label position="floating">Nombre de usuario</ion-label>
-        <ion-input type="text" [(ngModel)]="username"></ion-input>
-    </ion-item>
-    <ion-item id="firstName" class="ion-margin-bottom">
-        <ion-label position="floating">Primer nombre</ion-label>
-        <ion-input type="text" [(ngModel)]="firstName"></ion-input>
-    </ion-item>
-    <ion-item id="middleName" class="ion-margin-bottom">
-        <ion-label position="floating">Segundo nombre</ion-label>
-        <ion-input type="text" [(ngModel)]="middleName"></ion-input>
-    </ion-item>
-    <ion-item id="lastNameFather" class="ion-margin-bottom">
-        <ion-label position="floating">Apellido Paterno</ion-label>
-        <ion-input type="text" [(ngModel)]="lastNameFather"></ion-input>
-    </ion-item>
-    <ion-item id="lastNameMother" class="ion-margin-bottom">
-        <ion-label position="floating">Apellido Materno</ion-label>
-        <ion-input type="text" [(ngModel)]="lastNameMother"></ion-input>
-    </ion-item>
-    <div class="d-flex ion-justify-content-end">
-        <ion-button color="primary" (click)="onSaveClicked()">Guardar</ion-button>
-    </div>
+<ion-content class="ion-padding">
+    <ng-container *ngIf="!loading">
+        <ion-item id="firstName" class="ion-margin-bottom">
+            <ion-label position="floating">Nombre de usuario</ion-label>
+            <ion-input type="text" [(ngModel)]="username"></ion-input>
+        </ion-item>
+        <ion-item id="firstName" class="ion-margin-bottom">
+            <ion-label position="floating">Primer nombre</ion-label>
+            <ion-input type="text" [(ngModel)]="firstName"></ion-input>
+        </ion-item>
+        <ion-item id="middleName" class="ion-margin-bottom">
+            <ion-label position="floating">Segundo nombre</ion-label>
+            <ion-input type="text" [(ngModel)]="middleName"></ion-input>
+        </ion-item>
+        <ion-item id="lastNameFather" class="ion-margin-bottom">
+            <ion-label position="floating">Apellido Paterno</ion-label>
+            <ion-input type="text" [(ngModel)]="lastNameFather"></ion-input>
+        </ion-item>
+        <ion-item id="lastNameMother" class="ion-margin-bottom">
+            <ion-label position="floating">Apellido Materno</ion-label>
+            <ion-input type="text" [(ngModel)]="lastNameMother"></ion-input>
+        </ion-item>
+        <div class="d-flex ion-justify-content-end">
+            <ion-button color="primary" (click)="onSaveClicked()">Guardar</ion-button>
+        </div>
+    </ng-container>
 </ion-content>

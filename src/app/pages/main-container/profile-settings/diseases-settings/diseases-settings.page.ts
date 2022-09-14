@@ -4,7 +4,7 @@ import { LoadingController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { Logger, LogLevel } from 'src/app/logger';
 import { guid } from 'src/app/utils';
-import { NotImplementedError } from 'src/app/errors';
+import { ArgumentNullError, NotImplementedError } from 'src/app/errors';
 import { ToastsService } from 'src/app/services/toasts.service';
 
 const logger = new Logger({
@@ -58,7 +58,7 @@ export class DiseasesSettingsPage implements OnInit {
         if (!disease) {
             return;
         }
-        
+
         const caller = 'onDeleteClicked';
         const index = this.diseases.indexOf(disease);
 
@@ -118,6 +118,17 @@ export class DiseasesSettingsPage implements OnInit {
 
         await loadingDialog.dismiss();
         await this.toasts.presentToastAsync('¡Se guardó existosamente!');
+    }
+
+    getDiseaseDescription(disease: UserDiseaseDetail): string {
+        const caller = 'getDiseaseDescription';
+        ArgumentNullError.throwIfNull(disease, 'disease', caller);
+
+        if (!disease.name) {
+            return 'Enfermedad';
+        }
+
+        return disease.name;
     }
 
     private async loadAsync() {

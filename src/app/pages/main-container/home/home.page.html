@@ -8,9 +8,9 @@
         <ion-title>
             <app-logo size="sm"></app-logo>
         </ion-title>
-        <ion-buttons slot="end">
+        <!-- <ion-buttons slot="end">
             <app-avatar (clicked)="onProfileClicked()"></app-avatar>
-        </ion-buttons>
+        </ion-buttons> -->
     </ion-toolbar>
 </ion-header>
 
@@ -29,27 +29,25 @@
                 <ion-button (click)="onScanClicked()">Escanear</ion-button>
             </div>
         </div>
+        <ion-fab
+            vertical="bottom"
+            horizontal="end"
+            slot="fixed"
+        >
+            <ion-fab-button>
+                <ion-icon name="add-outline"></ion-icon>
+            </ion-fab-button>
+
+            <ion-fab-list side="top">
+                <ion-fab-button color="primary" (click)="loadAsync(false)">
+                    <ion-icon name="refresh-outline"></ion-icon>
+                </ion-fab-button>
+                <ion-fab-button color="primary" (click)="onLocationClicked()">
+                    <ion-icon name="location-outline"></ion-icon>
+                </ion-fab-button>
+            </ion-fab-list>
+        </ion-fab>
     </ng-container>
-
-    <ion-fab
-        *ngIf="hasPlatformFinishedLoading"
-        vertical="bottom"
-        horizontal="end"
-        slot="fixed"
-    >
-        <ion-fab-button>
-            <ion-icon name="add-outline"></ion-icon>
-        </ion-fab-button>
-
-        <ion-fab-list side="top">
-            <ion-fab-button (click)="loadAsync(false)">
-                <ion-icon name="refresh-outline"></ion-icon>
-            </ion-fab-button>
-            <ion-fab-button (click)="onLocationClicked()">
-                <ion-icon name="location-outline"></ion-icon>
-            </ion-fab-button>
-        </ion-fab-list>
-    </ion-fab>
 </ion-content>
 
 <app-bottom-navigation></app-bottom-navigation>

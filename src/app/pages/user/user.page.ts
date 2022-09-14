@@ -82,14 +82,16 @@ export class UserPage implements OnInit {
         return !this.userId || !this.user;
     }
 
-    get invalidContentMessage() {
+    get invalidContentMessage(): string {
         if (!this.userId) {
-            return 'Bad URL or no UserId provided';
+            return 'La URL es incorrecta';
         }
 
         if (!this.user) {
-            return 'User not found';
+            return 'No se encontró al usuario';
         }
+
+        return "Desconocido"
     }
 
     get userId(): string | undefined {
@@ -140,11 +142,13 @@ export class UserPage implements OnInit {
     }
 
     async onClickOpenActions() {
-        const actionSheet = await this.actionSheetController.create(this.actionSheetOptions);
+        const actionSheet = await this.actionSheetController.create(
+            this.actionSheetOptions
+        );
         await actionSheet.present();
         const { role, data } = await actionSheet.onDidDismiss();
-        logger.log("role:", role);
-        logger.log("data:", data);
+        logger.log('role:', role);
+        logger.log('data:', data);
     }
 
     private async loadUserAsync() {
@@ -154,15 +158,15 @@ export class UserPage implements OnInit {
         });
         await loadingDialog.present();
         this.user = await this.api.users.getByUidOrDefaultAsync(this.userId);
-        
+
         if (!this.user) {
             throw 'No user was found!';
         }
-        
+
         let photoName = `ProfilePicture_${this.user.uid}_`;
         this.context.photoName.set(photoName);
-        
-        logger.log("this.context.photoName.get():", this.context.photoName.get());
+
+        logger.log('this.context.photoName.get():', this.context.photoName.get());
         logger.log('this.user:', this.user);
 
         await loadingDialog.dismiss();

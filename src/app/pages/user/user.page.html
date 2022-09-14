@@ -1,7 +1,7 @@
 <ion-header>
     <ion-toolbar>
         <ion-buttons slot="start">
-            <!-- TODO Go back 2 pages -->
+            <!-- TODO Go back 2 pages if comming from qr code scan -->
             <!-- This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner -->
             <!-- https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4 -->
             <!-- https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3 -->
@@ -14,12 +14,13 @@
 </ion-header>
 
 <ion-content>
-    <ng-container *ngIf="invalidContent && !loading">
-        <h1>{{ invalidContentMessage }}</h1>
-    </ng-container>
-    <ng-container *ngIf="!invalidContent  && !loading">
-        <div>
-            <div class="user-profile-card">
+    <ng-container *ngIf="!loading">
+        <ng-container *ngIf="invalidContent">
+            <h1>{{ invalidContentMessage }}</h1>
+        </ng-container>
+        <ng-container *ngIf="!invalidContent">
+            <!-- Set *ngIf=true when user profile page is finished -->
+            <div *ngIf="false" class="user-profile-card">
                 <div class="user-avatar-display">
                     <div class="avatar-icon">
                         <img [src]="userAvatarImg" alt="avatar" />
@@ -37,7 +38,64 @@
                     <p>{{ user.email }}</p>
                 </div>
             </div>
-        </div>
+
+            <!-- Set *ngIf=false or remove when user profile page is finished -->
+            <ng-container *ngIf="true">
+                <div class="ion-padding">
+                    <div class="ion-margin-bottom">
+                        <p class="fw-bold m-0">Correo electrónico</p>
+                        <p class="m-0">{{user.email}}</p>
+                    </div>
+                    <div class="ion-margin-bottom">
+                        <p class="fw-bold m-0">Nombre completo</p>
+                        <p class="m-0">{{fullName}}</p>
+                    </div>
+                </div>
+                <ion-list *ngIf="user.phoneNumbers">
+                    <ion-list-header>
+                        <ion-label>Números Telefónicos</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let phoneNumber of user.phoneNumbers">
+                        <ion-label>{{phoneNumber.number}}</ion-label>
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.addresses">
+                    <ion-list-header>
+                        <ion-label>Direcciones</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let address of user.addresses">
+                        <ion-label
+                            style="
+                                overflow: unset;
+                                text-overflow: unset;
+                                white-space: pre-wrap;
+                            "
+                            >{{getAddressDescription(address)}}</ion-label
+                        >
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.diseases">
+                    <ion-list-header>
+                        <ion-label>Enfermedades</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let disease of user.diseases">
+                        <ion-label>{{disease.name}}</ion-label>
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.alergies">
+                    <ion-list-header>
+                        <ion-label>Alergias</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let alergy of user.alergies">
+                        <ion-label>{{alergy.name}}</ion-label>
+                    </ion-item>
+                </ion-list>
+
+                <div style="height: 200px">
+                    <!-- Extra space so user scan scroll comfortably -->
+                </div>
+            </ng-container>
+        </ng-container>
     </ng-container>
 </ion-content>
 

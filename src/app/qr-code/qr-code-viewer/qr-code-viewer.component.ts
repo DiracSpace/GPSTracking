@@ -133,7 +133,7 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
         return img.src;
     }
 
-    onChangeURL() {
+    onChangeURL($event: any) {
         if (this.qrCodeElement) {
             const blob = this.getBlob();
             this.qrCodeSrcEmitter.emit(blob);
