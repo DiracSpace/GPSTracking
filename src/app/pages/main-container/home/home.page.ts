@@ -417,8 +417,8 @@ export class HomePage implements OnInit, OnDestroy {
             let shortDisplayName = `${createdLocation.city}, ${createdLocation.state}`;
             const userLocation: UserLocation = {
                 shortDisplayName: shortDisplayName,
+                geohash: createdLocation.geohash,
                 uid: this.user.uid,
-                geohash: geohash
             };
 
             await this.api.userLocation.createAsync(userLocation);
