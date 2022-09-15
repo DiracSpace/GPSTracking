@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package viex.cbtis15.qr;
 
 import com.getcapacitor.BridgeActivity;
 
