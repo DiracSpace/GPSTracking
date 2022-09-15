@@ -1,0 +1,36 @@
+ion-card {
+    border: 1.5px solid rgb(0 0 0 / 12%);
+    box-shadow: none !important;
+
+    ion-icon {
+        color: rgba(0, 0, 0, 0.4);
+    }
+
+    ion-label {
+        h3 {
+            font-size: 0.9rem;
+            font-weight: 750;
+            line-height: 1.2;
+        }
+
+        span {
+            font-size: 12.3px;
+        }
+    }
+}
+
+.badge {
+    font-size: 10px !important;
+    border-radius: 8px;
+    padding: 0 8px;
+
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.badge-success {
+    background-color: lightgreen;
+    color: green;
+}
+

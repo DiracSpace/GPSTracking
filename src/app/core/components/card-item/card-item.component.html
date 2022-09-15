@@ -1,0 +1,32 @@
+<ion-card>
+    <ion-card-content
+        *ngIf="hasProvidedContent"
+        class="ion-no-padding ion-padding-top ion-padding-bottom"
+    >
+        <ion-item lines="none" detail (click)="onDetailClicked()">
+            <ion-icon [name]="cardItem.icon" slot="start"></ion-icon>
+            <ion-label class="ion-text-wrap">
+                <ion-grid>
+                    <ion-row style="column-gap: 15px">
+                        <h3>{{ cardItem.primaryTitle }}</h3>
+                        <span *ngIf="hasProvidedStatus" class="badge badge-success">{{
+                            cardItem.status
+                        }}</span>
+                    </ion-row>
+                    <ion-row>
+                        <span>{{ cardItem.secondaryTitle }}</span>
+                    </ion-row>
+                </ion-grid>
+            </ion-label>
+        </ion-item>
+    </ion-card-content>
+
+    <ion-card-content *ngIf="!hasProvidedContent">
+        <ion-item lines="none">
+            <ion-icon name="warning" slot="start"></ion-icon>
+            <ion-label class="ion-text-wrap">
+                <ion-label>Información no proporcionada</ion-label>
+            </ion-label>
+        </ion-item>
+    </ion-card-content>
+</ion-card>
