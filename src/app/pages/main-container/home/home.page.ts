@@ -35,6 +35,15 @@ const BACKGROUND_GPS_INTERVAL = 3600000;
     styleUrls: ['home.page.scss']
 })
 export class HomePage implements OnInit, OnDestroy {
+    /**
+     * We need to get most recent version of database
+     * to save in cache on first user login.
+     *
+     * It needs to start as false, so as to not check
+     * cache in loadAsync function. We then set it to true.
+     */
+    isFirstLoad: boolean = false;
+
     viewCode: boolean = true;
     loading = false;
     scanning = false;
@@ -86,7 +95,7 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.loadAsync();
+        this.loadAsync(this.isFirstLoad);
         this.backgroundLocationListener();
     }
 
@@ -234,35 +243,26 @@ export class HomePage implements OnInit, OnDestroy {
 
         this.debug.info('checkCache:', checkCache);
 
-        const user = await this.api.auth.currentUser;
-        this.debug.info('user:', user);
+        const authUser = await this.api.auth.currentUser;
+        this.debug.info('user:', authUser);
 
-        const locations = await this.api.userLocation.getUsersLocationsAsync(
-            checkCache,
-            false,
-            user.uid
-        );
-        this.debug.info('locations:', locations);
-
-        userLocations.set(locations.length);
-        this.debug.info('userLocations.set');
-
-        if (!user) {
+        if (!authUser) {
             this.debug.info('User not found!');
             await loadingDialog.dismiss();
-            let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
-            await this.toasts.presentToastAsync(message, 'danger');
-            await this.api.auth.signOut();
-            this.nav.login.go();
+            await this.throwToastAndSignoutAsync();
             return;
         }
-
+        
         this.debug.info('Getting user...');
-        this.user = await this.api.users.getByUidOrDefaultAsync(user.uid);
+        this.user = await this.api.users.getByUidOrDefaultAsync(authUser.uid);
         this.debug.info('this.user:', this.user);
         this.context.qrImgSrc.set(this.user.qrCodeUrl);
-
+        await this.updateUserLocationsAsync();
         await loadingDialog.dismiss();
+
+        // We update state so we don't query
+        // remote cloud every time.
+        this.isFirstLoad = true;
         this.loading = false;
     }
 
@@ -351,6 +351,8 @@ export class HomePage implements OnInit, OnDestroy {
                     new Date()
                 );
             }
+
+            await this.updateUserLocationsAsync();
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger', duration);
@@ -359,6 +361,23 @@ export class HomePage implements OnInit, OnDestroy {
 
         await loadingDialog.dismiss();
         await this.toasts.presentToastAsync(message, colorCode, duration);
+    }
+
+    private async updateUserLocationsAsync() {
+        try {
+            const locations = await this.api.userLocation.getUsersLocationsAsync(
+                false,
+                false,
+                this.user.uid
+            );
+            this.debug.info('locations:', locations);
+
+            userLocations.set(locations.length);
+            this.debug.info('userLocations.set');
+        } catch (error) {
+            await this.toasts.presentToastAsync(error, 'danger');
+            return;
+        }
     }
 
     /**
@@ -533,5 +552,12 @@ export class HomePage implements OnInit, OnDestroy {
         } finally {
             loadingModal.dismiss();
         }
+    }
+
+    private async throwToastAndSignoutAsync() {
+        let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
+        await this.toasts.presentToastAsync(message, 'danger');
+        await this.api.auth.signOut();
+        this.nav.login.go();
     }
 }

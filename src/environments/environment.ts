@@ -26,7 +26,7 @@ export const environment = {
     openstreetmap: {
         reverseGeocodingDomain: 'https://nominatim.openstreetmap.org/reverse'
     },
-    showDebug: true,
+    showDebug: false,
     environmentName: 'default'
 };
 

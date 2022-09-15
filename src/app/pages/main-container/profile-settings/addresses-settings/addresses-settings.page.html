@@ -16,7 +16,15 @@
                     >{{getAddressDescription(address)}}</ion-label
                 >
             </ion-item>
-            <div slot="content">
+            <div slot="content" class="ion-margin-bottom">
+                <ion-item id="default" lines="none">
+                    <ion-label>Dirección Predeterminada</ion-label>
+                    <ion-toggle
+                        [(ngModel)]="address.isDefault"
+                        [disabled]="hasDefaultAddressAlready"
+                    ></ion-toggle>
+                </ion-item>
+
                 <ion-item id="state" class="ion-margin-bottom">
                     <ion-label position="floating">Estado</ion-label>
                     <ion-select interface="action-sheet" [(ngModel)]="address.state">

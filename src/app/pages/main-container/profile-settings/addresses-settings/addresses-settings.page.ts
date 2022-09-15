@@ -41,6 +41,10 @@ export class AddressesSettingsPage implements OnInit {
         return this.user.addresses;
     }
 
+    get hasDefaultAddressAlready() {
+        return this.defaultAddress != null || this.defaultAddress != undefined;
+    }
+
     get defaultAddress(): UserAddress {
         return this.addresses.find((x) => x.isDefault);
     }

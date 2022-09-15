@@ -9,10 +9,10 @@ import { ApiService } from 'src/app/api';
 import { Logger, LogLevel } from 'src/app/logger';
 import { ContextService } from 'src/app/services/context.service';
 import { PhotoService } from 'src/app/services/photo.service';
-import { formatDate, wait } from 'src/app/utils/time';
 import { User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
 import { Assets } from 'src/assets';
+import { UserProfileCardItems } from './CardItems';
 
 const logger = new Logger({
     source: 'UserPage',
@@ -25,6 +25,7 @@ const logger = new Logger({
     styleUrls: ['./user.page.scss']
 })
 export class UserPage implements OnInit {
+    userProfileCardItems = UserProfileCardItems;
     actionSheetOptions: ActionSheetOptions = {
         buttons: [
             {
@@ -78,6 +79,7 @@ export class UserPage implements OnInit {
         }
     }
 
+    /* #region getters */
     get invalidContent() {
         return !this.userId || !this.user;
     }
@@ -91,7 +93,7 @@ export class UserPage implements OnInit {
             return 'No se encontró al usuario';
         }
 
-        return "Desconocido"
+        return 'Desconocido';
     }
 
     get userId(): string | undefined {
@@ -137,6 +139,15 @@ export class UserPage implements OnInit {
         return parts.join(' ');
     }
 
+    get hasAtLeastOneAddress() {
+        if (this.user.addresses == undefined || this.user.addresses == null) {
+            return false;
+        }
+
+        return this.user.addresses.length > 0;
+    }
+    /* #endregion */
+
     getAddressDescription(address: UserAddress) {
         return getAddressDescription(address);
     }
@@ -171,5 +182,10 @@ export class UserPage implements OnInit {
 
         await loadingDialog.dismiss();
         this.loading = false;
+    }
+
+    private async initUserCardInformation() {
+        if (this.hasAtLeastOneAddress) {
+        }
     }
 }

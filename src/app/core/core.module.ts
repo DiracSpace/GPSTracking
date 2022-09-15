@@ -12,6 +12,7 @@ import { LocationComponent } from './components/location/location.component';
 import { AvatarComponent } from './components/avatar/avatar.component';
 import { NoContentComponent } from './components/no-content/no-content.component';
 import { ProfileSelectorModalComponent } from './components/profile-selector-modal/profile-selector-modal.component';
+import { CardItemComponent } from './components/card-item/card-item.component';
 
 const ModuleComponents = [
     // Add components that should be re-usable inside this module only
@@ -27,7 +28,8 @@ const ExportedComponents = [
     LocationComponent,
     AvatarComponent,
     NoContentComponent,
-    ProfileSelectorModalComponent
+    ProfileSelectorModalComponent,
+    CardItemComponent
     // Add components that should be re-usable from another module
 ];
 
