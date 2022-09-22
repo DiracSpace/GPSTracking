@@ -26,7 +26,7 @@ import { Injectable } from '@angular/core';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
 import { decodeErrorDetails } from 'src/app/utils/errors';
-import { handleAndDecode } from 'src/app/utils/promises';
+import { handleAndDecodeAsync } from 'src/app/utils/promises';
 
 const logger = new Logger({
     source: 'UserService',
@@ -131,7 +131,7 @@ export class UserService {
         if (searchCache) {
             this.debug.info('Setting userSnapshot...');
 
-            const { error: cacheError, result: cacheResult } = await handleAndDecode(
+            const { error: cacheError, result: cacheResult } = await handleAndDecodeAsync(
                 this.tryToGetFromCacheAsync(userDocRef)
             );
 

@@ -6,11 +6,18 @@ import { ErrorDetails } from '../utils/errors';
 export class AlertUtils {
     constructor(private alerts: AlertController) {}
 
-    async error(message: string, error: ErrorDetails): Promise<HTMLIonAlertElement> {
+    async error(message: string, error?: ErrorDetails): Promise<HTMLIonAlertElement> {
+        const finalMessage =
+            error != undefined && error != null
+                ? `${message}. ${error.toString()}.`
+                : message;
+
         const alert = await this.alerts.create({
-            message: `${message}. ${error.toString()}.`
+            message: finalMessage
         });
+
         await alert.present();
+
         return alert;
     }
 }

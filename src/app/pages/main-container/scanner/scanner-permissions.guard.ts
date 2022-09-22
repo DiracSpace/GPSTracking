@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { Platform } from '@ionic/angular';
-import { handleAndDecode } from 'src/app/utils/promises';
+import { handleAndDecodeAsync } from 'src/app/utils/promises';
 import { ScannerPermissions } from './scanner-permissions.service';
 
 @Injectable({ providedIn: 'root' })
@@ -29,7 +29,7 @@ export class ScannerPermissionsGuard implements CanActivate {
             return false;
         }
 
-        const { result, error } = await handleAndDecode(
+        const { result, error } = await handleAndDecodeAsync(
             BarcodeScanner.checkPermission({ force: true })
         );
 

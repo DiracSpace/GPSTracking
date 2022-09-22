@@ -21,7 +21,7 @@ import {
 import { ApiService } from 'src/app/api';
 import { ContextService } from 'src/app/services/context.service';
 import { Subscription } from 'rxjs';
-import { handleAndDecode } from 'src/app/utils/promises';
+import { handleAndDecodeAsync } from 'src/app/utils/promises';
 import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
 import { AlertUtils, ToastsService } from 'src/app/services';
 import { NotImplementedError, RequiredPropError } from 'src/app/errors';
@@ -145,7 +145,7 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
         this.debug.info('this.platformName:', this.platformName);
         RequiredPropError.throwIfNull(this.platformName, 'platformName', caller);
 
-        const { error } = await handleAndDecode(this.setQrCodeDownloadDetailsAsync());
+        const { error } = await handleAndDecodeAsync(this.setQrCodeDownloadDetailsAsync());
 
         if (error) {
             await this.alertUtils.error('No se pudo descargar', error);

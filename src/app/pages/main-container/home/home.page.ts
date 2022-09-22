@@ -8,7 +8,7 @@ import { formatToBlobName } from 'src/app/views/User/User';
 import { AndroidPermissionsUtils } from 'src/app/services/android-permissions-utils.service';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
-import { handleAndDecode } from 'src/app/utils/promises';
+import { handleAndDecodeAsync } from 'src/app/utils/promises';
 import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
 import { Geolocation, Geoposition } from '@awesome-cordova-plugins/geolocation/ngx';
 import { guid } from 'src/app/utils';
@@ -458,7 +458,7 @@ export class HomePage implements OnInit, OnDestroy {
         const locationPermission = this.androidPermissions.PERMISSION.ACCESS_FINE_LOCATION;
 
         const { result: hasPermission, error: hasPermissionError } =
-            await handleAndDecode(
+            await handleAndDecodeAsync(
                 this.androidPermissionsUtils.hasAndroidPermissionAsync(locationPermission)
             );
 
@@ -471,7 +471,7 @@ export class HomePage implements OnInit, OnDestroy {
             const {
                 result: canRequestLocationAccuracy,
                 error: canRequestLocationAccuracyError
-            } = await handleAndDecode(
+            } = await handleAndDecodeAsync(
                 this.androidPermissionsUtils.canRequestLocationAccuracy()
             );
 
@@ -482,7 +482,7 @@ export class HomePage implements OnInit, OnDestroy {
 
             if (!canRequestLocationAccuracy) {
                 const { result: permissionGranted, error: permissionGrantedError } =
-                    await handleAndDecode(
+                    await handleAndDecodeAsync(
                         this.androidPermissionsUtils.requestAndroidPermissionAsync(
                             locationPermission
                         )
@@ -499,7 +499,7 @@ export class HomePage implements OnInit, OnDestroy {
             }
         }
 
-        const { error: turnOnGpsError } = await handleAndDecode(
+        const { error: turnOnGpsError } = await handleAndDecodeAsync(
             this.androidPermissionsUtils.turnOnGpsAsync()
         );
 

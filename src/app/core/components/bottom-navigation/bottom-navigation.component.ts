@@ -34,6 +34,13 @@ export class BottomNavigationComponent implements OnInit {
 
     async onPerfilClicked() {
         const { uid } = await this.auth.currentUser;
-        this.nav.user(uid).go();
+        this.nav.user(uid).go({
+            // TODO Used to test navigation pop
+            // extras: {
+            //     queryParams: {
+            //         fromScan: 'true'
+            //     }
+            // }
+        });
     }
 }
