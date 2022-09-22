@@ -76,9 +76,8 @@ export class ToastsService {
         const toast = await this.toastsController.create({
             color: 'danger',
             message,
-            duration: options?.duration
+            duration: options?.duration ?? 3000
         });
-
         await toast.present();
         return toast;
     }

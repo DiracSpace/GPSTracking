@@ -8,13 +8,14 @@ import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
 import { ToastsService } from 'src/app/services/toasts.service';
 import { ValidationService } from 'src/app/services/validation.service';
+import { decodeErrorDetails } from 'src/app/utils/errors';
 import { User } from 'src/app/views';
 import { environment } from 'src/environments/environment';
 
 const logger = new Logger({
     source: 'SignUpPage',
-    level: LogLevel.Debug,
-})
+    level: LogLevel.Debug
+});
 
 @Component({
     selector: 'app-sign-up',
@@ -94,8 +95,9 @@ export class SignUpPage implements OnInit {
         }
 
         const loadingDialog = await this.loadingController.create({
-            message: 'Iniciando sesión'
+            message: 'Creando tu cuenta'
         });
+
         await loadingDialog.present();
 
         const email = this.emailForm.get('email').value;
@@ -108,37 +110,32 @@ export class SignUpPage implements OnInit {
                 password
             );
         } catch (error) {
-            await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, 'danger');
-            this.resetForm();
+            const errorDetails = decodeErrorDetails(error);
+            loadingDialog.dismiss();
+            this.toasts.error(errorDetails.message);
             return;
         }
 
         const user = new User();
-
         user.uid = fireAuthUser.uid;
         user.email = fireAuthUser.email;
         user.emailVerified = fireAuthUser.emailVerified;
         user.photoUrl = fireAuthUser.photoURL;
         user.qrCodeUrl = `${environment.domains.default}/user/${fireAuthUser.uid}`;
 
-        logger.log("user:", user);
-        this.debug.info("user:", user);
-
-        this.resetForm();
         await this.api.users.createAsync(user);
-        await loadingDialog.dismiss();
+        loadingDialog.dismiss();
         this.nav.mainContainer.home.go();
     }
 
     onBackClicked() {
+        this.passwordForm.reset();
         this.showForm = 'email';
-        this.resetForm();
     }
 
-    private resetForm() {
-        this.showForm = 'email';
-        this.emailForm.reset();
-        this.passwordForm.reset();
-    }
+    // private resetForm() {
+    //     this.showForm = 'email';
+    //     this.emailForm.reset();
+    //     this.passwordForm.reset();
+    // }
 }
