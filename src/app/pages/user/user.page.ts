@@ -11,8 +11,11 @@ import { ApiService } from 'src/app/api';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
+import { AlertUtils } from 'src/app/services';
 import { ContextService } from 'src/app/services/context.service';
 import { PhotoService } from 'src/app/services/photo.service';
+import { decodeErrorDetails } from 'src/app/utils/errors';
+import { handleAndDecode, handleAndDecodeAsync } from 'src/app/utils/promises';
 import { User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
 import { Assets } from 'src/assets';
@@ -80,12 +83,13 @@ export class UserPage implements OnInit {
         private api: ApiService,
         private navController: NavController,
         private debug: Debugger,
-        private nav: Navigation
+        private nav: Navigation,
+        private alerts: AlertUtils
     ) {}
 
     ngOnInit() {
         if (this.userId) {
-            this.loadUserAsync();
+            this.tryLoadUserAsync();
         }
     }
 
@@ -93,7 +97,7 @@ export class UserPage implements OnInit {
      * Callback for Ionic lifecycle
      */
     ionViewDidEnter() {
-        this.backButton.onClick = this.backButtonDelegate;
+        this.backButton.onClick = this.backButtonOnClick;
     }
 
     /**
@@ -105,7 +109,7 @@ export class UserPage implements OnInit {
      *
      * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
      */
-    readonly backButtonDelegate = () => {
+    readonly backButtonOnClick = () => {
         this.debug.info('navigatedUsingQrCodeScan', this.navigatedUsingQrCodeScan);
 
         if (!this.navigatedUsingQrCodeScan) {
@@ -217,19 +221,38 @@ export class UserPage implements OnInit {
         logger.log('data:', data);
     }
 
+    private async tryLoadUserAsync() {
+        try {
+            await this.loadUserAsync();
+        } catch (error) {
+            const errorDetails = decodeErrorDetails(error);
+            await this.alerts.error('Usuario inválido', errorDetails);
+            this.backButtonOnClick();
+        }
+    }
+
     private async loadUserAsync() {
         this.loading = true;
+
         const loadingDialog = await this.loadingController.create({
             message: 'Cargando datos del usuario'
         });
-        await loadingDialog.present();
-        this.user = await this.api.users.getByUidOrDefaultAsync(this.userId);
 
-        if (!this.user) {
-            throw 'No user was found!';
+        await loadingDialog.present();
+
+        try {
+            this.user = await this.api.users.getByUidOrDefaultAsync(this.userId);
+        } catch (error) {
+            await loadingDialog.dismiss();
+            throw error;
         }
 
-        let photoName = `ProfilePicture_${this.user.uid}_`;
+        if (!this.user) {
+            await loadingDialog.dismiss();
+            throw new Error('No user was found!');
+        }
+
+        const photoName = `ProfilePicture_${this.user.uid}_`;
         this.context.photoName.set(photoName);
 
         logger.log('this.context.photoName.get():', this.context.photoName.get());
