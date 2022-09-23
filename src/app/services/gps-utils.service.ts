@@ -99,6 +99,14 @@ export class GpsUtils {
     private async verifyGpsPermissionAsync(): Promise<boolean> {
         this.debug.info('verifyPermissionForGpsAsync');
 
+        const platformName = await this.platform.ready();
+        this.debug.info('platformName', platformName);
+
+        if (platformName == 'dom') {
+            this.debug.info('Platform is dom. Android permission is not necessary');
+            return true;
+        }
+
         if (!this.platform.is('android')) {
             this.debug.info(
                 'Platform is not android. Android permission is not necessary'

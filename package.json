@@ -14,7 +14,7 @@
     "build:android": "ionic capacitor build android",
     "open:android": "ionic capacitor open android",
     "pipeline:android": "npm run res:android && npm run build:android && npm run open:android",
-    "firebase:deploy": "firebase deploy"
+    "pipeline:firebase": "ionic build && firebase deploy"
   },
   "private": true,
   "dependencies": {
