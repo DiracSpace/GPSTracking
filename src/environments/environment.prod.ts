@@ -22,6 +22,9 @@ export const environment = {
     openstreetmap: {
         reverseGeocodingDomain: 'https://nominatim.openstreetmap.org/reverse'
     },
+    apiKeys: {
+        stadiaMaps: 'ab5a7aa3-15ae-49c0-87c5-2af1d7546486'
+    },
     showDebug: true,
     environmentName: 'production'
 };

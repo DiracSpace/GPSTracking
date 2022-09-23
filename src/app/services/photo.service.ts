@@ -7,8 +7,6 @@ import { Capacitor } from '@capacitor/core';
 import { Injectable } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { UserPhoto } from '../views';
-import { user } from '@angular/fire/auth';
-import { formatDate } from '../utils/time';
 
 const logger = new Logger({
     source: 'PhotoService',
