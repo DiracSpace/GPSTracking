@@ -6,7 +6,7 @@ import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { ValidationErrorMessage } from 'src/app/core/components/form-control-error';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
-import { ToastsService } from 'src/app/services/toasts.service';
+import { ToastsService } from 'src/app/services/popups/toasts.service';
 import { ValidationService } from 'src/app/services/validation.service';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { User } from 'src/app/views';

@@ -1,4 +1,5 @@
 import { geohashForLocation } from 'geofire-common';
+import { ArgumentNullError } from 'src/app/errors';
 
 export class Location {
     geohash?: string;
@@ -19,18 +20,9 @@ export class Location {
     dateRegistered: Date; // TODO: remove this
 }
 
-export function formatToDocumentName(longitude: number, latitude: number) {
-    let message: string;
-
-    if (longitude == 0) {
-        message = 'Wrong longitude format.';
-        throw message;
-    }
-
-    if (latitude == 0) {
-        message = 'Wrong latitude format.';
-        throw message;
-    }
-
+export function getGeoHashString(longitude: number, latitude: number): string {
+    const caller = 'getGeoHashString';
+    ArgumentNullError.throwIfNull(longitude, 'longitude', caller);
+    ArgumentNullError.throwIfNull(latitude, 'latitude', caller);
     return geohashForLocation([latitude, longitude]);
 }

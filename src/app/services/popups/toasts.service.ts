@@ -1,15 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AlertButton, AlertController, ToastController } from '@ionic/angular';
-import { Debugger } from '../core/components/debug/debugger.service';
-import { Logger, LogLevel } from '../logger';
+import { Debugger } from '../../core/components/debug/debugger.service';
 
 export type ToastsColorCodes = 'danger' | 'success' | 'warning';
-export type AlertDefaultConfirmations = 'yes' | 'no';
 
-const logger = new Logger({
-    source: 'ToastsService',
-    level: LogLevel.Debug
-});
+export type AlertDefaultConfirmations = 'yes' | 'no';
 
 @Injectable({ providedIn: 'root' })
 export class ToastsService {
@@ -118,7 +113,7 @@ export class ToastsService {
         await alert.present();
 
         const { role } = await alert.onDidDismiss();
-        logger.log('role:', role);
+        this.debug.info('role:', role);
 
         return role == roleToCheck || role.includes(roleToCheck);
     }

@@ -2,7 +2,7 @@ import { ApiService } from 'src/app/api/ApiService.service';
 import { LoadingController } from '@ionic/angular';
 import { Component, OnInit } from '@angular/core';
 import { User } from 'src/app/views';
-import { ToastsService } from 'src/app/services/toasts.service';
+import { ToastsService } from 'src/app/services/popups/toasts.service';
 
 @Component({
     selector: 'app-names-settings',

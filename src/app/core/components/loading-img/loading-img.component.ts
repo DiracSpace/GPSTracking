@@ -2,7 +2,7 @@ import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/co
 import { Subscription } from 'rxjs';
 import { Logger, LogLevel } from 'src/app/logger';
 import { ContextService } from 'src/app/services/context.service';
-import { ToastsService } from 'src/app/services/toasts.service';
+import { ToastsService } from 'src/app/services/popups/toasts.service';
 
 const logger = new Logger({
     source: 'LoadingImgComponent',

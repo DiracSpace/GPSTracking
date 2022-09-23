@@ -15,15 +15,12 @@ import { guid } from 'src/app/utils';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { repeatWhen, takeUntil } from 'rxjs/operators';
 import { ScannerPermissions } from '../scanner/scanner-permissions.service';
-import { ToastsColorCodes, ToastsService } from 'src/app/services/toasts.service';
+import { ToastsColorCodes, ToastsService } from 'src/app/services/popups/toasts.service';
 import { ContextService } from 'src/app/services/context.service';
 import { userLocations } from 'src/app/core/components/bottom-navigation/bottom-navigation.component';
-import { formatToDocumentName } from 'src/app/views/Location/Location';
-
-const logger = new Logger({
-    source: 'HomePage',
-    level: LogLevel.Debug
-});
+import { getGeoHashString } from 'src/app/views/Location/Location';
+import { disposeSubscription } from 'src/app/utils/angular';
+import { GpsUtils } from 'src/app/services';
 
 // 1 hour = 3600000
 // 1 minute = 60000
@@ -49,7 +46,7 @@ export class HomePage implements OnInit, OnDestroy {
     scanning = false;
     user = new User();
 
-    private platformName: string = null;
+    // private platformName: string = null;
 
     private idleInterval: Observable<number>;
     closeIdleIntervalObservable() {
@@ -62,12 +59,6 @@ export class HomePage implements OnInit, OnDestroy {
     private readonly _stopInterval = new Subject<void>();
 
     private listenSubscription: Subscription;
-    closeListenSubscription() {
-        if (this.listenSubscription) {
-            this.listenSubscription.unsubscribe();
-            this.listenSubscription = null;
-        }
-    }
 
     constructor(
         private androidPermissionsUtils: AndroidPermissionsUtils,
@@ -81,18 +72,9 @@ export class HomePage implements OnInit, OnDestroy {
         private platform: Platform,
         private nav: Navigation,
         private api: ApiService,
-        private debug: Debugger
-    ) {
-        platform.ready().then((result: string) => {
-            this.platformName = result;
-
-            debug.info('Platform ready:', result);
-            logger.log('result:', result);
-
-            debug.info('Platform name:', this.platformName);
-            logger.log('this.platformName:', this.platformName);
-        });
-    }
+        private debug: Debugger,
+        private gpsUtils: GpsUtils
+    ) {}
 
     ngOnInit(): void {
         this.loadAsync(this.isFirstLoad);
@@ -101,10 +83,11 @@ export class HomePage implements OnInit, OnDestroy {
 
     ngOnDestroy(): void {
         this.closeIdleIntervalObservable();
-        this.closeListenSubscription();
+        disposeSubscription(this.listenSubscription);
     }
 
     /* #region getters */
+
     get qrCodeSrc() {
         return this.user.qrCodeBase64;
     }
@@ -122,10 +105,6 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     /* #endregion */
-
-    onProfileClicked() {
-        this.nav.user(this.user.uid).go();
-    }
 
     async onLogoutClicked() {
         const confirmation = await this.toasts.presentAlertAsync(
@@ -145,6 +124,10 @@ export class HomePage implements OnInit, OnDestroy {
         }
     }
 
+    onProfileClicked() {
+        this.nav.user(this.user.uid).go();
+    }
+
     async onQrSrcObtained(qrSrc: Blob) {
         if (!qrSrc) {
             throw 'No source provided for upload to storage!';
@@ -155,29 +138,30 @@ export class HomePage implements OnInit, OnDestroy {
         }
 
         if (this.user.qrCodeUrl.includes('firebasestorage')) {
-            logger.log('Already uploaded to storage!');
+            this.debug.info('Already uploaded to storage!');
             return;
         }
 
         const loadingDialog = await this.loadingController.create({
             message: 'Generando el código QR'
         });
+
         await loadingDialog.present();
 
         try {
-            logger.log('qrSrc:', qrSrc);
+            this.debug.info('qrSrc:', qrSrc);
             const fileName = formatToBlobName(this.user.uid);
-            logger.log('waiting...');
+            this.debug.info('waiting...');
             const resourceUrl = await this.api.storage.uploadBlobWithProgressAsync(
                 qrSrc,
                 fileName
             );
 
-            logger.log('resourceUrl:', resourceUrl);
+            this.debug.info('resourceUrl:', resourceUrl);
             if (!resourceUrl) {
                 throw 'Could not get resourceUrl';
             }
-            logger.log('resourceUrl:', resourceUrl);
+            this.debug.info('resourceUrl:', resourceUrl);
             this.user.qrCodeUrl = resourceUrl;
             await this.api.users.updateAsync(this.user.uid, this.user);
         } catch (error) {
@@ -197,23 +181,7 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     async onLocationClicked() {
-        if (!this.platformName) {
-            let message = 'No se pudo determinar el tipo dispositivo.';
-            await this.toasts.presentToastAsync(message, 'warning');
-            return;
-        }
-
-        if (this.platformName.includes('dom') || this.platformName == 'dom') {
-            await this.requestLocationAndSaveAsync();
-        } else if (
-            this.platformName.includes('cordova') ||
-            this.platformName == 'cordova'
-        ) {
-            await this.requestLocationForAndroidAsync();
-        } else {
-            let message = 'No se pudo determinar el tipo dispositivo.';
-            await this.toasts.presentToastAsync(message, 'warning');
-        }
+        await this.gpsUtils.saveMyLocationAsync();
     }
 
     private async requestLocationForAndroidAsync() {
@@ -252,7 +220,7 @@ export class HomePage implements OnInit, OnDestroy {
             await this.throwToastAndSignoutAsync();
             return;
         }
-        
+
         this.debug.info('Getting user...');
         this.user = await this.api.users.getByUidOrDefaultAsync(authUser.uid);
         this.debug.info('this.user:', this.user);
@@ -294,12 +262,12 @@ export class HomePage implements OnInit, OnDestroy {
         let duration = 800;
 
         if (!latitude || latitude == 0) {
-            logger.log('No latitude provided!');
+            this.debug.info('No latitude provided!');
             return;
         }
 
         if (!longitude || longitude == 0) {
-            logger.log('No longitude provided!');
+            this.debug.info('No longitude provided!');
             return;
         }
 
@@ -308,17 +276,17 @@ export class HomePage implements OnInit, OnDestroy {
         });
         await loadingDialog.present();
         try {
-            const geohash = formatToDocumentName(longitude, latitude);
+            const geohash = getGeoHashString(longitude, latitude);
 
             // we try to get cached version first
             let userLocationRelation =
-                await this.api.userLocation.getRelationByGeohashOrDefaultAsync(
+                await this.api.userLocation.getByGeohashOrDefaultAsync(
                     geohash,
                     this.user.uid
                 );
 
             if (!userLocationRelation) {
-                logger.log('No cached relation found! Checking server ... ');
+                this.debug.info('No cached relation found! Checking server ... ');
                 await this.requestServerInformationAndUpdateAsync(
                     geohash,
                     latitude,
@@ -327,13 +295,13 @@ export class HomePage implements OnInit, OnDestroy {
                 );
             }
 
-            logger.log('userLocationRelation:', userLocationRelation);
+            this.debug.info('userLocationRelation:', userLocationRelation);
 
             let hasLocationBeenRegisteredRecently =
                 await this.api.userLocation.hasLocationBeenRegisteredRecentlyAsync(
                     userLocationRelation
                 );
-            logger.log(
+            this.debug.info(
                 'hasLocationBeenRegisteredRecently:',
                 hasLocationBeenRegisteredRecently
             );
@@ -344,7 +312,7 @@ export class HomePage implements OnInit, OnDestroy {
                 message =
                     'Aún no ha pasado el tiempo de espera para que vuelvas a registrar esta ubicación';
             } else {
-                logger.log('Updating time');
+                this.debug.info('Updating time');
                 await this.api.userLocation.updateArrayAsync(
                     'datesRegistered',
                     geohash,
@@ -415,20 +383,19 @@ export class HomePage implements OnInit, OnDestroy {
             false
         );
 
-        logger.log('createdLocation:', createdLocation);
+        this.debug.info('createdLocation:', createdLocation);
 
-        let userLocationRelation =
-            await this.api.userLocation.getRelationByGeohashOrDefaultAsync(
-                createdLocation.geohash,
-                this.user.uid,
-                false
-            );
+        let userLocationRelation = await this.api.userLocation.getByGeohashOrDefaultAsync(
+            createdLocation.geohash,
+            this.user.uid,
+            false
+        );
 
-        logger.log('userLocationRelation:', userLocationRelation);
+        this.debug.info('userLocationRelation:', userLocationRelation);
 
         if (!userLocationRelation) {
             // create a relation
-            logger.log('New location detected! Creating relation with User');
+            this.debug.info('New location detected! Creating relation with User');
             this.debug.info('New location detected! Creating relation with User');
 
             let shortDisplayName = `${createdLocation.city}, ${createdLocation.state}`;
@@ -545,7 +512,7 @@ export class HomePage implements OnInit, OnDestroy {
 
             return geoposition;
         } catch (error) {
-            logger.log('error:', error);
+            this.debug.info('error:', error);
             const errorDetails = decodeErrorDetails(error);
             await this.showErrorAlertAsync(errorDetails);
             throw error;

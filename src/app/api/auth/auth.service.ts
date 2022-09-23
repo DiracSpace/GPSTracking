@@ -49,7 +49,7 @@ export class AuthService {
         const user = await this.currentUser;
 
         if (!user) {
-            throw 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
+            throw new Error('No se pudo autenticar. Por favor vuelva a iniciar sesión');
         }
 
         return user;

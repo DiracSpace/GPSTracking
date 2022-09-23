@@ -7,7 +7,7 @@ import {
     RequiredPropError
 } from 'src/app/errors';
 import { Logger, LogLevel } from 'src/app/logger';
-import { ToastsService } from 'src/app/services/toasts.service';
+import { ToastsService } from 'src/app/services/popups/toasts.service';
 import { guid } from 'src/app/utils';
 import { PhoneNumberOwnerTypes, User, UserPhoneNumber } from 'src/app/views';
 

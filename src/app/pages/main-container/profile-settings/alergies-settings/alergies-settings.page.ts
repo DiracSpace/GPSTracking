@@ -5,7 +5,7 @@ import { ApiService } from 'src/app/api';
 import { Logger, LogLevel } from 'src/app/logger';
 import { guid } from 'src/app/utils';
 import { NotImplementedError } from 'src/app/errors';
-import { ToastsService } from 'src/app/services/toasts.service';
+import { ToastsService } from 'src/app/services/popups/toasts.service';
 
 const logger = new Logger({
     source: 'AlergiesSettingsPage',

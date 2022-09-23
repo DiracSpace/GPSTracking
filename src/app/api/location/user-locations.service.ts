@@ -24,7 +24,7 @@ import { FirebaseEntityConverter, UserLocation } from 'src/app/views';
 import { Injectable } from '@angular/core';
 import { setDoc } from '@firebase/firestore';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
-import { NotImplementedError } from 'src/app/errors';
+import { ArgumentNullError, NotImplementedError } from 'src/app/errors';
 
 const logger = new Logger({
     source: 'UserLocationService',
@@ -167,20 +167,20 @@ export class UserLocationService {
         await setDoc(userLocationDocRef, entity);
     }
 
-    async getRelationByGeohashOrDefaultAsync(
+    async getByGeohashOrDefaultAsync(
         geohash: string,
         uid: string,
         checkCache: boolean = true
     ) {
-        if (!geohash || geohash.length == 0) {
-            throw 'No geohash provided!';
-        }
+        const caller = 'getByGeohashOrDefaultAsync';
+        ArgumentNullError.throwIfNull(geohash, 'geohash', caller);
 
         const userLocationDocRef = doc(
             this.afStore,
             COLLECTION_NAME,
             geohash
         ).withConverter(FirebaseEntityConverter<UserLocation>());
+
         let userLocationSnapshot: DocumentSnapshot<UserLocation> = null;
 
         if (checkCache) {
@@ -194,16 +194,21 @@ export class UserLocationService {
             try {
                 userLocationSnapshot = await getDoc(userLocationDocRef);
             } catch (error) {
-                logger.log("error:", error);
-                this.debug.error("error:", error);
-                // let invoker handle null results
+                logger.log('error:', error);
+                this.debug.error('error:', error);
                 return null;
             }
         }
 
-        if (!userLocationSnapshot || !userLocationSnapshot.exists()) return null;
+        if (!userLocationSnapshot || !userLocationSnapshot.exists()) {
+            return null;
+        }
+
         let userLocation = userLocationSnapshot.data();
-        if (userLocation.uid != uid) return null;
+
+        if (userLocation.uid != uid) {
+            return null;
+        }
 
         return userLocation;
     }

@@ -4,7 +4,7 @@ import { Logger, LogLevel } from 'src/app/logger';
 import { ToastsService } from 'src/app/services';
 import { ApiService } from 'src/app/api';
 import { Location, UserLocation } from 'src/app/views';
-import { formatToDocumentName } from 'src/app/views/Location/Location';
+import { getGeoHashString } from 'src/app/views/Location/Location';
 import { wait } from 'src/app/utils/time';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { ArgumentNullError } from 'src/app/errors';
