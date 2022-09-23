@@ -23,7 +23,7 @@ import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { HttpClient, HttpParams, HttpRequest } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
-import { ArgumentNullError } from 'src/app/errors';
+import { ArgumentNullError, RequiredPropError } from 'src/app/errors';
 
 const logger = new Logger({
     source: 'LocationService',
@@ -57,43 +57,25 @@ export class LocationService {
         entity: Location,
         checkCache: boolean = true
     ): Promise<Location> {
-        if (!entity) {
-            throw 'No entity provided!';
-        }
+        const caller = 'createIfNotExistsAsync';
+        ArgumentNullError.throwIfNull(entity, 'entity', caller);
+        RequiredPropError.throwIfNull(entity.geohash, 'entity.geohash', caller);
 
-        if (!entity.geohash) {
-            throw 'No unique location identifier provided!';
-        }
-
-        // We search by geohash first because we don't want to make
-        // an external request to OpenStreetMaps.
-        let locationByGeohash = await this.getByGeohashOrDefaultAsync(
+        const locationByGeohash = await this.getByGeohashOrDefaultAsync(
             entity.geohash,
             checkCache
         );
 
-        // We have a location registered with that geohash
-        // But these seem to differ based on longitude and
-        // latitude.
         if (locationByGeohash) {
-            logger.log('Geohash location found!');
-            this.debug.info('Geohash location found!');
             return locationByGeohash;
         }
 
-        // If the entity doesn't have this property, then
-        // we make the external request.
         if (!entity.displayName) {
-            logger.log('Requesting displayName from OpenStreetMaps!');
-            this.debug.info('Requesting displayName from OpenStreetMaps!');
-            // We have to request the new displayName from
-            // OpenStreetMaps to determine if a document is already created.
-            entity = await this.addGeocodingDataToEntityAsync(entity);
+            await this.mapGeocodePropertiesAsync(entity);
         }
 
         // We query the database for results based on displayName.
-        // The best case scenario is that only one document should
-        // be returned.
+        // The best case scenario is that only one document should be returned.
         let locationsByDisplayName = await this.getByDisplayNameOrDefaultAsync(
             entity.longitude,
             entity.latitude,
@@ -101,22 +83,18 @@ export class LocationService {
             checkCache
         );
 
-        // There should only exist one document in list, but
-        // murphy law. Either way, we search for an exact match
-        // of DisplayName.
+        // There should only exist one document in list, but murphy law.
+        // Either way, we search for an exact match of DisplayName.
         let locationByDisplayName = locationsByDisplayName.find(
             (x) => x.displayName == entity.displayName
         );
 
         // We found an exact match, so we return this.
         if (locationByDisplayName) {
-            logger.log('DisplayName location found!');
-            this.debug.info('DisplayName location found!');
             return locationByDisplayName;
         }
 
         // We don't have the location based on geohash or displayName
-        logger.log('New location detected! Creating ... ');
         const locationDocRef = doc(
             this.afStore,
             COLLECTION_NAME,
@@ -187,10 +165,7 @@ export class LocationService {
             logger.log(
                 'No displayName property provided! Requesting from OpenStreetMap ... '
             );
-            let openStreetMapResult = await this.requestGeocodingFromOpenStreetMap(
-                longitude,
-                latitude
-            );
+            let openStreetMapResult = await this.reverseGeocodeAsync(longitude, latitude);
 
             if (!openStreetMapResult) {
                 throw 'Could not get reverse geocode result.';
@@ -261,39 +236,33 @@ export class LocationService {
         return cachedDocSnap;
     }
 
-    private async addGeocodingDataToEntityAsync(entity: Location): Promise<Location> {
-        const geocodingResult = await this.requestGeocodingFromOpenStreetMap(
-            entity.longitude,
-            entity.latitude
+    private async mapGeocodePropertiesAsync(location: Location): Promise<void> {
+        const reverseGeocodingResult = await this.reverseGeocodeAsync(
+            location.longitude,
+            location.latitude
         );
-        logger.log('geocodingResult:', geocodingResult);
-
-        entity.displayName = geocodingResult.display_name;
-        entity.postcode = geocodingResult.address.postcode;
-        entity.country = geocodingResult.address.country;
-        entity.state = geocodingResult.address.state;
-        entity.city = geocodingResult.address.city;
-        entity.road = geocodingResult.address.road;
-
-        return entity;
+        location.displayName = reverseGeocodingResult.display_name;
+        location.postcode = reverseGeocodingResult.address.postcode;
+        location.country = reverseGeocodingResult.address.country;
+        location.state = reverseGeocodingResult.address.state;
+        location.city = reverseGeocodingResult.address.city;
+        location.road = reverseGeocodingResult.address.road;
     }
 
-    private async requestGeocodingFromOpenStreetMap(longitude: number, latitude: number) {
-        let httpQueryParams = new HttpParams();
-        httpQueryParams = httpQueryParams.append('format', 'json');
-        httpQueryParams = httpQueryParams.append('lat', latitude);
-        httpQueryParams = httpQueryParams.append('lon', longitude);
-
-        const completeUrl = new HttpRequest(
+    private async reverseGeocodeAsync(
+        longitude: number,
+        latitude: number
+    ): Promise<ReverseGeocodingResult> {
+        const url = new HttpRequest(
             'GET',
             environment.openstreetmap.reverseGeocodingDomain,
             {
-                params: httpQueryParams
+                params: new HttpParams()
+                    .append('format', 'json')
+                    .append('lat', latitude)
+                    .append('lon', longitude)
             }
         );
-
-        return await this.http
-            .get<ReverseGeocodingResult>(completeUrl.urlWithParams)
-            .toPromise();
+        return await this.http.get<ReverseGeocodingResult>(url.urlWithParams).toPromise();
     }
 }

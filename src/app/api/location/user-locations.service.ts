@@ -24,11 +24,15 @@ import { FirebaseEntityConverter, UserLocation } from 'src/app/views';
 import { Injectable } from '@angular/core';
 import { setDoc } from '@firebase/firestore';
 import { HandleFirebaseError } from 'src/app/utils/firebase-handling';
-import { ArgumentNullError, NotImplementedError } from 'src/app/errors';
+import {
+    ArgumentNullError,
+    NotImplementedError,
+    RequiredPropError
+} from 'src/app/errors';
 
 const logger = new Logger({
     source: 'UserLocationService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 const COLLECTION_NAME = 'userlocations';
@@ -150,13 +154,9 @@ export class UserLocationService {
     }
 
     async createAsync(entity: UserLocation) {
-        if (!entity) {
-            throw 'No entity provided!';
-        }
-
-        if (!entity.geohash || entity.geohash.length == 0) {
-            throw 'No unique location identifier provided in entity!';
-        }
+        const caller = 'createAsync';
+        ArgumentNullError.throwIfNull(entity, 'entity', caller);
+        RequiredPropError.throwIfNull(entity.geohash, 'entity.geohash', caller);
 
         const userLocationDocRef = doc(
             this.afStore,
@@ -190,12 +190,9 @@ export class UserLocationService {
         }
 
         if (!userLocationSnapshot) {
-            logger.log('Fetching data!');
             try {
                 userLocationSnapshot = await getDoc(userLocationDocRef);
             } catch (error) {
-                logger.log('error:', error);
-                this.debug.error('error:', error);
                 return null;
             }
         }
@@ -216,8 +213,7 @@ export class UserLocationService {
     private async tryToGetFromCacheOrDefaultAsync(
         userLocationDocRef: DocumentReference<UserLocation>
     ): Promise<QueryDocumentSnapshot<UserLocation> | null> {
-        logger.log('Trying to get from cache ... ');
-        this.debug.info('Trying to get from cache ... ');
+        this.debug.info('Trying to get from cache...');
         let cachedDocSnap: DocumentSnapshot<UserLocation> = null;
 
         try {
@@ -246,16 +242,24 @@ export class UserLocationService {
         entityId: string,
         entity: T
     ): Promise<void> {
+        console.log('1');
         const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId).withConverter(
             FirebaseEntityConverter<UserLocation>()
         );
 
+        console.log('2');
         const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
 
+        console.log('3');
         let genericObj = {};
+        console.log('4');
         genericObj[entityKey] = arrayUnion(firebaseEntity);
 
+        console.log('5');
+        console.log('userDocRef', userDocRef);
+        console.log('genericObj', genericObj);
         await updateDoc(userDocRef, genericObj);
+        console.log('6');
     }
 
     async removeArrayElementAsync<T>(

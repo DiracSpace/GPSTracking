@@ -124,6 +124,10 @@ export class HomePage implements OnInit, OnDestroy {
         }
     }
 
+    onRefreshClicked() {
+        this.loadAsync(false);
+    }
+
     onProfileClicked() {
         this.nav.user(this.user.uid).go();
     }

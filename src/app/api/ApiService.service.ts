@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth/auth.service';
+import { GeolocationService } from './geolocations/geolocations.service';
 import { BackgroundLocationService } from './location/background-location.service';
 import { LocationService } from './location/location.service';
 import { UserLocationService } from './location/user-locations.service';
@@ -15,5 +16,6 @@ export class ApiService {
         public location: LocationService,
         public userLocation: UserLocationService,
         public backgroundLocation: BackgroundLocationService,
+        public geolocations: GeolocationService
     ) {}
 }

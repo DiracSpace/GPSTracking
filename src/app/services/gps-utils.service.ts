@@ -5,12 +5,10 @@ import { Platform } from '@ionic/angular';
 import { ApiService } from '../api';
 import { userLocations } from '../core/components/bottom-navigation/bottom-navigation.component';
 import { Debugger } from '../core/components/debug/debugger.service';
-import { decodeErrorDetails } from '../utils/errors';
 import { handleAndDecodeAsync } from '../utils/promises';
 import { UserLocation } from '../views';
-import { getGeoHashString } from '../views/Location/Location';
+import { getGeoHashString, Location } from '../views/Location/Location';
 import { AndroidPermissionsUtils } from './android-permissions-utils.service';
-import { ToastsColorCodes } from './popups/toasts.service';
 import { Popups } from './popups';
 import { guid } from '../utils';
 import { ArgumentNullError } from '../errors';
@@ -18,6 +16,10 @@ import { AuthService } from '../api/auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class GpsUtils {
+    /**
+     * Used by several methods in this service.
+     * Must be set by the only public method "saveMyLocationAsync".
+     * */
     private userId: string;
 
     constructor(
@@ -30,27 +32,6 @@ export class GpsUtils {
         private androidPermissionsUtils: AndroidPermissionsUtils,
         private popups: Popups
     ) {}
-
-    get isAvailableForPlatform(): boolean {
-        if (
-            this.platform.is('desktop') ||
-            this.platform.is('mobileweb') ||
-            this.platform.is('pwa')
-        ) {
-            return false;
-        }
-
-        return (
-            this.platform.is('android') ||
-            this.platform.is('capacitor') ||
-            this.platform.is('cordova') ||
-            this.platform.is('hybrid') ||
-            this.platform.is('ios') ||
-            this.platform.is('ipad') ||
-            this.platform.is('iphone') ||
-            this.platform.is('mobile')
-        );
-    }
 
     async saveMyLocationAsync() {
         const { error: userIdError, result: userId } = await handleAndDecodeAsync(
@@ -73,17 +54,25 @@ export class GpsUtils {
             return;
         }
 
-        const loader = await this.popups.loaders.showAsync('Obteniendo tu ubicacion...');
+        const getMyLocationLoader = await this.popups.loaders.showAsync(
+            'Obteniendo tu ubicacion...'
+        );
 
         const { error: myLocationError, result: myLocation } = await handleAndDecodeAsync(
             this.getMyLocationAsync()
         );
 
         if (myLocationError) {
-            await loader.dismiss();
+            await getMyLocationLoader.dismiss();
             await this.popups.toasts.error(myLocationError.toString());
             return;
         }
+
+        await getMyLocationLoader.dismiss();
+
+        const persistMyLocationLoader = await this.popups.loaders.showAsync(
+            'Guardando tu ubicación...'
+        );
 
         const { error: persistMyLocationError } = await handleAndDecodeAsync(
             this.persistMyLocationAsync(
@@ -93,12 +82,12 @@ export class GpsUtils {
         );
 
         if (persistMyLocationError) {
-            await loader.dismiss();
+            await persistMyLocationLoader.dismiss();
             await this.popups.toasts.error(persistMyLocationError.toString());
             return;
         }
 
-        await loader.dismiss();
+        await persistMyLocationLoader.dismiss();
         await this.popups.toasts.success('Ubicación guardada');
     }
 
@@ -199,30 +188,53 @@ export class GpsUtils {
 
         const geohash = getGeoHashString(longitude, latitude);
 
+        await this.api.geolocations.createAsync({
+            id: guid(),
+            userId: this.userId,
+            geohash: getGeoHashString(longitude, latitude),
+            longitude: longitude,
+            latitude: latitude,
+            fromBackground: fromBackground,
+            dateRegistered: new Date()
+        });
+
+        return;
         // Try to get cached version first
-        this.debug.info('Trying to get UserLocation from cache...');
+        let userLocation: UserLocation;
+
+        this.debug.info(
+            `Trying to get an existing UserLocation with geohash ${geohash}...`
+        );
 
         const existingUserLocation =
             await this.api.userLocation.getByGeohashOrDefaultAsync(
                 geohash,
                 this.userId,
-                true
+                true // Try to get from cache
             );
 
-        if (!existingUserLocation) {
-            this.debug.info('Could not find UserLocation in cache! Checking server...');
+        if (existingUserLocation) {
+            userLocation = existingUserLocation;
+        } else {
+            this.debug.info(
+                `Could not find an existing UserLocation with geohash ${geohash} :(`
+            );
 
-            await this.createLocationIfNotExistsAndRelateToUserAsync(
+            this.debug.info('Creating new Location..');
+            const createdLocation = await this.createLocationIfNotExistsAsync(
                 geohash,
                 latitude,
                 longitude,
                 fromBackground
             );
+
+            this.debug.info('Creating new UserLocation..');
+            userLocation = await this.createUserLocationIfNotExistsAsync(createdLocation);
         }
 
-        this.debug.info('userLocation:', existingUserLocation);
+        this.debug.info('userLocation:', userLocation);
 
-        this.debug.info('Updating time');
+        this.debug.info('Updating UserLocation array...');
 
         await this.api.userLocation.updateArrayAsync(
             'datesRegistered',
@@ -230,7 +242,63 @@ export class GpsUtils {
             new Date()
         );
 
+        this.debug.info('Updating UserLocations...');
         await this.updateUserLocationsAsync();
+    }
+
+    private async createLocationIfNotExistsAsync(
+        geohash: string,
+        latitude: number,
+        longitude: number,
+        fromBackground: boolean = false
+    ): Promise<Location> {
+        const location = {
+            id: guid(),
+            geohash: geohash,
+            latitude: latitude,
+            longitude: longitude,
+            fromBackground: fromBackground,
+            dateRegistered: new Date()
+        };
+
+        const createdLocation = await this.api.location.createIfNotExistsAsync(
+            location,
+            false // Do not check cache
+        );
+
+        return createdLocation;
+    }
+
+    private async createUserLocationIfNotExistsAsync(
+        location: Location
+    ): Promise<UserLocation> {
+        this.debug.info('Trying to create UserLocation...');
+
+        const existingUserLocation =
+            await this.api.userLocation.getByGeohashOrDefaultAsync(
+                location.geohash,
+                this.userId,
+                false
+            );
+
+        if (existingUserLocation) {
+            this.debug.info('The UserLocation already exists!');
+            return existingUserLocation;
+        }
+
+        this.debug.info('The UserLocation does not exist! Creating new...');
+
+        const newUserLocation: UserLocation = {
+            shortDisplayName: `${location.city}, ${location.state}`,
+            geohash: location.geohash,
+            uid: this.userId
+        };
+
+        await this.api.userLocation.createAsync(newUserLocation);
+
+        this.debug.info('Created new UserLocation!');
+
+        return newUserLocation;
     }
 
     /**

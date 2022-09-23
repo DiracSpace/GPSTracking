@@ -6,6 +6,29 @@ import { ErrorDetails } from '../../utils/errors';
 export class AlertsService {
     constructor(private alerts: AlertController) {}
 
+    async confirmAsync(
+        message: string,
+        options?: { confirmText?: string; cancelText: string }
+    ): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            const alert = await this.alerts.create({
+                message,
+                buttons: [
+                    {
+                        text: options?.confirmText ?? 'Confirm',
+                        handler: () => resolve()
+                    },
+                    {
+                        text: options?.cancelText ?? 'Cancel',
+                        handler: () => reject()
+                    }
+                ]
+            });
+
+            await alert.present();
+        });
+    }
+
     async showAsync(message: string): Promise<HTMLIonAlertElement> {
         const alert = await this.alerts.create({ message });
         await alert.present();
