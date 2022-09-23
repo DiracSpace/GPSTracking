@@ -15,7 +15,6 @@ import { AlertUtils } from 'src/app/services';
 import { ContextService } from 'src/app/services/context.service';
 import { PhotoService } from 'src/app/services/photo.service';
 import { decodeErrorDetails } from 'src/app/utils/errors';
-import { handleAndDecode, handleAndDecodeAsync } from 'src/app/utils/promises';
 import { User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
 import { Assets } from 'src/assets';

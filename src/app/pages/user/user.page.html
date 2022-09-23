@@ -16,24 +16,70 @@
             <h1>{{ invalidContentMessage }}</h1>
         </ng-container>
         <ng-container *ngIf="!invalidContent">
-            <div class="user-profile-card">
-                <div class="user-avatar-display">
-                    <div class="avatar-icon">
-                        <img [src]="userAvatarImg" alt="avatar" />
-                        <ion-icon
-                            name="add-circle"
-                            (click)="onClickOpenActions()"
-                        ></ion-icon>
+            <ng-container *ngIf="user">
+                <div class="ion-padding">
+                    <div class="ion-margin-bottom">
+                        <p class="fw-bold m-0">Correo electrónico</p>
+                        <p class="m-0">{{user.email}}</p>
+                    </div>
+                    <div class="ion-margin-bottom">
+                        <p class="fw-bold m-0">Nombre completo</p>
+                        <p class="m-0">{{fullName}}</p>
                     </div>
                 </div>
-                <div class="user-profile-banner">
-                    <img [src]="userBannerImg" alt="banner" />
+                <ion-list *ngIf="user.phoneNumbers">
+                    <ion-list-header>
+                        <ion-label>Números Telefónicos</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let phoneNumber of user.phoneNumbers">
+                        <ion-label>{{phoneNumber.number}}</ion-label>
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.addresses">
+                    <ion-list-header>
+                        <ion-label>Direcciones</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let address of user.addresses">
+                        <ion-label>{{getAddressDescription(address)}}</ion-label>
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.diseases">
+                    <ion-list-header>
+                        <ion-label>Enfermedades</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let disease of user.diseases">
+                        <ion-label>{{disease.name}}</ion-label>
+                    </ion-item>
+                </ion-list>
+                <ion-list *ngIf="user.alergies">
+                    <ion-list-header>
+                        <ion-label>Alergias</ion-label>
+                    </ion-list-header>
+                    <ion-item *ngFor="let alergy of user.alergies">
+                        <ion-label>{{alergy.name}}</ion-label>
+                    </ion-item>
+                </ion-list>
+            </ng-container>
+            <ng-container *ngIf="false">
+                <div class="user-profile-card">
+                    <div class="user-avatar-display">
+                        <div class="avatar-icon">
+                            <img [src]="userAvatarImg" alt="avatar" />
+                            <ion-icon
+                                name="add-circle"
+                                (click)="onClickOpenActions()"
+                            ></ion-icon>
+                        </div>
+                    </div>
+                    <div class="user-profile-banner">
+                        <img [src]="userBannerImg" alt="banner" />
+                    </div>
                 </div>
-            </div>
-            <app-card-item
-                *ngFor="let cardItem of userProfileCardItems"
-                [cardItem]="cardItem"
-            ></app-card-item>
+                <app-card-item
+                    *ngFor="let cardItem of userProfileCardItems"
+                    [cardItem]="cardItem"
+                ></app-card-item>
+            </ng-container>
         </ng-container>
     </ng-container>
 </ion-content>
