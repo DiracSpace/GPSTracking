@@ -14,7 +14,8 @@
     "build:android": "ionic capacitor build android",
     "open:android": "ionic capacitor open android",
     "pipeline:android": "npm run res:android && npm run build:android && npm run open:android",
-    "pipeline:firebase": "ionic build && firebase deploy"
+    "pipeline:firebase": "ionic build && firebase deploy",
+    "prepare": "husky install"
   },
   "private": true,
   "dependencies": {
@@ -85,7 +86,8 @@
     "openapi-typescript": "^5.4.1",
     "protractor": "~7.0.0",
     "ts-node": "~8.3.0",
-    "typescript": "~4.7.3"
+    "typescript": "~4.7.3",
+    "husky": "^8.0.0"
   },
   "description": "An Ionic project"
 }
