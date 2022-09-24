@@ -8,6 +8,10 @@ import {
     NavController
 } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
+import {
+    CardItemIdTypes,
+    CardItemStatusTypes
+} from 'src/app/core/components/card-item/card-item.component';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
@@ -18,7 +22,15 @@ import { decodeErrorDetails } from 'src/app/utils/errors';
 import { User, UserAddress } from 'src/app/views';
 import { getAddressDescription } from 'src/app/views/User/UserAddress';
 import { Assets } from 'src/assets';
-import { UserProfileCardItems } from './CardItems';
+import {
+    UserAddressInformationCardItem,
+    UserAlergyInformationCardItem,
+    UserBasicInformationCardItem,
+    UserDiseaseInformationCardItem,
+    UserLocationsInformationCardItem,
+    UserPhoneNumberInformationCardItem,
+    UserProfileCardItems
+} from './CardItems';
 
 const logger = new Logger({
     source: 'UserPage',
@@ -142,17 +154,45 @@ export class UserPage implements OnInit {
         return 'Desconocido';
     }
 
+    /* #region cardItemStatuses */
+    get userBasicInformationStatus(): CardItemStatusTypes {
+        let basicInformationIsIncomplete =
+            !this.user.firstName ||
+            !this.user.middleName ||
+            !this.user.lastNameFather ||
+            !this.user.lastNameMother;
+
+        return basicInformationIsIncomplete ? 'incompleto' : 'completado';
+    }
+
+    get userAddressInformationStatus(): CardItemStatusTypes {
+        let addressInformationIsIncomplete =
+            !this.user.addresses || this.user.addresses.length == 0;
+        return addressInformationIsIncomplete ? 'incompleto' : 'completado';
+    }
+
+    get userPhoneNumberInformationStatus(): CardItemStatusTypes {
+        let phoneNumberInformationIsIncomplete =
+            !this.user.phoneNumbers || this.user.phoneNumbers.length == 0;
+        return phoneNumberInformationIsIncomplete ? 'incompleto' : 'completado';
+    }
+
+    get userDiseaseInformationStatus(): CardItemStatusTypes {
+        let diseaseInformationIsIncomplete =
+            !this.user.diseases || this.user.diseases.length == 0;
+        return diseaseInformationIsIncomplete ? 'incompleto' : 'completado';
+    }
+
+    get userAlergyInformationStatus(): CardItemStatusTypes {
+        let alergyInformationIsIncomplete =
+            !this.user.alergies || this.user.alergies.length == 0;
+        return alergyInformationIsIncomplete ? 'incompleto' : 'completado';
+    }
+    /* #endregion */
+
     get userId(): string | undefined {
         const userId = this.activatedRoute.snapshot.params.id;
         return userId;
-    }
-
-    get userBannerImg() {
-        if (!this.user.bannerUrl) {
-            return Assets.banner;
-        }
-
-        return this.user.bannerUrl;
     }
 
     get userAvatarImg() {
@@ -163,34 +203,9 @@ export class UserPage implements OnInit {
         return this.user.photoUrl;
     }
 
-    get fullName(): string {
-        const parts: string[] = [];
-
-        if (this.user.firstName) {
-            parts.push(this.user.firstName);
-        }
-
-        if (this.user.middleName) {
-            parts.push(this.user.middleName);
-        }
-
-        if (this.user.lastNameFather) {
-            parts.push(this.user.lastNameFather);
-        }
-
-        if (this.user.lastNameMother) {
-            parts.push(this.user.lastNameMother);
-        }
-
-        return parts.join(' ');
-    }
-
-    get hasAtLeastOneAddress() {
-        if (this.user.addresses == undefined || this.user.addresses == null) {
-            return false;
-        }
-
-        return this.user.addresses.length > 0;
+    get displayName(): string {
+        let display = `${this.user.firstName} ${this.user.lastNameFather}`;
+        return display ?? 'Usuario';
     }
 
     /**
@@ -254,6 +269,8 @@ export class UserPage implements OnInit {
         const photoName = `ProfilePicture_${this.user.uid}_`;
         this.context.photoName.set(photoName);
 
+        this.initCardItemRoutes();
+
         logger.log('this.context.photoName.get():', this.context.photoName.get());
         logger.log('this.user:', this.user);
 
@@ -261,8 +278,38 @@ export class UserPage implements OnInit {
         this.loading = false;
     }
 
-    private async initUserCardInformation() {
-        if (this.hasAtLeastOneAddress) {
-        }
+    private initCardItemRoutes() {
+        UserLocationsInformationCardItem.action = () => {
+            if (!this.user || !this.user.uid) {
+                throw 'Se require el UserId';
+            }
+
+            this.nav.locations(this.user.uid).go();
+        };
+
+        UserBasicInformationCardItem.status = this.userBasicInformationStatus;
+        UserBasicInformationCardItem.action = () => {
+            this.nav.mainContainer.profileSettings.names.go();
+        };
+
+        UserAddressInformationCardItem.status = this.userAddressInformationStatus;
+        UserAddressInformationCardItem.action = () => {
+            this.nav.mainContainer.profileSettings.addresses.go();
+        };
+
+        UserPhoneNumberInformationCardItem.status = this.userPhoneNumberInformationStatus;
+        UserPhoneNumberInformationCardItem.action = () => {
+            this.nav.mainContainer.profileSettings.phoneNumbers.go();
+        };
+
+        UserDiseaseInformationCardItem.status = this.userDiseaseInformationStatus;
+        UserDiseaseInformationCardItem.action = () => {
+            this.nav.mainContainer.profileSettings.diseases.go();
+        };
+
+        UserAlergyInformationCardItem.status = this.userAlergyInformationStatus;
+        UserAlergyInformationCardItem.action = () => {
+            this.nav.mainContainer.profileSettings.alergies.go();
+        };
     }
 }

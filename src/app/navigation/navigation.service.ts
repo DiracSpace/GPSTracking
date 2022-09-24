@@ -8,6 +8,10 @@ import { NavigationItem } from './NavigationItem';
 export class Navigation {
     constructor(private router: Router) {}
 
+    get mainContainerRoutes() {
+        return this.mainContainer;
+    }
+
     _ = NavigationItem(this.router, '/');
 
     login = NavigationItem(this.router, '/login');
