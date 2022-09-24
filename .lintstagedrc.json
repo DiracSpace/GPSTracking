@@ -1,3 +1,5 @@
 {
-    "*.{js,ts}": ["npm run format:fix", "npm run lint"]
+    "*.{png,jpeg,jpg,gif,svg}": "imagemin-lint-staged",
+    "*.{js,ts,tsx,md,html,css}": "prettier --write",
+    "*": "prettier --ignore-unknown --write"
 }
