@@ -9,7 +9,7 @@
                 <ion-grid>
                     <ion-row style="column-gap: 15px">
                         <h3>{{ cardItem.primaryTitle }}</h3>
-                        <span *ngIf="hasProvidedStatus" class="badge badge-success">{{
+                        <span *ngIf="hasProvidedStatus" [ngClass]="badgeClass">{{
                             cardItem.status
                         }}</span>
                     </ion-row>

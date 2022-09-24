@@ -30,7 +30,16 @@ ion-card {
 }
 
 .badge-success {
-    background-color: lightgreen;
-    color: green;
+    background-color: rgb(228, 245, 211);
+    color: rgb(67, 107, 29);
 }
 
+.badge-warning {
+    background-color: rgb(252, 237, 220);
+    color: rgb(143, 82, 10);
+}
+
+.bardge-failure {
+    background-color: rgb(255, 235, 232);
+    color: rgb(179, 49, 31);
+}
