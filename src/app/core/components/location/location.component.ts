@@ -2,11 +2,12 @@ import { icon, latLng, Map, MapOptions, marker, popup, tileLayer } from 'leaflet
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Assets } from 'src/assets';
 import { Logger, LogLevel } from 'src/app/logger';
+import { environment } from 'src/environments/environment';
 
 const logger = new Logger({
     source: 'LocationComponent',
-    level: LogLevel.Debug,
-})
+    level: LogLevel.Debug
+});
 
 @Component({
     selector: 'app-location',
@@ -16,12 +17,14 @@ const logger = new Logger({
 export class LocationComponent implements OnInit {
     @Input() longitude: number = -121.726909;
     @Input() latitude: number = 46.879966;
-    
+
     private _hidden: boolean = false;
-    get hidden() { return this._hidden }
+    get hidden() {
+        return this._hidden;
+    }
     @Input() set hidden(hidden: boolean) {
         this._hidden = hidden;
-        
+
         if (this.componentMap) {
             this.onMapReady(this.componentMap);
         } else {
@@ -38,7 +41,7 @@ export class LocationComponent implements OnInit {
     ngOnInit() {
         this.options = {
             layers: [
-                tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+                tileLayer(this.url, {
                     className: 'map-tiles',
                     maxZoom: 18
                 }),
@@ -58,6 +61,17 @@ export class LocationComponent implements OnInit {
             touchZoom: false,
             dragging: false
         };
+    }
+
+    get url() {
+        const apiKey = environment.apiKeys.stadiaMaps;
+
+        if (!apiKey) {
+            throw 'No API key provided for StadiaMaps';
+        }
+
+        // TODO: this is NOT secure at all, but for development purposes we shall leave it
+        return `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=${apiKey}`;
     }
 
     get areOptionsReady() {

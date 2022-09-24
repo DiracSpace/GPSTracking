@@ -1,7 +1,6 @@
 import {
     Component,
     EventEmitter,
-    Input,
     OnDestroy,
     OnInit,
     Output,
@@ -10,19 +9,15 @@ import {
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { formatToBlobName } from 'src/app/views/User/User';
-import { SafeUrl } from '@angular/platform-browser';
 import { Logger, LogLevel } from 'src/app/logger';
 import {
-    AlertController,
     LoadingController,
-    Platform,
-    ToastController
-} from '@ionic/angular';
+    Platform} from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { ContextService } from 'src/app/services/context.service';
 import { Subscription } from 'rxjs';
 import { handleAndDecodeAsync } from 'src/app/utils/promises';
-import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
+import { decodeErrorDetails } from 'src/app/utils/errors';
 import { AlertUtils, ToastsService } from 'src/app/services';
 import { NotImplementedError, RequiredPropError } from 'src/app/errors';
 
