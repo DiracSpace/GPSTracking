@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
     ActionSheetController,
@@ -7,6 +7,7 @@ import {
     LoadingController,
     NavController
 } from '@ionic/angular';
+import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/api';
 import {
     CardItemIdTypes,
@@ -15,7 +16,7 @@ import {
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
-import { AlertUtils } from 'src/app/services';
+import { AlertUtils, ToastsService } from 'src/app/services';
 import { ContextService } from 'src/app/services/context.service';
 import { PhotoService } from 'src/app/services/photo.service';
 import { decodeErrorDetails } from 'src/app/utils/errors';
@@ -42,7 +43,7 @@ const logger = new Logger({
     templateUrl: './user.page.html',
     styleUrls: ['./user.page.scss']
 })
-export class UserPage implements OnInit {
+export class UserPage implements OnInit, OnDestroy {
     @ViewChild(IonBackButtonDelegate, { static: false })
     backButton: IonBackButtonDelegate;
 
@@ -53,15 +54,25 @@ export class UserPage implements OnInit {
                 text: 'Eliminar la foto',
                 role: 'destructive',
                 icon: 'trash',
-                handler: () => {
-                    console.log('Eliminar la foto de perfil!');
+                handler: async () => {
+                    await this.api.storage.deleteFromStorageAsync(
+                        this.context.selectedProfilePicture.get()
+                    );
+                    this.context.selectedProfilePicture.set(null);
+                    await this.updateUserProfilePhotoUrlAsync(true);
+                    this.actionSheet.dismiss();
                 }
             },
             {
                 text: 'Tomarse una foto',
                 icon: 'camera-outline',
                 handler: async () => {
-                    await this.photoService.takePictureAsync();
+                    try {
+                        await this.photoService.loadSaved(this.user.uid);
+                        await this.photoService.takePictureAsync();
+                    } catch (error) {
+                        await this.toasts.error(error);
+                    }
                 }
             },
             {
@@ -85,23 +96,45 @@ export class UserPage implements OnInit {
     loading = false;
     user: User;
 
+    listenForProfilePictureSubscription: Subscription;
+    closeListenForProfilePictureSubscription() {
+        if (this.listenForProfilePictureSubscription) {
+            this.listenForProfilePictureSubscription.unsubscribe();
+            this.listenForProfilePictureSubscription = null;
+        }
+    }
+
+    private actionSheet: HTMLIonActionSheetElement;
+
     constructor(
         private actionSheetController: ActionSheetController,
         private loadingController: LoadingController,
         private activatedRoute: ActivatedRoute,
+        private navController: NavController,
         private photoService: PhotoService,
         private context: ContextService,
+        private toasts: ToastsService,
+        private alerts: AlertUtils,
         private api: ApiService,
-        private navController: NavController,
         private debug: Debugger,
-        private nav: Navigation,
-        private alerts: AlertUtils
+        private nav: Navigation
     ) {}
 
     ngOnInit() {
         if (this.userId) {
             this.tryLoadUserAsync();
         }
+
+        this.listenForProfilePictureSubscription = this.context.selectedProfilePicture
+            .watch()
+            .subscribe(async () => {
+                this.actionSheet.dismiss();
+                await this.updateUserProfilePhotoUrlAsync();
+            });
+    }
+
+    ngOnDestroy(): void {
+        this.closeListenForProfilePictureSubscription();
     }
 
     /**
@@ -196,11 +229,12 @@ export class UserPage implements OnInit {
     }
 
     get userAvatarImg() {
-        if (!this.user.photoUrl) {
+        if (!this.context.selectedProfilePicture.get()) {
+            logger.log('No profile picture!');
             return Assets.avatar;
         }
 
-        return this.user.photoUrl;
+        return this.context.selectedProfilePicture.get();
     }
 
     get displayName(): string {
@@ -225,14 +259,47 @@ export class UserPage implements OnInit {
         return getAddressDescription(address);
     }
 
+    onUserProfileImgError() {
+        logger.log('Error getting users picture!');
+        this.context.selectedProfilePicture.set(Assets.avatar);
+    }
+
     async onClickOpenActions() {
-        const actionSheet = await this.actionSheetController.create(
+        this.actionSheet = await this.actionSheetController.create(
             this.actionSheetOptions
         );
-        await actionSheet.present();
-        const { role, data } = await actionSheet.onDidDismiss();
+        await this.actionSheet.present();
+        const { role, data } = await this.actionSheet.onDidDismiss();
         logger.log('role:', role);
         logger.log('data:', data);
+    }
+
+    private async updateUserProfilePhotoUrlAsync(allowNull: boolean = false) {
+        let profilePictureUrl = this.context.selectedProfilePicture.get();
+        logger.log('profilePictureUrl:', profilePictureUrl);
+
+        if (!profilePictureUrl && !allowNull) {
+            throw 'No existe una URL';
+        }
+
+        if (!allowNull && profilePictureUrl.includes('assets')) {
+            logger.log('Includes assets!');
+            return;
+        }
+
+        try {
+            logger.log('profilePictureUrl:', profilePictureUrl);
+            this.user.photoUrl = profilePictureUrl;
+
+            logger.log('this.user:', this.user);
+            await this.api.users.updateAsync(this.user.uid, this.user);
+            logger.log('updated!');
+        } catch (error) {
+            await this.toasts.presentToastAsync(error, 'danger');
+            return;
+        }
+
+        await this.toasts.presentToastAsync('¡Se actualizó con éxito!');
     }
 
     private async tryLoadUserAsync() {
@@ -267,6 +334,7 @@ export class UserPage implements OnInit {
         }
 
         const photoName = `ProfilePicture_${this.user.uid}_`;
+        this.context.selectedProfilePicture.set(this.user.photoUrl ?? null);
         this.context.photoName.set(photoName);
 
         this.initCardItemRoutes();

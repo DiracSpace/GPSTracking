@@ -25,14 +25,21 @@ export class ContextService {
         watch: () => this.ProfileSelectorModalSubject.asObservable()
     };
 
+    private readonly selectedProfilePictureUrlSubject = new BehaviorSubject<string>(null);
+    selectedProfilePicture = {
+        get: () => this.selectedProfilePictureUrlSubject.value,
+        set: (value: string) => this.selectedProfilePictureUrlSubject.next(value),
+        watch: () => this.selectedProfilePictureUrlSubject.asObservable()
+    };
+
     openCloseProfileSelectorModal() {
         let isModalOpen = this.profileSelectorModal.get();
-        logger.log("isModalOpen:", isModalOpen);
+        logger.log('isModalOpen:', isModalOpen);
         if (isModalOpen) {
-            logger.log("setting false");
+            logger.log('setting false');
             this.profileSelectorModal.set(false);
         } else {
-            logger.log("setting true");
+            logger.log('setting true');
             this.profileSelectorModal.set(true);
         }
     }
@@ -40,6 +47,6 @@ export class ContextService {
     private readonly PhotoNameSubject = new BehaviorSubject<string>(null);
     photoName = {
         get: () => this.PhotoNameSubject.value,
-        set: (value: string) => this.PhotoNameSubject.next(value),
-    }
+        set: (value: string) => this.PhotoNameSubject.next(value)
+    };
 }

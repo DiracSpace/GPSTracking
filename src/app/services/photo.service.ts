@@ -33,11 +33,36 @@ export class PhotoService {
         return this.areCachedPhotosLoaded;
     }
 
-    public async loadSaved(): Promise<void> {
+    public async loadSaved(uid: string = null): Promise<void> {
+        if (!uid) {
+            throw 'No se pasó el UserId';
+        }
+
         logger.log('Loading Pictures!');
         // Retrieve cached photo array data
         const photoList = await Preferences.get({ key: this.photoStorage });
         this.photos = JSON.parse(photoList.value) || [];
+
+        if (this.photos.length == 0) {
+            logger.log('loaded!');
+            return;
+        }
+
+        let photoMissingFilepath = this.photos.some((photo) => !photo.filepath);
+        logger.log('photoMissingFilepath:', photoMissingFilepath);
+
+        if (photoMissingFilepath) {
+            logger.log('Missing filepath!');
+            this.photos = [];
+            return;
+        }
+
+        this.photos = this.photos.filter((photo) => {
+            let photoNameParts = photo.filepath.split('_');
+            let middleMostPart = photoNameParts[Math.floor(photoNameParts.length / 2)];
+            return middleMostPart === uid;
+        });
+        logger.log('this.photos:', this.photos);
 
         try {
             // If running on the web...
@@ -78,8 +103,9 @@ export class PhotoService {
             logger.log('error:', error);
         } finally {
             logger.log('capturedPhoto:', capturedPhoto);
+            logger.log('this.photos:', this.photos);
             const savedImgFile = await this.savePictureAsync(capturedPhoto);
-            this.photos.unshift(savedImgFile);
+            this.photos.push(savedImgFile);
             Preferences.set({
                 key: this.photoStorage,
                 value: JSON.stringify(this.photos)
@@ -91,7 +117,7 @@ export class PhotoService {
     private async savePictureAsync(cameraPhoto: Photo): Promise<UserPhoto> {
         let formattedDate = new Date().toISOString();
         const fileName = `${this.contextService.photoName.get()}${formattedDate}.jpeg`;
-        
+
         let userPhoto: UserPhoto = new UserPhoto();
 
         if (!cameraPhoto) {
@@ -122,11 +148,11 @@ export class PhotoService {
             userPhoto.filepath = fileName;
         }
 
-        logger.log("userPhoto:", userPhoto);
+        logger.log('userPhoto:', userPhoto);
         return userPhoto;
     }
 
-    private async getBlob(webPath: string) {
+    async getBlob(webPath: string) {
         if (!webPath) {
             throw 'No webPath provided!';
         }
@@ -139,7 +165,7 @@ export class PhotoService {
             throw 'No response data!';
         }
 
-        logger.log("blob:", blob);
+        logger.log('blob:', blob);
         return blob;
     }
 
