@@ -14,6 +14,7 @@
         "open:android": "ionic capacitor open android",
         "pipeline:android": "npm run res:android && npm run build:android && npm run open:android",
         "pipeline:firebase": "ionic build && firebase deploy",
+        "pipeline:github": "ionic build",
         "prepare": "husky install",
         "lint-staged": "lint-staged",
         "format:check": "prettier --check .",
