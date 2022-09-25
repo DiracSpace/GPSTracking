@@ -77,7 +77,7 @@
         "angularx-qrcode": "^14.0.0",
         "eslint": "^7.6.0",
         "eslint-plugin-import": "2.22.1",
-        "eslint-plugin-jsdoc": "30.7.6",
+        "eslint-plugin-jsdoc": "39.3.6",
         "eslint-plugin-prefer-arrow": "1.2.2",
         "husky": "^8.0.0",
         "imagemin-lint-staged": "^0.5.1",
