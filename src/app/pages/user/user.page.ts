@@ -21,7 +21,7 @@ import { ContextService } from 'src/app/services/context.service';
 import { PhotoService } from 'src/app/services/photo.service';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { User, UserAddress } from 'src/app/views';
-import { getAddressDescription } from 'src/app/views/User/UserAddress';
+import { getUserAddressDescription } from 'src/app/views/User/UserAddress';
 import { Assets } from 'src/assets';
 import {
     UserAddressInformationCardItem,
@@ -230,7 +230,7 @@ export class UserPage implements OnInit, OnDestroy {
 
     get userAvatarImg() {
         if (!this.context.selectedProfilePicture.get()) {
-            logger.log('No profile picture!');
+            // logger.log('No profile picture!');
             return Assets.avatar;
         }
 
@@ -238,8 +238,24 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     get displayName(): string {
+        if (this.user.username) {
+            return this.user.username;
+        }
+
+        if (!this.user.firstName && !this.user.lastNameFather) {
+            return this.user.email;
+        }
+
         let display = `${this.user.firstName} ${this.user.lastNameFather}`;
         return display ?? 'Usuario';
+    }
+
+    get defaultAddress() {
+        if (!this.user.addresses || this.user.addresses) {
+            return null;
+        }
+
+        return this.user.addresses.find((x) => x.isDefault);
     }
 
     /**
@@ -254,10 +270,6 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     /* #endregion */
-
-    getAddressDescription(address: UserAddress) {
-        return getAddressDescription(address);
-    }
 
     onUserProfileImgError() {
         logger.log('Error getting users picture!');
@@ -322,7 +334,7 @@ export class UserPage implements OnInit, OnDestroy {
         await loadingDialog.present();
 
         try {
-            this.user = await this.api.users.getByUidOrDefaultAsync(this.userId);
+            this.user = await this.api.users.getByUidOrDefaultAsync(this.userId, false);
         } catch (error) {
             await loadingDialog.dismiss();
             throw error;
@@ -356,11 +368,17 @@ export class UserPage implements OnInit, OnDestroy {
         };
 
         UserBasicInformationCardItem.status = this.userBasicInformationStatus;
+        UserBasicInformationCardItem.secondaryTitle = `${this.user.firstName} ${this.user.lastNameFather}, ${this.user.email}`;
         UserBasicInformationCardItem.action = () => {
             this.nav.mainContainer.profileSettings.names.go();
         };
 
         UserAddressInformationCardItem.status = this.userAddressInformationStatus;
+        if (this.defaultAddress != null) {
+            UserAddressInformationCardItem.secondaryTitle = getUserAddressDescription(
+                this.defaultAddress
+            );
+        }
         UserAddressInformationCardItem.action = () => {
             this.nav.mainContainer.profileSettings.addresses.go();
         };

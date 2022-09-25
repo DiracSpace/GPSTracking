@@ -7,7 +7,7 @@
             <ion-icon [name]="cardItem.icon" slot="start"></ion-icon>
             <ion-label class="ion-text-wrap">
                 <ion-grid>
-                    <ion-row style="column-gap: 15px">
+                    <ion-row style="column-gap: 15px; margin-bottom: 8px">
                         <h3>{{ cardItem.primaryTitle }}</h3>
                         <span *ngIf="hasProvidedStatus" [ngClass]="badgeClass">{{
                             cardItem.status

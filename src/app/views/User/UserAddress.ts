@@ -17,7 +17,7 @@ export class UserAddress {
     additionalInstructions?: string;
 }
 
-export function getAddressDescription(address: UserAddress): string {
+export function getUserAddressDescription(address: UserAddress): string {
     const caller = 'getAddressDescription';
     ArgumentNullError.throwIfNull(address, 'address', caller);
 
