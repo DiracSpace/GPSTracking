@@ -11,15 +11,24 @@
                 </ion-buttons>
             </ion-toolbar>
         </ion-header>
-        <ion-content class="ion-padding">
-            <app-no-content
-                *ngIf="!hasContent"
-                message="¡No se encontraron fotos!"
-            ></app-no-content>
 
-            <ion-col size="6" *ngFor="let photo of photos; index as position">
-                <ion-img [src]="photo.webViewPath" (click)="onClickSet(photo)"></ion-img>
-            </ion-col>
+        <ion-content class="ion-padding">
+            <ion-grid>
+                <ion-row *ngIf="!hasContent">
+                    <app-no-content message="¡No se encontraron fotos!"></app-no-content>
+                </ion-row>
+                <ion-row class="ion-justify-content-center" *ngIf="isLoading">
+                    <ion-spinner name="circular"></ion-spinner>
+                </ion-row>
+                <ion-row *ngIf="!isLoading">
+                    <ion-col *ngFor="let photo of photos; index as position" col-12>
+                        <ion-img
+                            [src]="photo.webViewPath"
+                            (click)="onClickSet(photo)"
+                        ></ion-img>
+                    </ion-col>
+                </ion-row>
+            </ion-grid>
         </ion-content>
     </ng-template>
 </ion-modal>

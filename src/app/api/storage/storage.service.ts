@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
+    deleteObject,
     getBlob,
     getDownloadURL,
     getStorage,
@@ -72,6 +73,20 @@ export class StorageService {
             const message = HandleFirebaseError(error);
             throw message;
         }
+    }
+
+    async deleteFromStorageAsync(fileName: string): Promise<void> {
+        const storageRef = ref(this.afStorage, fileName);
+        return new Promise<void>((resolve, reject) => {
+            try {
+                deleteObject(storageRef);
+            } catch (error) {
+                let message = HandleFirebaseError(error);
+                reject(message);
+            }
+
+            resolve();
+        });
     }
 
     async uploadBlobWithProgressAsync(blob: Blob, fileName: string): Promise<string> {

@@ -8,6 +8,8 @@ import { skip } from 'rxjs/operators';
 import { PhotoService } from 'src/app/services/photo.service';
 import { UserPhoto } from 'src/app/views';
 import { StorageService } from 'src/app/api/storage/storage.service';
+import { ToastsService } from 'src/app/services';
+import { AuthService } from 'src/app/api/auth/auth.service';
 
 const logger = new Logger({
     source: 'ProfileSelectorModalComponent',
@@ -26,7 +28,7 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
         'This modal example uses triggers to automatically open a modal when the button is clicked.';
     name: string;
 
-    modalStateSubscription: Subscription;
+    private modalStateSubscription: Subscription;
     removeModalStateSubscription() {
         if (this.modalStateSubscription) {
             this.modalStateSubscription.unsubscribe();
@@ -34,10 +36,14 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
         }
     }
 
+    isLoading: boolean = false;
+
     constructor(
-        private context: ContextService,
+        private storageService: StorageService,
         private photoService: PhotoService,
-        private storageService: StorageService
+        private authService: AuthService,
+        private context: ContextService,
+        private toasts: ToastsService
     ) {}
 
     ngOnInit() {
@@ -46,11 +52,13 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
             .pipe(skip(1))
             .subscribe(async (value: boolean) => {
                 logger.log('value:', value);
-                this.modal.isOpen = value;
-
-                if (this.modal.isOpen) {
-                    await this.photoService.loadSaved();
+                logger.log('this.modal.isOpen:', this.modal.isOpen);
+                if (value) {
+                    let { uid } = await this.authService.currentUser;
+                    await this.photoService.loadSaved(uid);
                 }
+
+                this.modal.isOpen = value;
             });
     }
 
@@ -66,9 +74,33 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
         return this.photoService.savedPhotos;
     }
 
-    onClickSet(photo: UserPhoto) {
+    async onClickSet(photo: UserPhoto) {
         logger.log('photo:', photo);
-        this.context.profileSelectorModal.set(false);
+        if (!photo) {
+            return;
+        }
+
+        this.isLoading = true;
+
+        try {
+            logger.log('photo:', photo);
+            let blob = await this.photoService.getBlob(photo.webViewPath);
+            logger.log('blob:', blob);
+
+            logger.log('uploading to firebase!');
+            const resourceUrl = await this.storageService.uploadBlobWithProgressAsync(
+                blob,
+                photo.filepath
+            );
+            logger.log('resourceUrl:', resourceUrl);
+            this.context.selectedProfilePicture.set(resourceUrl);
+            this.context.openCloseProfileSelectorModal();
+        } catch (error) {
+            await this.toasts.presentToastAsync(error, 'danger');
+            return;
+        }
+
+        this.isLoading = false;
     }
 
     cancel() {

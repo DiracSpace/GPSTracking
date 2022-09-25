@@ -72,9 +72,9 @@ export class LoginPage implements OnInit {
     }
 
     async onEmailFormSubmit() {
-        logger.log("this.emailForm.valid:", this.emailForm.valid);
+        logger.log('this.emailForm.valid:', this.emailForm.valid);
         if (!this.emailForm.valid) {
-            logger.log("emailForm not valid!");
+            logger.log('emailForm not valid!');
             this.resetForm();
             return;
         }
@@ -82,9 +82,9 @@ export class LoginPage implements OnInit {
     }
 
     async onPasswordFormSubmit() {
-        logger.log("this.passwordForm.valid:", this.passwordForm.valid);
+        logger.log('this.passwordForm.valid:', this.passwordForm.valid);
         if (!this.passwordForm.valid) {
-            logger.log("passwordForm not valid!");
+            logger.log('passwordForm not valid!');
             this.resetForm();
             return;
         }
@@ -98,18 +98,19 @@ export class LoginPage implements OnInit {
         await loadingDialog.present();
 
         try {
-            logger.log("signing up!");
+            logger.log('signing up!');
             await this.api.auth.signInWithEmailAndPassword(email, password);
-            logger.log("signed up!");
+            logger.log('signed up!');
         } catch (error) {
-            logger.log("error:", error);
+            logger.log('error:', error);
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
 
         await loadingDialog.dismiss();
-        logger.log("navigating to home");
+        logger.log('navigating to home');
+        this.resetForm();
         await this.nav.mainContainer.home.go();
     }
 

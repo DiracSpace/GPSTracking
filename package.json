@@ -21,7 +21,8 @@
         "lint": "eslint --ext .ts .",
         "no-browser": "ionic serve --no-open",
         "audit": "better-npm-audit audit",
-        "upgrades": "ncu --format group"
+        "check-upgrades": "ncu --peer --format group --color",
+        "apply-upgrades": "ncu -u"
     },
     "private": true,
     "dependencies": {

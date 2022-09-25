@@ -114,21 +114,41 @@ export class HomePage implements OnInit, OnDestroy {
             'yes'
         );
 
-        if (confirmation) {
-            const loadingDialog = await this.loadingController.create({
-                message: 'Cerrando Sesión'
-            });
-            await loadingDialog.present();
-            await this.api.auth.signOut();
-            await loadingDialog.dismiss();
+        if (!confirmation) {
+            return;
         }
+
+        const loadingDialog = await this.loadingController.create({
+            message: 'Cerrando Sesión'
+        });
+        await loadingDialog.present();
+        try {
+            await this.api.auth.signOut();
+        } catch (error) {
+            await loadingDialog.dismiss();
+            this.toasts.presentToastAsync(error, 'danger');
+            return;
+        }
+        await loadingDialog.dismiss();
     }
 
     onRefreshClicked() {
         this.loadAsync(false);
     }
 
-    onProfileClicked() {
+    async onLocationClicked() {
+        await this.gpsUtils.saveMyLocationAsync();
+    }
+
+    onScanClicked() {
+        this.nav.mainContainer.scanner.go();
+    }
+
+    onClickScanQRCode() {
+        this.viewCode = !this.viewCode;
+    }
+
+    onUserProfileClicked() {
         this.nav.user(this.user.uid).go();
     }
 
@@ -176,34 +196,6 @@ export class HomePage implements OnInit, OnDestroy {
         await loadingDialog.dismiss();
     }
 
-    onScanClicked() {
-        this.nav.mainContainer.scanner.go();
-    }
-
-    onClickScanQRCode() {
-        this.viewCode = !this.viewCode;
-    }
-
-    async onLocationClicked() {
-        await this.gpsUtils.saveMyLocationAsync();
-    }
-
-    private async requestLocationForAndroidAsync() {
-        const permissionsVerified = await this.verifyPermissionForGpsAsync();
-
-        if (!permissionsVerified) {
-            return;
-        }
-
-        await this.requestLocationAndSaveAsync();
-    }
-
-    private async requestLocationAndSaveAsync() {
-        const geoposition = await this.getMyLocationAsync();
-        const { latitude, longitude } = geoposition.coords;
-        await this.savingLocationInFirebaseAsync(latitude, longitude);
-    }
-
     async loadAsync(checkCache: boolean = true) {
         this.debug.info('Loading user profile...');
 
@@ -248,91 +240,10 @@ export class HomePage implements OnInit, OnDestroy {
                     repeatWhen(() => this._restartInterval)
                 )
                 .subscribe(async () => {
-                    const { latitude, longitude } =
-                        await this.api.backgroundLocation.attachWatcherListener();
                     this.debug.info('Saving location from background!');
-                    await this.savingLocationInFirebaseAsync(latitude, longitude, true);
+                    await this.gpsUtils.saveMyLocationAsync();
                 });
         }
-    }
-
-    private async savingLocationInFirebaseAsync(
-        latitude: number,
-        longitude: number,
-        fromBackground: boolean = false
-    ) {
-        let message: string = '¡Se guardó existosamente!';
-        let colorCode: ToastsColorCodes = 'success';
-        let duration = 800;
-
-        if (!latitude || latitude == 0) {
-            this.debug.info('No latitude provided!');
-            return;
-        }
-
-        if (!longitude || longitude == 0) {
-            this.debug.info('No longitude provided!');
-            return;
-        }
-
-        const loadingDialog = await this.loadingController.create({
-            message: 'Actualizando su ubicación'
-        });
-        await loadingDialog.present();
-        try {
-            const geohash = getGeoHashString(longitude, latitude);
-
-            // we try to get cached version first
-            let userLocationRelation =
-                await this.api.userLocation.getByGeohashOrDefaultAsync(
-                    geohash,
-                    this.user.uid
-                );
-
-            if (!userLocationRelation) {
-                this.debug.info('No cached relation found! Checking server ... ');
-                await this.requestServerInformationAndUpdateAsync(
-                    geohash,
-                    latitude,
-                    longitude,
-                    fromBackground
-                );
-            }
-
-            this.debug.info('userLocationRelation:', userLocationRelation);
-
-            let hasLocationBeenRegisteredRecently =
-                await this.api.userLocation.hasLocationBeenRegisteredRecentlyAsync(
-                    userLocationRelation
-                );
-            this.debug.info(
-                'hasLocationBeenRegisteredRecently:',
-                hasLocationBeenRegisteredRecently
-            );
-
-            if (hasLocationBeenRegisteredRecently) {
-                colorCode = 'warning';
-                duration = 2000;
-                message =
-                    'Aún no ha pasado el tiempo de espera para que vuelvas a registrar esta ubicación';
-            } else {
-                this.debug.info('Updating time');
-                await this.api.userLocation.updateArrayAsync(
-                    'datesRegistered',
-                    geohash,
-                    new Date()
-                );
-            }
-
-            await this.updateUserLocationsAsync();
-        } catch (error) {
-            await loadingDialog.dismiss();
-            await this.toasts.presentToastAsync(error, 'danger', duration);
-            return;
-        }
-
-        await loadingDialog.dismiss();
-        await this.toasts.presentToastAsync(message, colorCode, duration);
     }
 
     private async updateUserLocationsAsync() {
@@ -350,136 +261,6 @@ export class HomePage implements OnInit, OnDestroy {
             await this.toasts.presentToastAsync(error, 'danger');
             return;
         }
-    }
-
-    /**
-     * This function requests data from Firebase Cloud, which does the following:
-     * * Creates location if not exists in cloud.
-     * * Creates relation between user and location if not exists in cloud.
-     *
-     * This function does *NOT* check local cache version, so any requests count
-     * to quota usage for Firebase.
-     *
-     * @param geohash - unique location identifier
-     * @param latitude
-     * @param longitude
-     * @param fromBackground - state to check if it's from background listener
-     */
-    private async requestServerInformationAndUpdateAsync(
-        geohash: string,
-        latitude: number,
-        longitude: number,
-        fromBackground: boolean = false
-    ) {
-        // We create a new entity
-        let location = {
-            id: guid(),
-            geohash: geohash,
-            latitude: latitude,
-            longitude: longitude,
-            fromBackground: fromBackground,
-            dateRegistered: new Date()
-        };
-
-        // We don't want to check cache here
-        let createdLocation = await this.api.location.createIfNotExistsAsync(
-            location,
-            false
-        );
-
-        this.debug.info('createdLocation:', createdLocation);
-
-        let userLocationRelation = await this.api.userLocation.getByGeohashOrDefaultAsync(
-            createdLocation.geohash,
-            this.user.uid,
-            false
-        );
-
-        this.debug.info('userLocationRelation:', userLocationRelation);
-
-        if (!userLocationRelation) {
-            // create a relation
-            this.debug.info('New location detected! Creating relation with User');
-            this.debug.info('New location detected! Creating relation with User');
-
-            let shortDisplayName = `${createdLocation.city}, ${createdLocation.state}`;
-            const userLocation: UserLocation = {
-                shortDisplayName: shortDisplayName,
-                geohash: createdLocation.geohash,
-                uid: this.user.uid
-            };
-
-            await this.api.userLocation.createAsync(userLocation);
-        }
-    }
-
-    private async verifyPermissionForGpsAsync(): Promise<boolean> {
-        this.debug.info('onLocationClicked');
-
-        if (!this.platform.is('android')) {
-            this.debug.info('Platform is not android');
-            this.debug.info('Android permission is not necessary');
-            return true;
-        }
-
-        this.debug.info('Platform is android');
-        this.debug.info('Android permission must be requested');
-
-        // prettier-ignore
-        const locationPermission = this.androidPermissions.PERMISSION.ACCESS_FINE_LOCATION;
-
-        const { result: hasPermission, error: hasPermissionError } =
-            await handleAndDecodeAsync(
-                this.androidPermissionsUtils.hasAndroidPermissionAsync(locationPermission)
-            );
-
-        if (hasPermissionError) {
-            await this.showErrorAlertAsync(hasPermissionError);
-            return false;
-        }
-
-        if (!hasPermission) {
-            const {
-                result: canRequestLocationAccuracy,
-                error: canRequestLocationAccuracyError
-            } = await handleAndDecodeAsync(
-                this.androidPermissionsUtils.canRequestLocationAccuracy()
-            );
-
-            if (canRequestLocationAccuracyError) {
-                await this.showErrorAlertAsync(canRequestLocationAccuracyError);
-                return false;
-            }
-
-            if (!canRequestLocationAccuracy) {
-                const { result: permissionGranted, error: permissionGrantedError } =
-                    await handleAndDecodeAsync(
-                        this.androidPermissionsUtils.requestAndroidPermissionAsync(
-                            locationPermission
-                        )
-                    );
-
-                if (permissionGrantedError) {
-                    await this.showErrorAlertAsync(permissionGrantedError);
-                    return false;
-                }
-
-                if (!permissionGranted) {
-                    return false;
-                }
-            }
-        }
-
-        const { error: turnOnGpsError } = await handleAndDecodeAsync(
-            this.androidPermissionsUtils.turnOnGpsAsync()
-        );
-
-        if (turnOnGpsError) {
-            await this.showErrorAlertAsync(turnOnGpsError);
-            return false;
-        }
-
-        return true;
     }
 
     private async showAlertAsync(message: string) {
