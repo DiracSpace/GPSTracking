@@ -61,7 +61,7 @@ export class UserPage implements OnInit, OnDestroy {
                     );
                     this.context.selectedProfilePicture.set(null);
                     await this.updateUserProfilePhotoUrlAsync(true);
-                    this.actionSheet.dismiss();
+                    this.actionSheet?.dismiss();
                 }
             },
             {
@@ -130,7 +130,7 @@ export class UserPage implements OnInit, OnDestroy {
         this.listenForProfilePictureSubscription = this.context.selectedProfilePicture
             .watch()
             .subscribe(async () => {
-                this.actionSheet.dismiss();
+                this.actionSheet?.dismiss();
                 await this.updateUserProfilePhotoUrlAsync();
             });
     }
