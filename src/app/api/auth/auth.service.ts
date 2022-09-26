@@ -1,6 +1,7 @@
 import {
     createUserWithEmailAndPassword,
     getAuth,
+    signInAnonymously,
     signInWithEmailAndPassword,
     signOut,
     User
@@ -121,6 +122,15 @@ export class AuthService {
             return credentials.user;
         } catch (error) {
             const message = HandleFirebaseError(error);
+            throw message;
+        }
+    }
+
+    async signInAnonymously() {
+        try {
+            await signInAnonymously(this.afAuth);
+        } catch (error) {
+            let message = HandleFirebaseError(error);
             throw message;
         }
     }

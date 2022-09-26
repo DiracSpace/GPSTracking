@@ -120,6 +120,10 @@ export class UserPage implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit() {
+        if (!this.api.auth.isAuthenticated.get()) {
+            this.trySignInUser();
+        }
+
         if (this.userId) {
             this.tryLoadUserAsync();
         }
@@ -335,6 +339,16 @@ export class UserPage implements OnInit, OnDestroy {
         }
 
         await this.toasts.presentToastAsync('¡Se actualizó con éxito!');
+    }
+
+    private async trySignInUser() {
+        try {
+            await this.api.auth.signInAnonymously();
+        } catch (error) {
+            const errorDetails = decodeErrorDetails(error);
+            await this.alerts.error('Usuario Inválido', errorDetails);
+            this.backButtonOnClick();
+        }
     }
 
     private async tryLoadUserAsync() {

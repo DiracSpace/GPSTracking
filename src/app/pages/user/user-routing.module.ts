@@ -8,7 +8,6 @@ const routes: Routes = [
     {
         path: '',
         component: UserPage
-        // canActivate: [TokenGuard] // Not necessary since external providers can also scan qr codes.
     }
 ];
 
