@@ -21,13 +21,14 @@
                     <ion-col class="justify-center" col-12>
                         <div class="avatar-icon">
                             <img
+                                (error)="onUserProfileImgError()"
                                 [src]="userAvatarImg"
                                 alt="avatar"
-                                (error)="onUserProfileImgError()"
                             />
                             <ion-icon
-                                name="add-circle"
                                 (click)="onClickOpenActions()"
+                                *ngIf="!isReadonly"
+                                name="add-circle"
                             ></ion-icon>
                         </div>
                         <h3>{{ displayName }}</h3>

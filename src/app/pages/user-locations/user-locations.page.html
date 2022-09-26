@@ -13,7 +13,7 @@
 </ion-header>
 
 <ion-content scroll="false">
-    <ng-container *ngIf="!isLoading">
+    <ng-container *ngIf="!loading">
         <app-no-content *ngIf="!hasLocations "></app-no-content>
 
         <ng-container *ngIf="hasLocations">
@@ -65,7 +65,7 @@
             </ion-accordion-group>
         </ng-container>
 
-        <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="canEdit">
             <ion-fab-button (click)="onLocationClicked()">
                 <ion-icon name="location-outline"></ion-icon>
             </ion-fab-button>

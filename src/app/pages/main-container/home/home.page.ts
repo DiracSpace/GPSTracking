@@ -263,49 +263,6 @@ export class HomePage implements OnInit, OnDestroy {
         }
     }
 
-    private async showAlertAsync(message: string) {
-        const alert = await this.alerts.create({
-            message
-        });
-        await alert.present();
-        return alert;
-    }
-
-    private async showErrorAlertAsync(error: ErrorDetails) {
-        const errorString = error.toString();
-        this.debug.error(errorString);
-        return await this.showAlertAsync(errorString);
-    }
-
-    private async getMyLocationAsync(): Promise<Geoposition> {
-        this.debug.info("Trying to get user's location...");
-
-        const loadingModal = await this.loadingController.create({
-            message: 'Obteniendo tu ubicación...'
-        });
-
-        loadingModal.present();
-
-        this.debug.info("Getting user's location...");
-
-        try {
-            const geoposition = await this.geolocation.getCurrentPosition({
-                timeout: 10000, // TODO Make this an env var?
-                enableHighAccuracy: true, // TODO Make this an env var?
-                maximumAge: 0 // TODO Make this an env var?
-            });
-
-            return geoposition;
-        } catch (error) {
-            this.debug.info('error:', error);
-            const errorDetails = decodeErrorDetails(error);
-            await this.showErrorAlertAsync(errorDetails);
-            throw error;
-        } finally {
-            loadingModal.dismiss();
-        }
-    }
-
     private async throwToastAndSignoutAsync() {
         let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
         await this.toasts.presentToastAsync(message, 'danger');

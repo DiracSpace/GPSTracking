@@ -20,7 +20,7 @@ const logger = new Logger({
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private afAuth = getAuth();
+    private afAuth = null;
 
     private readonly authSubject = new BehaviorSubject<boolean>(false);
     public readonly isAuthenticated = {
@@ -33,6 +33,7 @@ export class AuthService {
     };
 
     constructor(private router: Router, private debug: Debugger) {
+        this.afAuth = getAuth();
         this.initAuthDetection();
     }
 

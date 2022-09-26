@@ -1,19 +1,15 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
     ActionSheetController,
     ActionSheetOptions,
     IonBackButtonDelegate,
     LoadingController,
-    NavController,
-    Platform
+    NavController
 } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/api';
-import {
-    CardItemIdTypes,
-    CardItemStatusTypes
-} from 'src/app/core/components/card-item/card-item.component';
+import { CardItemStatusTypes } from 'src/app/core/components/card-item/card-item.component';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
@@ -21,7 +17,7 @@ import { AlertUtils, ToastsService } from 'src/app/services';
 import { ContextService } from 'src/app/services/context.service';
 import { PhotoService } from 'src/app/services/photo.service';
 import { decodeErrorDetails } from 'src/app/utils/errors';
-import { User, UserAddress } from 'src/app/views';
+import { User } from 'src/app/views';
 import { getUserAddressDescription } from 'src/app/views/User/UserAddress';
 import { Assets } from 'src/assets';
 import {
@@ -61,7 +57,7 @@ export class UserPage implements OnInit, OnDestroy {
                     );
                     this.context.selectedProfilePicture.set(null);
                     await this.updateUserProfilePhotoUrlAsync(true);
-                    this.actionSheet?.dismiss();
+                    this.actionSheet.dismiss();
                 }
             },
             {
@@ -94,6 +90,7 @@ export class UserPage implements OnInit, OnDestroy {
         ]
     };
 
+    isReadonly = false;
     loading = false;
     user: User;
 
@@ -118,8 +115,8 @@ export class UserPage implements OnInit, OnDestroy {
         private alerts: AlertUtils,
         private api: ApiService,
         private debug: Debugger,
-        private nav: Navigation,
-        private platform: Platform
+        private router: Router,
+        private nav: Navigation
     ) {}
 
     ngOnInit() {
@@ -130,7 +127,7 @@ export class UserPage implements OnInit, OnDestroy {
         this.listenForProfilePictureSubscription = this.context.selectedProfilePicture
             .watch()
             .subscribe(async () => {
-                this.actionSheet?.dismiss();
+                this.actionSheet.dismiss();
                 await this.updateUserProfilePhotoUrlAsync();
             });
     }
@@ -143,33 +140,34 @@ export class UserPage implements OnInit, OnDestroy {
      * Callback for Ionic lifecycle
      */
     ionViewDidEnter() {
-        this.setBackButtonClicks();
+        this.backButton.onClick = this.backButtonOnClick;
     }
 
     /**
-     * Set handlers to go directly to home page if either comming from home page or a qr code scan.
+     * Go back 2 pages if comming from qr code scan.
      *
-     * In the case if comming from a qr code scan, this will prevent a bug where the screen goes
-     * black if the user has navigated to this page via qr scanner.
+     * This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner.
+     *
+     * https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4
+     *
+     * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
      */
-    private setBackButtonClicks() {
-        this.backButton.onClick = () => {
-            this.debug.info('this.backButton.onClick');
-            this.goBackToHomePage();
-        };
+    readonly backButtonOnClick = () => {
+        this.debug.info('navigatedUsingQrCodeScan', this.navigatedUsingQrCodeScan);
 
-        // TODO Add constant for priority argument?
-        this.platform.backButton.subscribeWithPriority(10, () => {
-            this.debug.info('platform.backButton');
-            this.goBackToHomePage();
-        });
-    }
+        if (!this.navigatedUsingQrCodeScan) {
+            this.navController.pop();
+            return;
+        }
 
-    private goBackToHomePage() {
-        this.debug.info('goBackToHomePage');
+        // TODO Figure out how to pop 2 times. Using .pop() 2 times does not work (that would've been too easy).
+        // this.navController.pop();
+        // this.navController.pop();
+
+        // TODO As a solution for now, take user to home page, navigating backwards (or maybe this is the solution we want).
         const route = this.nav.mainContainer.home.path;
         this.navController.navigateBack(route);
-    }
+    };
 
     /* #region getters */
     get invalidContent() {
@@ -256,19 +254,31 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     get defaultAddress() {
-        if (!this.user.addresses || this.user.addresses.length == 0) {
-            return null;
-        }
-
-        return this.user.addresses.find((x) => x.isDefault);
+        return this.user.addresses.find((x) => x.isDefault) ?? null;
     }
 
     get defaultPhoneNumber() {
-        if (!this.user.phoneNumbers || this.user.phoneNumbers.length == 0) {
-            return null;
-        }
+        return this.user.phoneNumbers.find((x) => x.isDefault) ?? null;
+    }
 
-        return this.user.phoneNumbers.find((x) => x.isDefault);
+    // We use slice to not alter original array
+    get diseaseNames() {
+        return (
+            this.user.diseases
+                .slice(0, 3)
+                .map((d) => d.name)
+                .join(', ') ?? null
+        );
+    }
+
+    // We use slice to not alter original array
+    get alergyNames() {
+        return (
+            this.user.alergies
+                .slice(0, 3)
+                .map((a) => a.name)
+                .join(', ') ?? null
+        );
     }
 
     /**
@@ -333,7 +343,7 @@ export class UserPage implements OnInit, OnDestroy {
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario inválido', errorDetails);
-            this.goBackToHomePage();
+            this.backButtonOnClick();
         }
     }
 
@@ -347,6 +357,11 @@ export class UserPage implements OnInit, OnDestroy {
         await loadingDialog.present();
 
         try {
+            let authUser = await this.api.auth.getCurrentUserAsync();
+            if (authUser.uid != this.userId) {
+                this.isReadonly = true;
+            }
+
             this.user = await this.api.users.getByUidOrDefaultAsync(this.userId, false);
         } catch (error) {
             await loadingDialog.dismiss();
@@ -385,36 +400,63 @@ export class UserPage implements OnInit, OnDestroy {
             UserBasicInformationCardItem.secondaryTitle = `${this.user.firstName} ${this.user.lastNameFather}, ${this.user.email}`;
         }
         UserBasicInformationCardItem.action = () => {
-            this.nav.mainContainer.profileSettings.names.go();
+            let route = this.nav.mainContainer.profileSettings.names.path;
+            this.router.navigate([route], {
+                queryParams: {
+                    userId: this.userId
+                }
+            });
         };
 
         UserAddressInformationCardItem.status = this.userAddressInformationStatus;
-        if (this.defaultAddress) {
+        if (this.defaultAddress != null) {
             UserAddressInformationCardItem.secondaryTitle = getUserAddressDescription(
                 this.defaultAddress
             );
         }
         UserAddressInformationCardItem.action = () => {
-            this.nav.mainContainer.profileSettings.addresses.go();
+            let route = this.nav.mainContainer.profileSettings.addresses.path;
+            this.router.navigate([route], {
+                queryParams: {
+                    userId: this.userId
+                }
+            });
         };
 
         UserPhoneNumberInformationCardItem.status = this.userPhoneNumberInformationStatus;
-        if (this.defaultPhoneNumber) {
+        if (this.defaultPhoneNumber != null) {
             UserPhoneNumberInformationCardItem.secondaryTitle =
                 this.defaultPhoneNumber.number;
         }
         UserPhoneNumberInformationCardItem.action = () => {
-            this.nav.mainContainer.profileSettings.phoneNumbers.go();
+            let route = this.nav.mainContainer.profileSettings.phoneNumbers.path;
+            this.router.navigate([route], {
+                queryParams: {
+                    userId: this.userId
+                }
+            });
         };
 
         UserDiseaseInformationCardItem.status = this.userDiseaseInformationStatus;
+        UserDiseaseInformationCardItem.secondaryTitle = this.diseaseNames;
         UserDiseaseInformationCardItem.action = () => {
-            this.nav.mainContainer.profileSettings.diseases.go();
+            let route = this.nav.mainContainer.profileSettings.diseases.path;
+            this.router.navigate([route], {
+                queryParams: {
+                    userId: this.userId
+                }
+            });
         };
 
         UserAlergyInformationCardItem.status = this.userAlergyInformationStatus;
+        UserAlergyInformationCardItem.secondaryTitle = this.alergyNames;
         UserAlergyInformationCardItem.action = () => {
-            this.nav.mainContainer.profileSettings.alergies.go();
+            let route = this.nav.mainContainer.profileSettings.alergies.path;
+            this.router.navigate([route], {
+                queryParams: {
+                    userId: this.userId
+                }
+            });
         };
     }
 }
