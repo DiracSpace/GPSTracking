@@ -19,7 +19,7 @@ import {
     WhereFilterOp,
     writeBatch
 } from '@angular/fire/firestore';
-import { FirebaseEntityConverter, User } from 'src/app/views';
+import { FirebaseEntityConverter, User, UserAddress } from 'src/app/views';
 import { Logger, LogLevel } from 'src/app/logger';
 import { setDoc } from '@firebase/firestore';
 import { Injectable } from '@angular/core';
@@ -30,7 +30,7 @@ import { handleAndDecodeAsync } from 'src/app/utils/promises';
 
 const logger = new Logger({
     source: 'UserService',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 const COLLECTION_NAME = 'users';
@@ -233,6 +233,22 @@ export class UserService {
         );
 
         await updateDoc(userDocRef, entity);
+    }
+
+    async updateUserListPropertyAsync<T>(
+        property: string,
+        entityId: string,
+        entities: T[]
+    ) {
+        const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId);
+        const firebaseEntities = entities.map((entity) => {
+            return FirebaseEntityConverter<T>().toFirestore(entity);
+        });
+
+        let genericObj = {};
+        genericObj[property] = firebaseEntities;
+
+        await updateDoc(userDocRef, genericObj);
     }
 
     async updateArrayAsync<T>(

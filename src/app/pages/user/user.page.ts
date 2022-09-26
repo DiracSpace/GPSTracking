@@ -21,7 +21,7 @@ import { ContextService } from 'src/app/services/context.service';
 import { PhotoService } from 'src/app/services/photo.service';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { User, UserAddress } from 'src/app/views';
-import { getAddressDescription } from 'src/app/views/User/UserAddress';
+import { getUserAddressDescription } from 'src/app/views/User/UserAddress';
 import { Assets } from 'src/assets';
 import {
     UserAddressInformationCardItem,
@@ -200,13 +200,17 @@ export class UserPage implements OnInit, OnDestroy {
 
     get userAddressInformationStatus(): CardItemStatusTypes {
         let addressInformationIsIncomplete =
-            !this.user.addresses || this.user.addresses.length == 0;
+            !this.user.addresses ||
+            this.user.addresses.length == 0 ||
+            !this.defaultAddress;
         return addressInformationIsIncomplete ? 'incompleto' : 'completado';
     }
 
     get userPhoneNumberInformationStatus(): CardItemStatusTypes {
         let phoneNumberInformationIsIncomplete =
-            !this.user.phoneNumbers || this.user.phoneNumbers.length == 0;
+            !this.user.phoneNumbers ||
+            this.user.phoneNumbers.length == 0 ||
+            !this.defaultPhoneNumber;
         return phoneNumberInformationIsIncomplete ? 'incompleto' : 'completado';
     }
 
@@ -230,7 +234,7 @@ export class UserPage implements OnInit, OnDestroy {
 
     get userAvatarImg() {
         if (!this.context.selectedProfilePicture.get()) {
-            logger.log('No profile picture!');
+            // logger.log('No profile picture!');
             return Assets.avatar;
         }
 
@@ -238,8 +242,32 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     get displayName(): string {
+        if (this.user.username) {
+            return this.user.username;
+        }
+
+        if (!this.user.firstName && !this.user.lastNameFather) {
+            return this.user.email;
+        }
+
         let display = `${this.user.firstName} ${this.user.lastNameFather}`;
         return display ?? 'Usuario';
+    }
+
+    get defaultAddress() {
+        if (!this.user.addresses || this.user.addresses.length == 0) {
+            return null;
+        }
+
+        return this.user.addresses.find((x) => x.isDefault);
+    }
+
+    get defaultPhoneNumber() {
+        if (!this.user.phoneNumbers || this.user.phoneNumbers.length == 0) {
+            return null;
+        }
+
+        return this.user.phoneNumbers.find((x) => x.isDefault);
     }
 
     /**
@@ -254,10 +282,6 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     /* #endregion */
-
-    getAddressDescription(address: UserAddress) {
-        return getAddressDescription(address);
-    }
 
     onUserProfileImgError() {
         logger.log('Error getting users picture!');
@@ -322,7 +346,7 @@ export class UserPage implements OnInit, OnDestroy {
         await loadingDialog.present();
 
         try {
-            this.user = await this.api.users.getByUidOrDefaultAsync(this.userId);
+            this.user = await this.api.users.getByUidOrDefaultAsync(this.userId, false);
         } catch (error) {
             await loadingDialog.dismiss();
             throw error;
@@ -337,10 +361,10 @@ export class UserPage implements OnInit, OnDestroy {
         this.context.selectedProfilePicture.set(this.user.photoUrl ?? null);
         this.context.photoName.set(photoName);
 
-        this.initCardItemRoutes();
-
         logger.log('this.context.photoName.get():', this.context.photoName.get());
         logger.log('this.user:', this.user);
+
+        this.initCardItemRoutes();
 
         await loadingDialog.dismiss();
         this.loading = false;
@@ -356,16 +380,28 @@ export class UserPage implements OnInit, OnDestroy {
         };
 
         UserBasicInformationCardItem.status = this.userBasicInformationStatus;
+        if (this.user.firstName && this.user.lastNameFather && this.user.email) {
+            UserBasicInformationCardItem.secondaryTitle = `${this.user.firstName} ${this.user.lastNameFather}, ${this.user.email}`;
+        }
         UserBasicInformationCardItem.action = () => {
             this.nav.mainContainer.profileSettings.names.go();
         };
 
         UserAddressInformationCardItem.status = this.userAddressInformationStatus;
+        if (this.defaultAddress) {
+            UserAddressInformationCardItem.secondaryTitle = getUserAddressDescription(
+                this.defaultAddress
+            );
+        }
         UserAddressInformationCardItem.action = () => {
             this.nav.mainContainer.profileSettings.addresses.go();
         };
 
         UserPhoneNumberInformationCardItem.status = this.userPhoneNumberInformationStatus;
+        if (this.defaultPhoneNumber) {
+            UserPhoneNumberInformationCardItem.secondaryTitle =
+                this.defaultPhoneNumber.number;
+        }
         UserPhoneNumberInformationCardItem.action = () => {
             this.nav.mainContainer.profileSettings.phoneNumbers.go();
         };

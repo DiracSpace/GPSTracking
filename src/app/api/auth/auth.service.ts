@@ -2,6 +2,7 @@ import {
     createUserWithEmailAndPassword,
     getAuth,
     signInWithEmailAndPassword,
+    signOut,
     User
 } from '@angular/fire/auth';
 import { Logger, LogLevel } from 'src/app/logger';
@@ -14,7 +15,7 @@ import { BehaviorSubject } from 'rxjs';
 
 const logger = new Logger({
     source: 'AuthService',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 @Injectable({ providedIn: 'root' })
@@ -57,7 +58,7 @@ export class AuthService {
     /* #endregion */
 
     async initAuthDetection(): Promise<boolean> {
-        return new Promise<boolean>((resolve) => {
+        return new Promise<boolean>((resolve, reject) => {
             this.afAuth.onAuthStateChanged(async (user) => {
                 if (user) {
                     // User is signed in
@@ -66,16 +67,31 @@ export class AuthService {
                     resolve(true);
                 } else {
                     logger.log("User isn't signed in!");
-                    await this.signOut();
+
+                    try {
+                        await this.signOut();
+                    } catch (error) {
+                        reject(error);
+                    }
                 }
             });
         });
     }
 
     async signOut(): Promise<void> {
-        await this.afAuth.signOut();
-        this.authentication.set(false);
-        this.router.navigateByUrl('/login');
+        return new Promise<void>((resolve, reject) => {
+            signOut(this.afAuth)
+                .then(() => {
+                    logger.log('Signed Out!');
+                    this.authentication.set(false);
+                    this.router.navigateByUrl('/login');
+                    logger.log('redirecting!');
+                    resolve();
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+        });
     }
 
     async createUserWithEmailAndPasswordAsync(email: string, password: string) {

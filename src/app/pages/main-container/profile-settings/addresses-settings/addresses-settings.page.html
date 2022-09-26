@@ -19,10 +19,7 @@
             <div slot="content" class="ion-margin-bottom">
                 <ion-item id="default" lines="none">
                     <ion-label>Dirección Predeterminada</ion-label>
-                    <ion-toggle
-                        [(ngModel)]="address.isDefault"
-                        [disabled]="hasDefaultAddressAlready"
-                    ></ion-toggle>
+                    <ion-toggle [(ngModel)]="address.isDefault"></ion-toggle>
                 </ion-item>
 
                 <ion-item id="state" class="ion-margin-bottom">
@@ -119,7 +116,10 @@
                         (click)="onDeleteClick(address)"
                         >Eliminar</ion-button
                     >
-                    <ion-button color="primary" (click)="onSaveClicked(address)"
+                    <ion-button
+                        color="primary"
+                        [disabled]="isFormValid(address)"
+                        (click)="onSaveClicked()"
                         >Guardar</ion-button
                     >
                 </div>

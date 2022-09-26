@@ -6,11 +6,11 @@ import { Logger, LogLevel } from 'src/app/logger';
 import { ToastsService } from 'src/app/services/popups/toasts.service';
 import { guid } from 'src/app/utils';
 import { AddressTypeTypes, MexicoStates, User, UserAddress } from 'src/app/views';
-import { getAddressDescription } from 'src/app/views/User/UserAddress';
+import { getUserAddressDescription } from 'src/app/views/User/UserAddress';
 
 const logger = new Logger({
     source: 'AddressesSettingsPage',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 @Component({
@@ -41,19 +41,22 @@ export class AddressesSettingsPage implements OnInit {
         return this.user.addresses;
     }
 
-    get hasDefaultAddressAlready() {
-        return this.defaultAddress != null || this.defaultAddress != undefined;
-    }
-
-    get defaultAddress(): UserAddress {
-        return this.addresses.find((x) => x.isDefault);
+    isFormValid(address: UserAddress): boolean {
+        return (
+            !address.state ||
+            !address.county ||
+            !address.neighbourhood ||
+            !address.street ||
+            !address.zipCode ||
+            !address.addressType
+        );
     }
 
     async onAddClicked() {
         logger.log('Adding new!');
         const address = new UserAddress();
         address.id = guid();
-        this.addresses.push(address);
+        this.user.addresses.push(address);
     }
 
     async onDeleteClick(address: UserAddress) {
@@ -64,7 +67,7 @@ export class AddressesSettingsPage implements OnInit {
         const caller = 'onDeleteClick';
         RequiredPropError.throwIfNull(this.addresses, 'addresses', caller);
 
-        const index = this.addresses.indexOf(address);
+        const index = this.user.addresses.indexOf(address);
 
         if (index == -1) {
             let message = 'Could not find address to delete';
@@ -80,7 +83,7 @@ export class AddressesSettingsPage implements OnInit {
         );
 
         if (confirmation) {
-            this.addresses.splice(index, 1);
+            this.user.addresses.splice(index, 1);
 
             const loadingDialog = await this.loadingController.create({
                 message: 'Eliminando...'
@@ -89,6 +92,7 @@ export class AddressesSettingsPage implements OnInit {
 
             try {
                 logger.log('address:', address);
+                logger.log('this.user:', this.user);
                 await this.api.users.removeArrayElementAsync(
                     'addresses',
                     this.user.uid,
@@ -98,25 +102,25 @@ export class AddressesSettingsPage implements OnInit {
                 await loadingDialog.dismiss();
                 await this.toasts.presentToastAsync(error, 'danger');
                 return;
-            } finally {
-                await loadingDialog.dismiss();
             }
+
+            await loadingDialog.dismiss();
         }
     }
 
-    async onSaveClicked(address: UserAddress) {
-        if (!address) {
-            return;
-        }
-
+    async onSaveClicked() {
         const loadingDialog = await this.loadingController.create({
             message: 'Guardando...'
         });
         await loadingDialog.present();
 
         try {
-            logger.log('address:', address);
-            await this.api.users.updateArrayAsync('addresses', this.user.uid, address);
+            logger.log('this.user:', this.user);
+            await this.api.users.updateUserListPropertyAsync<UserAddress>(
+                'addresses',
+                this.user.uid,
+                this.user.addresses
+            );
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');
@@ -128,7 +132,7 @@ export class AddressesSettingsPage implements OnInit {
     }
 
     getAddressDescription(address: UserAddress) {
-        return getAddressDescription(address);
+        return getUserAddressDescription(address);
     }
 
     private async loadAsync() {

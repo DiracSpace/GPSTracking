@@ -90,7 +90,7 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
             logger.log('uploading to firebase!');
             const resourceUrl = await this.storageService.uploadBlobWithProgressAsync(
                 blob,
-                photo.filepath
+                `profiles/${photo.filepath}`
             );
             logger.log('resourceUrl:', resourceUrl);
             this.context.selectedProfilePicture.set(resourceUrl);
