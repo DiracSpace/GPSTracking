@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
+
+    namespace 'viex.cbtis15.qr'
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "viex.cbtis15.qr"
