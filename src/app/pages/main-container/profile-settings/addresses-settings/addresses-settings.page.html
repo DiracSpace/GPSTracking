@@ -116,7 +116,10 @@
                         (click)="onDeleteClick(address)"
                         >Eliminar</ion-button
                     >
-                    <ion-button color="primary" (click)="onSaveClicked(address)"
+                    <ion-button
+                        color="primary"
+                        [disabled]="isFormValid(address)"
+                        (click)="onSaveClicked()"
                         >Guardar</ion-button
                     >
                 </div>

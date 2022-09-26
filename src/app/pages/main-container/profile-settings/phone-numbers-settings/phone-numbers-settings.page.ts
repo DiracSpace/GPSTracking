@@ -13,7 +13,7 @@ import { PhoneNumberOwnerTypes, User, UserPhoneNumber } from 'src/app/views';
 
 const logger = new Logger({
     source: 'PhoneNumbersSettingsPage',
-    level: LogLevel.Off
+    level: LogLevel.Debug
 });
 
 @Component({
@@ -43,10 +43,14 @@ export class PhoneNumbersSettingsPage implements OnInit {
         return this.user.phoneNumbers;
     }
 
+    isFormValid(phoneNumber: UserPhoneNumber) {
+        return !phoneNumber.number || !phoneNumber.owner;
+    }
+
     async onAddClicked() {
         const phoneNumber = new UserPhoneNumber();
         phoneNumber.id = guid();
-        this.phoneNumbers.push(phoneNumber);
+        this.user.phoneNumbers.push(phoneNumber);
     }
 
     async onDeleteClick(phoneNumber: UserPhoneNumber) {
@@ -57,7 +61,7 @@ export class PhoneNumbersSettingsPage implements OnInit {
         const caller = 'onDeleteClick';
         RequiredPropError.throwIfNull(this.phoneNumbers, 'phoneNumbers', caller);
 
-        const index = this.phoneNumbers.indexOf(phoneNumber);
+        const index = this.user.phoneNumbers.indexOf(phoneNumber);
 
         if (index == -1) {
             let message = 'Could not find phone number to delete';
@@ -73,7 +77,7 @@ export class PhoneNumbersSettingsPage implements OnInit {
         );
 
         if (confirmation) {
-            this.phoneNumbers.splice(index, 1);
+            this.user.phoneNumbers.splice(index, 1);
 
             const loadingDialog = await this.loadingController.create({
                 message: 'Eliminando...'
@@ -97,18 +101,17 @@ export class PhoneNumbersSettingsPage implements OnInit {
         }
     }
 
-    async onSaveClicked(phoneNumber: UserPhoneNumber) {
+    async onSaveClicked() {
         const loadingDialog = await this.loadingController.create({
             message: 'Guardando...'
         });
         await loadingDialog.present();
 
         try {
-            logger.log('phoneNumber:', phoneNumber);
-            await this.api.users.updateArrayAsync(
+            await this.api.users.updateUserListPropertyAsync<UserPhoneNumber>(
                 'phoneNumbers',
                 this.user.uid,
-                phoneNumber
+                this.user.phoneNumbers
             );
         } catch (error) {
             await loadingDialog.dismiss();

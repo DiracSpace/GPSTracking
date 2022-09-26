@@ -200,13 +200,17 @@ export class UserPage implements OnInit, OnDestroy {
 
     get userAddressInformationStatus(): CardItemStatusTypes {
         let addressInformationIsIncomplete =
-            !this.user.addresses || this.user.addresses.length == 0;
+            !this.user.addresses ||
+            this.user.addresses.length == 0 ||
+            !this.defaultAddress;
         return addressInformationIsIncomplete ? 'incompleto' : 'completado';
     }
 
     get userPhoneNumberInformationStatus(): CardItemStatusTypes {
         let phoneNumberInformationIsIncomplete =
-            !this.user.phoneNumbers || this.user.phoneNumbers.length == 0;
+            !this.user.phoneNumbers ||
+            this.user.phoneNumbers.length == 0 ||
+            !this.defaultPhoneNumber;
         return phoneNumberInformationIsIncomplete ? 'incompleto' : 'completado';
     }
 
@@ -251,11 +255,19 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     get defaultAddress() {
-        if (!this.user.addresses || this.user.addresses) {
+        if (!this.user.addresses || this.user.addresses.length == 0) {
             return null;
         }
 
         return this.user.addresses.find((x) => x.isDefault);
+    }
+
+    get defaultPhoneNumber() {
+        if (!this.user.phoneNumbers || this.user.phoneNumbers.length == 0) {
+            return null;
+        }
+
+        return this.user.phoneNumbers.find((x) => x.isDefault);
     }
 
     /**
@@ -349,10 +361,10 @@ export class UserPage implements OnInit, OnDestroy {
         this.context.selectedProfilePicture.set(this.user.photoUrl ?? null);
         this.context.photoName.set(photoName);
 
-        this.initCardItemRoutes();
-
         logger.log('this.context.photoName.get():', this.context.photoName.get());
         logger.log('this.user:', this.user);
+
+        this.initCardItemRoutes();
 
         await loadingDialog.dismiss();
         this.loading = false;
@@ -368,13 +380,15 @@ export class UserPage implements OnInit, OnDestroy {
         };
 
         UserBasicInformationCardItem.status = this.userBasicInformationStatus;
-        UserBasicInformationCardItem.secondaryTitle = `${this.user.firstName} ${this.user.lastNameFather}, ${this.user.email}`;
+        if (this.user.firstName && this.user.lastNameFather && this.user.email) {
+            UserBasicInformationCardItem.secondaryTitle = `${this.user.firstName} ${this.user.lastNameFather}, ${this.user.email}`;
+        }
         UserBasicInformationCardItem.action = () => {
             this.nav.mainContainer.profileSettings.names.go();
         };
 
         UserAddressInformationCardItem.status = this.userAddressInformationStatus;
-        if (this.defaultAddress != null) {
+        if (this.defaultAddress) {
             UserAddressInformationCardItem.secondaryTitle = getUserAddressDescription(
                 this.defaultAddress
             );
@@ -384,6 +398,10 @@ export class UserPage implements OnInit, OnDestroy {
         };
 
         UserPhoneNumberInformationCardItem.status = this.userPhoneNumberInformationStatus;
+        if (this.defaultPhoneNumber) {
+            UserPhoneNumberInformationCardItem.secondaryTitle =
+                this.defaultPhoneNumber.number;
+        }
         UserPhoneNumberInformationCardItem.action = () => {
             this.nav.mainContainer.profileSettings.phoneNumbers.go();
         };

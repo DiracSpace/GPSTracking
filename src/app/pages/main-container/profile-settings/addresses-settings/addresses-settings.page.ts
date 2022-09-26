@@ -41,6 +41,17 @@ export class AddressesSettingsPage implements OnInit {
         return this.user.addresses;
     }
 
+    isFormValid(address: UserAddress): boolean {
+        return (
+            !address.state ||
+            !address.county ||
+            !address.neighbourhood ||
+            !address.street ||
+            !address.zipCode ||
+            !address.addressType
+        );
+    }
+
     async onAddClicked() {
         logger.log('Adding new!');
         const address = new UserAddress();
@@ -91,26 +102,25 @@ export class AddressesSettingsPage implements OnInit {
                 await loadingDialog.dismiss();
                 await this.toasts.presentToastAsync(error, 'danger');
                 return;
-            } finally {
-                await loadingDialog.dismiss();
             }
+
+            await loadingDialog.dismiss();
         }
     }
 
-    async onSaveClicked(address: UserAddress) {
-        if (!address) {
-            return;
-        }
-
+    async onSaveClicked() {
         const loadingDialog = await this.loadingController.create({
             message: 'Guardando...'
         });
         await loadingDialog.present();
 
         try {
-            logger.log('address:', address);
             logger.log('this.user:', this.user);
-            await this.api.users.updateArrayAsync('addresses', this.user.uid, address);
+            await this.api.users.updateUserListPropertyAsync<UserAddress>(
+                'addresses',
+                this.user.uid,
+                this.user.addresses
+            );
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');
