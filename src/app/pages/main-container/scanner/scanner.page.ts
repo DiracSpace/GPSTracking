@@ -1,10 +1,10 @@
-import { AfterViewInit, Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { BarcodeScanner, ScanResult } from '@capacitor-community/barcode-scanner';
 import { NavController } from '@ionic/angular';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { ArgumentNullError, RequiredPropError } from 'src/app/errors';
 import { Navigation } from 'src/app/navigation';
-import { AlertUtils, ToastsService } from 'src/app/services';
+import { Popups } from 'src/app/services';
 import { handleAndDecode, handleAndDecodeAsync } from 'src/app/utils/promises';
 
 @Component({
@@ -12,35 +12,46 @@ import { handleAndDecode, handleAndDecodeAsync } from 'src/app/utils/promises';
     templateUrl: './scanner.page.html',
     styleUrls: ['./scanner.page.scss']
 })
-export class ScannerPage implements AfterViewInit, OnDestroy {
+export class ScannerPage implements OnDestroy {
     constructor(
         private debug: Debugger,
         private navController: NavController,
         private nav: Navigation,
-        private toasts: ToastsService,
-        private alerts: AlertUtils
+        private popups: Popups
     ) {}
 
-    ngAfterViewInit(): void {
-        this.tryScanAsync();
+    ionViewDidEnter(): void {
+        this.debug.info('ScannerPage.ionViewDidEnter');
+        this.tryStartScanAsync();
+    }
+
+    ionViewWillLeave(): void {
+        this.debug.info('ScannerPage.ionViewWillLeave');
+        this.tryStopScanAsync();
     }
 
     ngOnDestroy(): void {
-        this.debug.info('Scanner was stopped');
+        this.debug.info('ScannerPage.ngOnDestroy');
         BarcodeScanner.stopScan();
     }
 
-    async tryScanAsync() {
-        this.debug.info('Hiding brackground...');
-        await BarcodeScanner.hideBackground();
+    private async tryStartScanAsync() {
+        this.debug.info('tryStartScanAsync');
 
-        this.debug.info('Scanning...');
-        const scanResult = await BarcodeScanner.startScan();
-        this.debug.info('result:', scanResult);
+        const { error: scanError, result: scanResult } = await handleAndDecodeAsync(
+            this.startScanAsync()
+        );
+
+        if (scanError) {
+            await this.popups.alerts.error(scanError.toString());
+            this.navController.pop();
+            return;
+        }
+
+        this.debug.info('scanResult:', scanResult);
 
         if (!scanResult.hasContent) {
-            this.debug.info('No conent!', scanResult.content);
-            await this.alerts.error(
+            await this.popups.alerts.error(
                 'La cámara no ha podido detectar un código qr válido. Por favor intenta de nuevo.'
             );
             this.navController.pop();
@@ -52,7 +63,7 @@ export class ScannerPage implements AfterViewInit, OnDestroy {
         );
 
         if (error) {
-            await this.alerts.error(
+            await this.popups.alerts.error(
                 'Código qr inválido. Por favor intenta con otro código qr',
                 error
             );
@@ -60,7 +71,34 @@ export class ScannerPage implements AfterViewInit, OnDestroy {
             return;
         }
 
-        this.nav.user(uid).go();
+        await this.tryStopScanAsync();
+        await this.nav.user(uid).go({
+            extras: {
+                replaceUrl: true // Replace URL so user cannot come back to this page. This prevents a qr code scanner bug where the screen goes black
+            }
+        });
+    }
+
+    private async tryStopScanAsync() {
+        this.debug.info('tryStopScanAsync');
+
+        const { error } = await handleAndDecodeAsync(this.stopScanAsync());
+
+        if (error) {
+            this.debug.error(error.toString());
+        }
+    }
+
+    async startScanAsync(): Promise<ScanResult> {
+        this.debug.info('startScanAsync');
+        await BarcodeScanner.hideBackground();
+        return await BarcodeScanner.startScan();
+    }
+
+    async stopScanAsync() {
+        this.debug.info('stopScanAsync');
+        await BarcodeScanner.stopScan();
+        await BarcodeScanner.showBackground();
     }
 
     private extractUserUidFromQrCodeScanResult(scanResult: ScanResult): string {
