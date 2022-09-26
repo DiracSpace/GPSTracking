@@ -8,11 +8,7 @@ import { Navigation } from 'src/app/navigation';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { AlertUtils } from 'src/app/services';
 import { Logger, LogLevel } from 'src/app/logger';
-
-const logger = new Logger({
-    source: 'NamesSettingsPage',
-    level: LogLevel.Debug
-});
+import { Debugger } from 'src/app/core/components/debug/debugger.service';
 
 @Component({
     selector: 'app-names-settings',
@@ -20,9 +16,6 @@ const logger = new Logger({
     styleUrls: ['./names-settings.page.scss']
 })
 export class NamesSettingsPage implements OnInit {
-    @ViewChild(IonBackButtonDelegate, { static: false })
-    backButton: IonBackButtonDelegate;
-
     canEdit = true;
     loading = false;
     user = new User();
@@ -34,38 +27,16 @@ export class NamesSettingsPage implements OnInit {
         private toasts: ToastsService,
         private alerts: AlertUtils,
         private nav: Navigation,
-        private api: ApiService
+        private api: ApiService,
+        private debug: Debugger
     ) {}
 
     ngOnInit() {
         this.tryLoadUserAsync();
     }
 
-    /**
-     * Callback for Ionic lifecycle
-     */
-    ionViewDidEnter() {
-        this.backButton.onClick = this.backButtonOnClick;
-    }
-
-    /**
-     * Go back 2 pages if comming from qr code scan.
-     *
-     * This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner.
-     *
-     * https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4
-     *
-     * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
-     */
-    readonly backButtonOnClick = () => {
-        // TODO As a solution for now, take user to home page, navigating backwards (or maybe this is the solution we want).
-        const route = this.nav.mainContainer.home.path;
-        this.navController.navigateBack(route);
-    };
-
     get userId(): string | undefined {
-        const userId = this.activatedRoute.snapshot.queryParams.userId;
-        return userId;
+        return this.activatedRoute.snapshot.params.id;
     }
 
     get name() {
@@ -141,7 +112,7 @@ export class NamesSettingsPage implements OnInit {
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario inválido', errorDetails);
-            this.backButtonOnClick();
+            this.navController.pop();
         }
     }
 
@@ -160,7 +131,6 @@ export class NamesSettingsPage implements OnInit {
 
             let uid = this.userId ?? authUser.uid;
             this.user = await this.api.users.getByUidOrDefaultAsync(uid);
-            logger.log('this.canEdit:', this.canEdit);
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');

@@ -12,20 +12,12 @@ import { decodeErrorDetails } from 'src/app/utils/errors';
 import { AddressTypeTypes, MexicoStates, User, UserAddress } from 'src/app/views';
 import { getUserAddressDescription } from 'src/app/views/User/UserAddress';
 
-const logger = new Logger({
-    source: 'AddressesSettingsPage',
-    level: LogLevel.Debug
-});
-
 @Component({
     selector: 'app-addresses-settings',
     templateUrl: './addresses-settings.page.html',
     styleUrls: ['./addresses-settings.page.scss']
 })
 export class AddressesSettingsPage implements OnInit {
-    @ViewChild(IonBackButtonDelegate, { static: false })
-    backButton: IonBackButtonDelegate;
-
     addressTypes = AddressTypeTypes;
     states = MexicoStates;
     user = new User();
@@ -47,31 +39,8 @@ export class AddressesSettingsPage implements OnInit {
         this.tryLoadUserAsync();
     }
 
-    /**
-     * Callback for Ionic lifecycle
-     */
-    ionViewDidEnter() {
-        this.backButton.onClick = this.backButtonOnClick;
-    }
-
-    /**
-     * Go back 2 pages if comming from qr code scan.
-     *
-     * This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner.
-     *
-     * https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4
-     *
-     * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
-     */
-    readonly backButtonOnClick = () => {
-        // TODO As a solution for now, take user to home page, navigating backwards (or maybe this is the solution we want).
-        const route = this.nav.mainContainer.home.path;
-        this.navController.navigateBack(route);
-    };
-
     get userId(): string | undefined {
-        const userId = this.activatedRoute.snapshot.queryParams.userId;
-        return userId;
+        return this.activatedRoute.snapshot.params.id;
     }
 
     get name() {
@@ -96,7 +65,6 @@ export class AddressesSettingsPage implements OnInit {
     }
 
     async onAddClicked() {
-        logger.log('Adding new!');
         const address = new UserAddress();
         address.id = guid();
         this.user.addresses.push(address);
@@ -134,8 +102,6 @@ export class AddressesSettingsPage implements OnInit {
             await loadingDialog.present();
 
             try {
-                logger.log('address:', address);
-                logger.log('this.user:', this.user);
                 await this.api.users.removeArrayElementAsync(
                     'addresses',
                     this.user.uid,
@@ -158,7 +124,6 @@ export class AddressesSettingsPage implements OnInit {
         await loadingDialog.present();
 
         try {
-            logger.log('this.user:', this.user);
             await this.api.users.updateUserListPropertyAsync<UserAddress>(
                 'addresses',
                 this.user.uid,
@@ -184,7 +149,7 @@ export class AddressesSettingsPage implements OnInit {
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario inválido', errorDetails);
-            this.backButtonOnClick();
+            this.navController.pop();
         }
     }
 
@@ -203,8 +168,6 @@ export class AddressesSettingsPage implements OnInit {
 
             let uid = this.userId ?? authUser.uid;
             this.user = await this.api.users.getByUidOrDefaultAsync(uid);
-            logger.log('this.user:', this.user);
-            logger.log('this.canEdit:', this.canEdit);
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');

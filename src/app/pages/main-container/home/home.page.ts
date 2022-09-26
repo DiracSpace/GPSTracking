@@ -1,26 +1,21 @@
 import { ApiService } from 'src/app/api/ApiService.service';
 import { AlertController, LoadingController, Platform } from '@ionic/angular';
-import { Logger, LogLevel } from 'src/app/logger';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Navigation } from 'src/app/navigation';
-import { Location, User, UserLocation } from 'src/app/views';
+import { User } from 'src/app/views';
 import { formatToBlobName } from 'src/app/views/User/User';
 import { AndroidPermissionsUtils } from 'src/app/services/android-permissions-utils.service';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { AndroidPermissions } from '@awesome-cordova-plugins/android-permissions/ngx';
-import { handleAndDecodeAsync } from 'src/app/utils/promises';
-import { decodeErrorDetails, ErrorDetails } from 'src/app/utils/errors';
-import { Geolocation, Geoposition } from '@awesome-cordova-plugins/geolocation/ngx';
-import { guid } from 'src/app/utils';
+import { Geolocation } from '@awesome-cordova-plugins/geolocation/ngx';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { repeatWhen, takeUntil } from 'rxjs/operators';
 import { ScannerPermissions } from '../scanner/scanner-permissions.service';
-import { ToastsColorCodes, ToastsService } from 'src/app/services/popups/toasts.service';
+import { ToastsService } from 'src/app/services/popups/toasts.service';
 import { ContextService } from 'src/app/services/context.service';
-import { userLocations } from 'src/app/core/components/bottom-navigation/bottom-navigation.component';
-import { getGeoHashString } from 'src/app/views/Location/Location';
 import { disposeSubscription } from 'src/app/utils/angular';
 import { GpsUtils } from 'src/app/services';
+import { userLocations } from 'src/app/core/components/bottom-navigation/bottom-navigation.component';
 
 // 1 hour = 3600000
 // 1 minute = 60000

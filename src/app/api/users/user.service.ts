@@ -30,7 +30,7 @@ import { handleAndDecodeAsync } from 'src/app/utils/promises';
 
 const logger = new Logger({
     source: 'UserService',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 const COLLECTION_NAME = 'users';

@@ -30,9 +30,14 @@ export class ScannerPage implements OnDestroy {
         this.tryStopScanAsync();
     }
 
+    ionViewDidLeave(): void {
+        this.debug.info('ScannerPage.ionViewDidLeave');
+        this.tryStopScanAsync();
+    }
+
     ngOnDestroy(): void {
         this.debug.info('ScannerPage.ngOnDestroy');
-        BarcodeScanner.stopScan();
+        this.tryStopScanAsync();
     }
 
     private async tryStartScanAsync() {
@@ -86,6 +91,8 @@ export class ScannerPage implements OnDestroy {
 
         if (error) {
             this.debug.error(error.toString());
+        } else {
+            this.debug.info('Scanner stopped successfully');
         }
     }
 
