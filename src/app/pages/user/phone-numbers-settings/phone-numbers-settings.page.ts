@@ -15,20 +15,12 @@ import { guid } from 'src/app/utils';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { PhoneNumberOwnerTypes, User, UserPhoneNumber } from 'src/app/views';
 
-const logger = new Logger({
-    source: 'PhoneNumbersSettingsPage',
-    level: LogLevel.Debug
-});
-
 @Component({
     selector: 'app-phone-numbers-settings',
     templateUrl: './phone-numbers-settings.page.html',
     styleUrls: ['./phone-numbers-settings.page.scss']
 })
 export class PhoneNumbersSettingsPage implements OnInit {
-    @ViewChild(IonBackButtonDelegate, { static: false })
-    backButton: IonBackButtonDelegate;
-
     ownerTypes = PhoneNumberOwnerTypes;
     user = new User();
 
@@ -49,31 +41,8 @@ export class PhoneNumbersSettingsPage implements OnInit {
         this.tryLoadUserAsync();
     }
 
-    /**
-     * Callback for Ionic lifecycle
-     */
-    ionViewDidEnter() {
-        this.backButton.onClick = this.backButtonOnClick;
-    }
-
-    /**
-     * Go back 2 pages if comming from qr code scan.
-     *
-     * This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner.
-     *
-     * https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4
-     *
-     * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
-     */
-    readonly backButtonOnClick = () => {
-        // TODO As a solution for now, take user to home page, navigating backwards (or maybe this is the solution we want).
-        const route = this.nav.mainContainer.home.path;
-        this.navController.navigateBack(route);
-    };
-
     get userId(): string | undefined {
-        const userId = this.activatedRoute.snapshot.queryParams.userId;
-        return userId;
+        return this.activatedRoute.snapshot.params.id;
     }
 
     get name() {
@@ -134,7 +103,6 @@ export class PhoneNumbersSettingsPage implements OnInit {
             await loadingDialog.present();
 
             try {
-                logger.log('phoneNumber:', phoneNumber);
                 await this.api.users.removeArrayElementAsync(
                     'phoneNumbers',
                     this.user.uid,
@@ -207,7 +175,7 @@ export class PhoneNumbersSettingsPage implements OnInit {
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario inválido', errorDetails);
-            this.backButtonOnClick();
+            this.navController.pop();
         }
     }
 
@@ -226,7 +194,6 @@ export class PhoneNumbersSettingsPage implements OnInit {
 
             let uid = this.userId ?? authUser.uid;
             this.user = await this.api.users.getByUidOrDefaultAsync(uid);
-            logger.log('this.canEdit:', this.canEdit);
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');

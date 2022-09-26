@@ -1,8 +1,7 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { Logger, LogLevel } from 'src/app/logger';
+import { Component, OnInit } from '@angular/core';
 import { AlertUtils, GpsUtils, Popups } from 'src/app/services';
 import { ApiService } from 'src/app/api';
-import { User, UserLocation } from 'src/app/views';
+import { User } from 'src/app/views';
 import { wait } from 'src/app/utils/time';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { ArgumentNullError } from 'src/app/errors';
@@ -10,25 +9,18 @@ import { DDMMYYYYHHmmssLong } from 'src/app/utils/dates';
 import { limit, orderBy, where } from '@angular/fire/firestore';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Geolocation } from 'src/app/api/geolocations/Geolocation';
-import { IonBackButtonDelegate, NavController } from '@ionic/angular';
+import { NavController } from '@ionic/angular';
 import { Navigation } from 'src/app/navigation';
 import { ActivatedRoute } from '@angular/router';
 
 const LocationsLimit = 10; // TODO Add this to environment or user preference?
 
-const logger = new Logger({
-    source: 'UserLocationsPage',
-    level: LogLevel.Debug
-});
 @Component({
-    selector: 'app-user-locations',
-    templateUrl: './user-locations.page.html',
-    styleUrls: ['./user-locations.page.scss']
+    selector: 'app-locations-settings',
+    templateUrl: './locations-settings.page.html',
+    styleUrls: ['./locations-settings.page.scss']
 })
-export class UserLocationsPage implements OnInit {
-    @ViewChild(IonBackButtonDelegate, { static: false })
-    backButton: IonBackButtonDelegate;
-
+export class LocationsSettingsPage implements OnInit {
     geolocations: Geolocation[] = [];
     user = new User();
     loading: boolean = false;
@@ -49,31 +41,8 @@ export class UserLocationsPage implements OnInit {
         this.tryLoadAsync();
     }
 
-    /**
-     * Callback for Ionic lifecycle
-     */
-    ionViewDidEnter() {
-        this.backButton.onClick = this.backButtonOnClick;
-    }
-
-    /**
-     * Go back 2 pages if comming from qr code scan.
-     *
-     * This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner.
-     *
-     * https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4
-     *
-     * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
-     */
-    readonly backButtonOnClick = () => {
-        // TODO As a solution for now, take user to home page, navigating backwards (or maybe this is the solution we want).
-        const route = this.nav.mainContainer.home.path;
-        this.navController.navigateBack(route);
-    };
-
     get userId(): string | undefined {
-        const userId = this.activatedRoute.snapshot.params.uid;
-        return userId;
+        return this.activatedRoute.snapshot.params.id;
     }
 
     get name() {
@@ -147,7 +116,7 @@ export class UserLocationsPage implements OnInit {
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario inválido', errorDetails);
-            this.backButtonOnClick();
+            this.navController.pop();
         }
     }
 
@@ -157,7 +126,7 @@ export class UserLocationsPage implements OnInit {
 
         try {
             let authUser = await this.api.auth.getCurrentUserAsync();
-            logger.log('this.userId:', this.userId);
+
             if (this.userId && authUser.uid != this.userId) {
                 this.canEdit = false;
             }
@@ -172,7 +141,6 @@ export class UserLocationsPage implements OnInit {
             });
             this.geolocations.forEach((location) => (location._isAccordianHidden = true));
             console.log('geolocations', this.geolocations);
-            logger.log('this.canEdit:', this.canEdit);
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             this.debug.error(errorDetails.toString());

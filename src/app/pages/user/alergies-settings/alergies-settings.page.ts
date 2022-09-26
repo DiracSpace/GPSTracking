@@ -1,35 +1,27 @@
-import { User, UserDiseaseDetail } from 'src/app/views';
+import { User, UserAlergyDetail } from 'src/app/views';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { IonBackButtonDelegate, LoadingController, NavController } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { Logger, LogLevel } from 'src/app/logger';
 import { guid } from 'src/app/utils';
-import { ArgumentNullError, NotImplementedError } from 'src/app/errors';
+import { NotImplementedError } from 'src/app/errors';
 import { ToastsService } from 'src/app/services/popups/toasts.service';
-import { decodeErrorDetails } from 'src/app/utils/errors';
 import { Navigation } from 'src/app/navigation';
 import { AlertUtils } from 'src/app/services';
 import { ActivatedRoute } from '@angular/router';
-
-const logger = new Logger({
-    source: 'DiseasesSettingsPage',
-    level: LogLevel.Debug
-});
+import { decodeErrorDetails } from 'src/app/utils/errors';
 
 @Component({
-    selector: 'app-diseases-settings',
-    templateUrl: './diseases-settings.page.html',
-    styleUrls: ['./diseases-settings.page.scss']
+    selector: 'app-alergies-settings',
+    templateUrl: './alergies-settings.page.html',
+    styleUrls: ['./alergies-settings.page.scss']
 })
-export class DiseasesSettingsPage implements OnInit {
-    @ViewChild(IonBackButtonDelegate, { static: false })
-    backButton: IonBackButtonDelegate;
-
-    diseaseInput = new UserDiseaseDetail();
-    user = new User();
-
-    loading = false;
+export class AlergiesSettingsPage implements OnInit {
     canEdit = true;
+    loading = false;
+
+    user = new User();
+    alergyInput = new UserAlergyDetail();
 
     constructor(
         private loadingController: LoadingController,
@@ -45,74 +37,50 @@ export class DiseasesSettingsPage implements OnInit {
         this.tryLoadUserAsync();
     }
 
-    /**
-     * Callback for Ionic lifecycle
-     */
-    ionViewDidEnter() {
-        this.backButton.onClick = this.backButtonOnClick;
-    }
-
-    /**
-     * Go back 2 pages if comming from qr code scan.
-     *
-     * This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner.
-     *
-     * https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4
-     *
-     * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
-     */
-    readonly backButtonOnClick = () => {
-        // TODO As a solution for now, take user to home page, navigating backwards (or maybe this is the solution we want).
-        const route = this.nav.mainContainer.home.path;
-        this.navController.navigateBack(route);
-    };
-
     get userId(): string | undefined {
-        const userId = this.activatedRoute.snapshot.queryParams.userId;
-        return userId;
+        return this.activatedRoute.snapshot.params.id;
     }
 
     get name() {
         if (!this.user.firstName || !this.user.lastNameFather) {
-            return 'Enfermedades del Usuario buscado';
+            return 'Alergias del Usuario buscado';
         }
 
         return `Usuario: ${this.user.firstName} ${this.user.lastNameFather}`;
     }
 
-    get diseases(): UserDiseaseDetail[] {
-        if (this.user.diseases == undefined || this.user.diseases == null) {
+    get alergies(): UserAlergyDetail[] {
+        if (this.user.alergies == undefined || this.user.alergies == null) {
             return [];
         }
 
-        return this.user.diseases;
+        return this.user.alergies;
     }
 
-    onDiseaseEnter() {
-        if (!this.diseaseInput) {
+    onAlergyEnter() {
+        if (!this.alergyInput) {
             return;
         }
 
-        this.diseases.push(this.diseaseInput);
+        this.alergies.push(this.alergyInput);
     }
 
     onAddClicked() {
-        logger.log('Adding new!');
-        const disease = new UserDiseaseDetail();
-        disease.id = guid();
-        this.user.diseases.push(disease);
+        const alergy = new UserAlergyDetail();
+        alergy.id = guid();
+        this.user.alergies.push(alergy);
     }
 
-    async onDeleteClicked(disease: UserDiseaseDetail) {
-        if (!disease) {
+    async onDeleteClicked(alergy: UserAlergyDetail) {
+        if (!alergy) {
             return;
         }
 
         const caller = 'onDeleteClicked';
-        const index = this.diseases.indexOf(disease);
+        const index = this.alergies.indexOf(alergy);
 
         if (index == -1) {
-            let message = 'Could not find disease to delete';
+            let message = 'Could not find alergy to delete';
             await this.toasts.presentToastAsync(message, 'danger');
             throw new NotImplementedError(message, caller);
         }
@@ -125,7 +93,7 @@ export class DiseasesSettingsPage implements OnInit {
         );
 
         if (confirmation) {
-            this.diseases.splice(index, 1);
+            this.alergies.splice(index, 1);
 
             const loadingDialog = await this.loadingController.create({
                 message: 'Eliminando...'
@@ -133,11 +101,10 @@ export class DiseasesSettingsPage implements OnInit {
             await loadingDialog.present();
 
             try {
-                logger.log('disease:', disease);
                 await this.api.users.removeArrayElementAsync(
-                    'diseases',
+                    'alergies',
                     this.user.uid,
-                    disease
+                    alergy
                 );
             } catch (error) {
                 await loadingDialog.dismiss();
@@ -149,17 +116,19 @@ export class DiseasesSettingsPage implements OnInit {
         }
     }
 
-    async onSaveClicked(disease: UserDiseaseDetail) {
+    async onSaveClicked(alergy: UserAlergyDetail) {
+        if (!alergy) {
+            return;
+        }
+
         const loadingDialog = await this.loadingController.create({
             message: 'Guardando...'
         });
         await loadingDialog.present();
 
         try {
-            logger.log('disease:', disease);
-            await this.api.users.updateArrayAsync('diseases', this.user.uid, disease);
+            await this.api.users.updateArrayAsync('alergies', this.user.uid, alergy);
         } catch (error) {
-            logger.log('error:', error);
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');
             return;
@@ -169,24 +138,13 @@ export class DiseasesSettingsPage implements OnInit {
         await this.toasts.presentToastAsync('¡Se guardó existosamente!');
     }
 
-    getDiseaseDescription(disease: UserDiseaseDetail): string {
-        const caller = 'getDiseaseDescription';
-        ArgumentNullError.throwIfNull(disease, 'disease', caller);
-
-        if (!disease.name) {
-            return 'Enfermedad';
-        }
-
-        return disease.name;
-    }
-
     private async tryLoadUserAsync() {
         try {
             await this.loadUserAsync();
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario inválido', errorDetails);
-            this.backButtonOnClick();
+            this.navController.pop();
         }
     }
 
@@ -205,7 +163,6 @@ export class DiseasesSettingsPage implements OnInit {
 
             let uid = this.userId ?? authUser.uid;
             this.user = await this.api.users.getByUidOrDefaultAsync(uid);
-            logger.log('this.canEdit:', this.canEdit);
         } catch (error) {
             await loadingDialog.dismiss();
             await this.toasts.presentToastAsync(error, 'danger');

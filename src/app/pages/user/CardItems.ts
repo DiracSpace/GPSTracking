@@ -31,10 +31,10 @@ export const UserAlergyInformationCardItem: CardItem = {
 };
 
 export const UserProfileCardItems: CardItem[] = [
-    UserLocationsInformationCardItem,
     UserBasicInformationCardItem,
-    UserAddressInformationCardItem,
     UserPhoneNumberInformationCardItem,
+    UserAddressInformationCardItem,
+    UserLocationsInformationCardItem,
     UserDiseaseInformationCardItem,
     UserAlergyInformationCardItem
 ];

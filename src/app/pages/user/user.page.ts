@@ -5,17 +5,20 @@ import {
     ActionSheetOptions,
     IonBackButtonDelegate,
     LoadingController,
-    NavController
+    NavController,
+    Platform
 } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/api';
 import { CardItemStatusTypes } from 'src/app/core/components/card-item/card-item.component';
 import { Debugger } from 'src/app/core/components/debug/debugger.service';
+import { RequiredPropError } from 'src/app/errors';
 import { Logger, LogLevel } from 'src/app/logger';
 import { Navigation } from 'src/app/navigation';
 import { AlertUtils, ToastsService } from 'src/app/services';
 import { ContextService } from 'src/app/services/context.service';
 import { PhotoService } from 'src/app/services/photo.service';
+import { disposeSubscription } from 'src/app/utils/angular';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { User } from 'src/app/views';
 import { getUserAddressDescription } from 'src/app/views/User/UserAddress';
@@ -32,7 +35,7 @@ import {
 
 const logger = new Logger({
     source: 'UserPage',
-    level: LogLevel.Debug
+    level: LogLevel.Off
 });
 
 @Component({
@@ -57,7 +60,7 @@ export class UserPage implements OnInit, OnDestroy {
                     );
                     this.context.selectedProfilePicture.set(null);
                     await this.updateUserProfilePhotoUrlAsync(true);
-                    this.actionSheet.dismiss();
+                    this.actionSheet?.dismiss();
                 }
             },
             {
@@ -94,15 +97,9 @@ export class UserPage implements OnInit, OnDestroy {
     loading = false;
     user: User;
 
-    listenForProfilePictureSubscription: Subscription;
-    closeListenForProfilePictureSubscription() {
-        if (this.listenForProfilePictureSubscription) {
-            this.listenForProfilePictureSubscription.unsubscribe();
-            this.listenForProfilePictureSubscription = null;
-        }
-    }
-
+    private listenForProfilePictureSubscription: Subscription;
     private actionSheet: HTMLIonActionSheetElement;
+    private platformBackButtonSubs: Subscription;
 
     constructor(
         private actionSheetController: ActionSheetController,
@@ -116,7 +113,8 @@ export class UserPage implements OnInit, OnDestroy {
         private api: ApiService,
         private debug: Debugger,
         private router: Router,
-        private nav: Navigation
+        private nav: Navigation,
+        private platform: Platform
     ) {}
 
     ngOnInit() {
@@ -131,47 +129,68 @@ export class UserPage implements OnInit, OnDestroy {
         this.listenForProfilePictureSubscription = this.context.selectedProfilePicture
             .watch()
             .subscribe(async () => {
-                this.actionSheet.dismiss();
+                this.actionSheet?.dismiss();
                 await this.updateUserProfilePhotoUrlAsync();
             });
     }
 
-    ngOnDestroy(): void {
-        this.closeListenForProfilePictureSubscription();
-    }
-
-    /**
-     * Callback for Ionic lifecycle
-     */
     ionViewDidEnter() {
-        this.backButton.onClick = this.backButtonOnClick;
+        this.debug.info('UserPage.ionViewDidEnter');
+        this.setBackButtonClicks();
+    }
+
+    ionViewWillLeave(): void {
+        this.debug.info('UserPage.ionViewWillLeave');
+        this.disposeResources();
+    }
+
+    ionViewDidLeave(): void {
+        this.debug.info('UserPage.ionViewDidLeave');
+        this.disposeResources();
+    }
+
+    ngOnDestroy(): void {
+        this.debug.info('UserPage.ngOnDestroy');
+        this.disposeResources();
+    }
+
+    private disposeResources() {
+        this.debug.info('disposeResources');
+        disposeSubscription(this.listenForProfilePictureSubscription);
+        disposeSubscription(this.platformBackButtonSubs);
     }
 
     /**
-     * Go back 2 pages if comming from qr code scan.
+     * Set handlers to go directly to home page if either comming from home page or a qr code scan.
      *
-     * This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner.
-     *
-     * https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4
-     *
-     * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
+     * In the case if comming from a qr code scan, this will prevent a bug where the screen goes
+     * black if the user has navigated to this page via qr scanner.
      */
-    readonly backButtonOnClick = () => {
-        this.debug.info('navigatedUsingQrCodeScan', this.navigatedUsingQrCodeScan);
+    private setBackButtonClicks() {
+        this.debug.info('setBackButtonClicks');
 
-        if (!this.navigatedUsingQrCodeScan) {
-            this.navController.pop();
-            return;
-        }
+        this.backButton.onClick = () => {
+            this.debug.info('this.backButton.onClick');
+            this.goBackToHomePage();
+        };
 
-        // TODO Figure out how to pop 2 times. Using .pop() 2 times does not work (that would've been too easy).
-        // this.navController.pop();
-        // this.navController.pop();
+        // TODO Add constant for priority argument?
+        this.platformBackButtonSubs = this.platform.backButton.subscribeWithPriority(
+            10,
+            () => {
+                this.debug.info('platform.backButton');
+                this.goBackToHomePage();
+            }
+        );
 
-        // TODO As a solution for now, take user to home page, navigating backwards (or maybe this is the solution we want).
+        this.debug.info('observers', this.platform.backButton.observers);
+    }
+
+    private goBackToHomePage() {
+        this.debug.info('goBackToHomePage');
         const route = this.nav.mainContainer.home.path;
         this.navController.navigateBack(route);
-    };
+    }
 
     /* #region getters */
     get invalidContent() {
@@ -318,7 +337,7 @@ export class UserPage implements OnInit, OnDestroy {
         logger.log('profilePictureUrl:', profilePictureUrl);
 
         if (!profilePictureUrl && !allowNull) {
-            throw 'No existe una URL';
+            return;
         }
 
         if (!allowNull && profilePictureUrl.includes('assets')) {
@@ -347,7 +366,7 @@ export class UserPage implements OnInit, OnDestroy {
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario Inválido', errorDetails);
-            this.backButtonOnClick();
+            this.goBackToHomePage();
         }
     }
 
@@ -357,7 +376,7 @@ export class UserPage implements OnInit, OnDestroy {
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario inválido', errorDetails);
-            this.backButtonOnClick();
+            this.goBackToHomePage();
         }
     }
 
@@ -401,40 +420,34 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     private initCardItemRoutes() {
-        UserLocationsInformationCardItem.action = () => {
-            if (!this.user || !this.user.uid) {
-                throw 'Se require el UserId';
-            }
+        const caller = 'initCardItemRoutes';
 
-            this.nav.locations(this.user.uid).go();
+        UserLocationsInformationCardItem.action = () => {
+            RequiredPropError.throwIfNull(this.user, 'user', caller);
+            RequiredPropError.throwIfNull(this.user.uid, 'user.uid', caller);
+            this.nav.user(this.user.uid).locations.go();
         };
 
         UserBasicInformationCardItem.status = this.userBasicInformationStatus;
+
         if (this.user.firstName && this.user.lastNameFather && this.user.email) {
             UserBasicInformationCardItem.secondaryTitle = `${this.user.firstName} ${this.user.lastNameFather}, ${this.user.email}`;
         }
+
         UserBasicInformationCardItem.action = () => {
-            let route = this.nav.mainContainer.profileSettings.names.path;
-            this.router.navigate([route], {
-                queryParams: {
-                    userId: this.userId
-                }
-            });
+            this.nav.user(this.user.uid).names.go();
         };
 
         UserAddressInformationCardItem.status = this.userAddressInformationStatus;
+
         if (this.defaultAddress != null) {
             UserAddressInformationCardItem.secondaryTitle = getUserAddressDescription(
                 this.defaultAddress
             );
         }
+
         UserAddressInformationCardItem.action = () => {
-            let route = this.nav.mainContainer.profileSettings.addresses.path;
-            this.router.navigate([route], {
-                queryParams: {
-                    userId: this.userId
-                }
-            });
+            this.nav.user(this.user.uid).addresses.go();
         };
 
         UserPhoneNumberInformationCardItem.status = this.userPhoneNumberInformationStatus;
@@ -443,34 +456,19 @@ export class UserPage implements OnInit, OnDestroy {
                 this.defaultPhoneNumber.number;
         }
         UserPhoneNumberInformationCardItem.action = () => {
-            let route = this.nav.mainContainer.profileSettings.phoneNumbers.path;
-            this.router.navigate([route], {
-                queryParams: {
-                    userId: this.userId
-                }
-            });
+            this.nav.user(this.user.uid).phoneNumbers.go();
         };
 
         UserDiseaseInformationCardItem.status = this.userDiseaseInformationStatus;
         UserDiseaseInformationCardItem.secondaryTitle = this.diseaseNames;
         UserDiseaseInformationCardItem.action = () => {
-            let route = this.nav.mainContainer.profileSettings.diseases.path;
-            this.router.navigate([route], {
-                queryParams: {
-                    userId: this.userId
-                }
-            });
+            this.nav.user(this.user.uid).diseases.go();
         };
 
         UserAlergyInformationCardItem.status = this.userAlergyInformationStatus;
         UserAlergyInformationCardItem.secondaryTitle = this.alergyNames;
         UserAlergyInformationCardItem.action = () => {
-            let route = this.nav.mainContainer.profileSettings.alergies.path;
-            this.router.navigate([route], {
-                queryParams: {
-                    userId: this.userId
-                }
-            });
+            this.nav.user(this.user.uid).alergies.go();
         };
     }
 }
