@@ -42,14 +42,8 @@ export class AddressesSettingsPage implements OnInit {
     }
 
     isFormValid(address: UserAddress): boolean {
-        return (
-            !address.state ||
-            !address.county ||
-            !address.neighbourhood ||
-            !address.street ||
-            !address.zipCode ||
-            !address.addressType
-        );
+        // Require minimum info so user does not get annoyed
+        return !address.state || !address.county;
     }
 
     async onAddClicked() {
@@ -72,7 +66,7 @@ export class AddressesSettingsPage implements OnInit {
         if (index == -1) {
             let message = 'Could not find address to delete';
             await this.toasts.presentToastAsync(message, 'danger');
-            throw new NotImplementedError(message, caller);
+            return;
         }
 
         const confirmation = await this.toasts.presentAlertAsync(
