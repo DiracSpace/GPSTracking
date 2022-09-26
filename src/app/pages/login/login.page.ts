@@ -111,7 +111,7 @@ export class LoginPage implements OnInit {
         await loadingDialog.dismiss();
         logger.log('navigating to home');
         this.resetForm();
-        await this.nav.mainContainer.home.go();
+        await this.nav.mainContainer.home.go({ extras: { replaceUrl: true } });
     }
 
     onBackClicked() {

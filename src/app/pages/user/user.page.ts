@@ -5,7 +5,8 @@ import {
     ActionSheetOptions,
     IonBackButtonDelegate,
     LoadingController,
-    NavController
+    NavController,
+    Platform
 } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ApiService } from 'src/app/api';
@@ -117,7 +118,8 @@ export class UserPage implements OnInit, OnDestroy {
         private alerts: AlertUtils,
         private api: ApiService,
         private debug: Debugger,
-        private nav: Navigation
+        private nav: Navigation,
+        private platform: Platform
     ) {}
 
     ngOnInit() {
@@ -141,34 +143,33 @@ export class UserPage implements OnInit, OnDestroy {
      * Callback for Ionic lifecycle
      */
     ionViewDidEnter() {
-        this.backButton.onClick = this.backButtonOnClick;
+        this.setBackButtonClicks();
     }
 
     /**
-     * Go back 2 pages if comming from qr code scan.
+     * Set handlers to go directly to home page if either comming from home page or a qr code scan.
      *
-     * This will prevent a bug where the screen goes black if the user has navigated to this page via qr scanner.
-     *
-     * https://forum.ionicframework.com/t/how-to-go-back-multiple-pages-in-ionic/118733/4
-     *
-     * https://stackoverflow.com/questions/48336846/how-to-go-back-multiple-pages-in-ionic-3
+     * In the case if comming from a qr code scan, this will prevent a bug where the screen goes
+     * black if the user has navigated to this page via qr scanner.
      */
-    readonly backButtonOnClick = () => {
-        this.debug.info('navigatedUsingQrCodeScan', this.navigatedUsingQrCodeScan);
+    private setBackButtonClicks() {
+        this.backButton.onClick = () => {
+            this.debug.info('this.backButton.onClick');
+            this.goBackToHomePage();
+        };
 
-        if (!this.navigatedUsingQrCodeScan) {
-            this.navController.pop();
-            return;
-        }
+        // TODO Add constant for priority argument?
+        this.platform.backButton.subscribeWithPriority(10, () => {
+            this.debug.info('platform.backButton');
+            this.goBackToHomePage();
+        });
+    }
 
-        // TODO Figure out how to pop 2 times. Using .pop() 2 times does not work (that would've been too easy).
-        // this.navController.pop();
-        // this.navController.pop();
-
-        // TODO As a solution for now, take user to home page, navigating backwards (or maybe this is the solution we want).
+    private goBackToHomePage() {
+        this.debug.info('goBackToHomePage');
         const route = this.nav.mainContainer.home.path;
         this.navController.navigateBack(route);
-    };
+    }
 
     /* #region getters */
     get invalidContent() {
@@ -332,7 +333,7 @@ export class UserPage implements OnInit, OnDestroy {
         } catch (error) {
             const errorDetails = decodeErrorDetails(error);
             await this.alerts.error('Usuario inválido', errorDetails);
-            this.backButtonOnClick();
+            this.goBackToHomePage();
         }
     }
 

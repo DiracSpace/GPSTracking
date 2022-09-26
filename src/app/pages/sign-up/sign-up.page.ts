@@ -125,7 +125,7 @@ export class SignUpPage implements OnInit {
 
         await this.api.users.createAsync(user);
         loadingDialog.dismiss();
-        this.nav.mainContainer.home.go();
+        this.nav.mainContainer.home.go({ extras: { replaceUrl: true } });
     }
 
     onBackClicked() {

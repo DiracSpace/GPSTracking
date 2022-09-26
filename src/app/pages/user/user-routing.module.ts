@@ -5,15 +5,15 @@ import { TokenGuard } from '../main-container/token-guard.service';
 import { UserPage } from './user.page';
 
 const routes: Routes = [
-  {
-    path: '',
-    component: UserPage,
-    canActivate: [TokenGuard]
-  }
+    {
+        path: '',
+        component: UserPage
+        // canActivate: [TokenGuard] // Not necessary since external providers can also scan qr codes.
+    }
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
+    imports: [RouterModule.forChild(routes)],
+    exports: [RouterModule]
 })
 export class UserPageRoutingModule {}
