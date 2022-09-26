@@ -1,15 +1,16 @@
 import { Logger, LogLevel } from '../logger';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { Debugger } from '../core/components/debug/debugger.service';
 
-const logger = new Logger({
-    source: 'ContextService',
-    level: LogLevel.Off
-});
+// const logger = new Logger({
+//     source: 'ContextService',
+//     level: LogLevel.Off
+// });
 
 @Injectable({ providedIn: 'root' })
 export class ContextService {
-    constructor() {}
+    constructor(private debug: Debugger) {}
 
     private readonly qrImgSrcSubject = new BehaviorSubject<string>(null);
     qrImgSrc = {
@@ -33,13 +34,15 @@ export class ContextService {
     };
 
     openCloseProfileSelectorModal() {
-        let isModalOpen = this.profileSelectorModal.get();
-        logger.log('isModalOpen:', isModalOpen);
+        this.debug.info('openCloseProfileSelectorModal');
+
+        const isModalOpen = this.profileSelectorModal.get();
+        this.debug.info('isModalOpen:', isModalOpen);
         if (isModalOpen) {
-            logger.log('setting false');
+            this.debug.info('setting false');
             this.profileSelectorModal.set(false);
         } else {
-            logger.log('setting true');
+            this.debug.info('setting true');
             this.profileSelectorModal.set(true);
         }
     }

@@ -10,11 +10,13 @@ import { UserPhoto } from 'src/app/views';
 import { StorageService } from 'src/app/api/storage/storage.service';
 import { ToastsService } from 'src/app/services';
 import { AuthService } from 'src/app/api/auth/auth.service';
+import { Debugger } from '../debug/debugger.service';
+import { decodeErrorDetails } from 'src/app/utils/errors';
 
-const logger = new Logger({
-    source: 'ProfileSelectorModalComponent',
-    level: LogLevel.Debug
-});
+// const logger = new Logger({
+//     source: 'ProfileSelectorModalComponent',
+//     level: LogLevel.Debug
+// });
 
 @Component({
     selector: 'app-profile-selector-modal',
@@ -43,7 +45,8 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
         private photoService: PhotoService,
         private authService: AuthService,
         private context: ContextService,
-        private toasts: ToastsService
+        private toasts: ToastsService,
+        private debug: Debugger
     ) {}
 
     ngOnInit() {
@@ -51,8 +54,8 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
             .watch()
             .pipe(skip(1))
             .subscribe(async (value: boolean) => {
-                logger.log('value:', value);
-                logger.log('this.modal.isOpen:', this.modal.isOpen);
+                this.debug.info('value:', value);
+                this.debug.info('this.modal.isOpen:', this.modal.isOpen);
                 if (value) {
                     let { uid } = await this.authService.currentUser;
                     await this.photoService.loadSaved(uid);
@@ -75,7 +78,8 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
     }
 
     async onClickSet(photo: UserPhoto) {
-        logger.log('photo:', photo);
+        this.debug.info('photo:', photo);
+
         if (!photo) {
             return;
         }
@@ -83,20 +87,21 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
         this.isLoading = true;
 
         try {
-            logger.log('photo:', photo);
+            this.debug.info('photo:', photo);
             let blob = await this.photoService.getBlob(photo.webViewPath);
-            logger.log('blob:', blob);
+            this.debug.info('blob:', blob);
 
-            logger.log('uploading to firebase!');
+            this.debug.info('uploading to firebase!');
             const resourceUrl = await this.storageService.uploadBlobWithProgressAsync(
                 blob,
                 `profiles/${photo.filepath}`
             );
-            logger.log('resourceUrl:', resourceUrl);
+            this.debug.info('resourceUrl:', resourceUrl);
             this.context.selectedProfilePicture.set(resourceUrl);
             this.context.openCloseProfileSelectorModal();
         } catch (error) {
-            await this.toasts.presentToastAsync(error, 'danger');
+            const errorDetails = decodeErrorDetails(error);
+            await this.toasts.error(errorDetails.toString());
             return;
         }
 
