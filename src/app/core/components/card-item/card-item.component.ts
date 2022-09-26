@@ -31,8 +31,9 @@ const logger = new Logger({
     styleUrls: ['./card-item.component.scss']
 })
 export class CardItemComponent implements OnInit {
-    @Input() cardItem: CardItem;
     @Output() clicked = new EventEmitter<void>();
+    @Input() displayStatus: boolean = false;
+    @Input() cardItem: CardItem;
 
     constructor() {}
 

@@ -7,7 +7,7 @@
     </ion-toolbar>
 </ion-header>
 
-<ion-content>
+<ion-content *ngIf="!loading && canEdit">
     <ion-accordion-group [multiple]="true">
         <ion-accordion *ngFor="let phoneNumber of phoneNumbers" [value]="phoneNumber.id">
             <ion-item slot="header" color="light">
@@ -86,11 +86,28 @@
         </ion-accordion>
     </ion-accordion-group>
 
-    <div style="height: 200px"></div>
-
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
         <ion-fab-button (click)="onAddClicked()">
             <ion-icon name="add-outline"></ion-icon>
         </ion-fab-button>
     </ion-fab>
+</ion-content>
+
+<ion-content *ngIf="!loading && !canEdit" class="ion-padding">
+    <ion-grid>
+        <ion-row>
+            <ion-col class="justify-center" col-12>
+                <ion-label>{{ name }}</ion-label>
+            </ion-col>
+        </ion-row>
+        <ion-row *ngFor="let phoneNumber of phoneNumbers">
+            <ion-col col-12>
+                <app-information-display
+                    [title]="phoneNumber.owner"
+                    [content]="phoneNumber.number"
+                    [classes]="['ion-text-wrap']"
+                ></app-information-display>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
 </ion-content>
