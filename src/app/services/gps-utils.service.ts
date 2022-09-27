@@ -200,9 +200,9 @@ export class GpsUtils {
             id: guid(),
             userId: this.userId,
             geohash: getGeoHashString(longitude, latitude),
-            longitude: longitude,
-            latitude: latitude,
-            fromBackground: fromBackground,
+            longitude,
+            latitude,
+            fromBackground,
             dateRegistered: new Date()
         });
 
@@ -262,10 +262,10 @@ export class GpsUtils {
     ): Promise<Location> {
         const location = {
             id: guid(),
-            geohash: geohash,
-            latitude: latitude,
-            longitude: longitude,
-            fromBackground: fromBackground,
+            geohash,
+            latitude,
+            longitude,
+            fromBackground,
             dateRegistered: new Date()
         };
 
@@ -330,10 +330,10 @@ export class GpsUtils {
     ) {
         const location = {
             id: guid(),
-            geohash: geohash,
-            latitude: latitude,
-            longitude: longitude,
-            fromBackground: fromBackground,
+            geohash,
+            latitude,
+            longitude,
+            fromBackground,
             dateRegistered: new Date()
         };
 

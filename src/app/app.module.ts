@@ -51,7 +51,7 @@ const logger = new Logger({
             const firestore = getFirestore();
             try {
                 enableIndexedDbPersistence(firestore);
-                logger.log("Cache active!");
+                logger.log('Cache active!');
             } catch (error) {
                 let message = '';
 

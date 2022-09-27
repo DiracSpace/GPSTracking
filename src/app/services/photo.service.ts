@@ -16,7 +16,7 @@ const logger = new Logger({
 @Injectable({ providedIn: 'root' })
 export class PhotoService {
     private readonly PHOTO_STORAGE: string = 'photos';
-    private areCachedPhotosLoaded: boolean = false;
+    private areCachedPhotosLoaded = false;
     private photos: UserPhoto[] = [];
 
     constructor(private platform: Platform, private contextService: ContextService) {}
@@ -48,7 +48,7 @@ export class PhotoService {
             return;
         }
 
-        let photoMissingFilepath = this.photos.some((photo) => !photo.filepath);
+        const photoMissingFilepath = this.photos.some((photo) => !photo.filepath);
         logger.log('photoMissingFilepath:', photoMissingFilepath);
 
         if (photoMissingFilepath) {
@@ -58,8 +58,8 @@ export class PhotoService {
         }
 
         this.photos = this.photos.filter((photo) => {
-            let photoNameParts = photo.filepath.split('_');
-            let middleMostPart = photoNameParts[Math.floor(photoNameParts.length / 2)];
+            const photoNameParts = photo.filepath.split('_');
+            const middleMostPart = photoNameParts[Math.floor(photoNameParts.length / 2)];
             return middleMostPart === uid;
         });
         logger.log('this.photos:', this.photos);
@@ -68,7 +68,7 @@ export class PhotoService {
             // If running on the web...
             if (!this.platform.is('hybrid')) {
                 // Display the photo by reading into base64 format
-                for (let photo of this.photos) {
+                for (const photo of this.photos) {
                     // Read each saved photo's data from the Filesystem
                     const readFile = await Filesystem.readFile({
                         path: photo.filepath,
@@ -115,10 +115,10 @@ export class PhotoService {
 
     // Save picture to file on device
     private async savePictureAsync(cameraPhoto: Photo): Promise<UserPhoto> {
-        let formattedDate = new Date().toISOString();
+        const formattedDate = new Date().toISOString();
         const fileName = `${this.contextService.photoName.get()}${formattedDate}.jpeg`;
 
-        let userPhoto: UserPhoto = new UserPhoto();
+        const userPhoto: UserPhoto = new UserPhoto();
 
         if (!cameraPhoto) {
             throw 'No cameraPhoto provided!';
@@ -158,8 +158,8 @@ export class PhotoService {
         }
 
         // Fetch the photo, read as a blob, then convert to base64 format
-        let response = await fetch(webPath);
-        let blob = await response.blob();
+        const response = await fetch(webPath);
+        const blob = await response.blob();
 
         if (!response || !blob) {
             throw 'No response data!';

@@ -32,7 +32,7 @@ const logger = new Logger({
 })
 export class CardItemComponent implements OnInit {
     @Output() clicked = new EventEmitter<void>();
-    @Input() displayStatus: boolean = false;
+    @Input() displayStatus = false;
     @Input() cardItem: CardItem;
 
     constructor() {}
@@ -48,7 +48,7 @@ export class CardItemComponent implements OnInit {
     }
 
     get badgeClass() {
-        let classes = ['badge'];
+        const classes = ['badge'];
 
         if (this.cardItem.status && this.cardItem.status == 'completado') {
             classes.push('badge-success');

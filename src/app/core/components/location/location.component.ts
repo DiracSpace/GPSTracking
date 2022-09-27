@@ -1,6 +1,6 @@
 import { icon, latLng, Map, MapOptions, marker, popup, tileLayer } from 'leaflet';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Assets } from 'src/assets';
+import { ASSETS } from 'src/assets';
 import { Logger, LogLevel } from 'src/app/logger';
 import { environment } from 'src/environments/environment';
 
@@ -15,10 +15,10 @@ const logger = new Logger({
     styleUrls: ['./location.component.scss']
 })
 export class LocationComponent implements OnInit {
-    @Input() longitude: number = -121.726909;
-    @Input() latitude: number = 46.879966;
+    @Input() longitude = -121.726909;
+    @Input() latitude = 46.879966;
 
-    private _hidden: boolean = false;
+    private _hidden = false;
     get hidden() {
         return this._hidden;
     }
@@ -47,7 +47,7 @@ export class LocationComponent implements OnInit {
                 }),
                 marker([this.latitude, this.longitude], {
                     icon: icon({
-                        iconUrl: Assets.leafletCursor,
+                        iconUrl: ASSETS.leafletCursor,
                         iconSize: [20, 20],
                         iconAnchor: [13, 41]
                     })

@@ -45,13 +45,19 @@ export class Debugger {
     }
 
     private _log(level: DebugLevel, objects: any[]) {
-        if (level == DebugLevel.Off) return;
+        if (level == DebugLevel.Off) {
+            return;
+        }
 
         const log = this.buildLogParts(objects);
 
-        if (level == DebugLevel.Info) console.info(...log);
-        else if (level == DebugLevel.Warning) console.warn(...log);
-        else if (level == DebugLevel.Error) console.error(...log);
+        if (level == DebugLevel.Info) {
+            console.info(...log);
+        } else if (level == DebugLevel.Warning) {
+            console.warn(...log);
+        } else if (level == DebugLevel.Error) {
+            console.error(...log);
+        }
 
         this.logEmitter.emit({
             level,

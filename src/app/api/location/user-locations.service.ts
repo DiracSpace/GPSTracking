@@ -71,11 +71,11 @@ export class UserLocationService {
             }
 
             // We get the time passed since last registered
-            let timestampDifference = Math.abs(
+            const timestampDifference = Math.abs(
                 new Date().getTime() - latestDate.getTime()
             );
 
-            let hoursPassedSinceLastRegistered = Math.floor(
+            const hoursPassedSinceLastRegistered = Math.floor(
                 timestampDifference / 1000 / 3600
             );
 
@@ -103,8 +103,8 @@ export class UserLocationService {
         userId?: string,
         geohash?: string
     ): Promise<UserLocation[]> {
-        let entityProperty = queryByGeohash ? 'geohash' : 'uid';
-        let entityValue = queryByGeohash ? geohash : userId;
+        const entityProperty = queryByGeohash ? 'geohash' : 'uid';
+        const entityValue = queryByGeohash ? geohash : userId;
 
         if (!entityProperty) {
             throw 'No entityProperty was provided!';
@@ -130,7 +130,7 @@ export class UserLocationService {
             } catch (error) {
                 logger.log('error:', error);
                 this.debug.error('error:', error);
-                let message = HandleFirebaseError(error);
+                const message = HandleFirebaseError(error);
                 throw message;
             }
         }
@@ -143,7 +143,7 @@ export class UserLocationService {
             } catch (error) {
                 logger.log('error:', error);
                 this.debug.error('error:', error);
-                let message = HandleFirebaseError(error);
+                const message = HandleFirebaseError(error);
                 throw message;
             }
         }
@@ -201,7 +201,7 @@ export class UserLocationService {
             return null;
         }
 
-        let userLocation = userLocationSnapshot.data();
+        const userLocation = userLocationSnapshot.data();
 
         if (userLocation.uid != uid) {
             return null;
@@ -228,8 +228,12 @@ export class UserLocationService {
         logger.log('cachedDocSnap:', cachedDocSnap);
         this.debug.info('cachedDocSnap:', cachedDocSnap);
 
-        if (!cachedDocSnap) return null;
-        if (!cachedDocSnap.exists()) return null;
+        if (!cachedDocSnap) {
+            return null;
+        }
+        if (!cachedDocSnap.exists()) {
+            return null;
+        }
 
         logger.log('Exists in cache!');
         this.debug.info('Exists in cache!');
@@ -251,7 +255,7 @@ export class UserLocationService {
         const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
 
         console.log('3');
-        let genericObj = {};
+        const genericObj = {};
         console.log('4');
         genericObj[entityKey] = arrayUnion(firebaseEntity);
 
@@ -273,7 +277,7 @@ export class UserLocationService {
 
         const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
 
-        let genericObj = {};
+        const genericObj = {};
         genericObj[entityKey] = arrayRemove(firebaseEntity);
 
         await updateDoc(userDocRef, genericObj);

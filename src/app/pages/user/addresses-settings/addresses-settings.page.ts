@@ -81,7 +81,7 @@ export class AddressesSettingsPage implements OnInit {
         const index = this.user.addresses.indexOf(address);
 
         if (index == -1) {
-            let message = 'Could not find address to delete';
+            const message = 'Could not find address to delete';
             await this.toasts.presentToastAsync(message, 'danger');
             return;
         }
@@ -161,12 +161,12 @@ export class AddressesSettingsPage implements OnInit {
         await loadingDialog.present();
 
         try {
-            let authUser = await this.api.auth.getCurrentUserAsync();
+            const authUser = await this.api.auth.getCurrentUserAsync();
             if (this.userId && authUser.uid != this.userId) {
                 this.canEdit = false;
             }
 
-            let uid = this.userId ?? authUser.uid;
+            const uid = this.userId ?? authUser.uid;
             this.user = await this.api.users.getByUidOrDefaultAsync(uid);
         } catch (error) {
             await loadingDialog.dismiss();

@@ -1,5 +1,5 @@
 import { Component, HostBinding, Input, OnInit } from '@angular/core';
-import { Assets } from 'src/assets';
+import { ASSETS } from 'src/assets';
 
 @Component({
     selector: 'app-logo-img',
@@ -31,6 +31,6 @@ export class LogoImgComponent implements OnInit {
     }
 
     get src(): string {
-        return Assets.qrCode;
+        return ASSETS.qrCode;
     }
 }

@@ -76,7 +76,7 @@ export class LocationService {
 
         // We query the database for results based on displayName.
         // The best case scenario is that only one document should be returned.
-        let locationsByDisplayName = await this.getByDisplayNameOrDefaultAsync(
+        const locationsByDisplayName = await this.getByDisplayNameOrDefaultAsync(
             entity.longitude,
             entity.latitude,
             entity.displayName,
@@ -85,7 +85,7 @@ export class LocationService {
 
         // There should only exist one document in list, but murphy law.
         // Either way, we search for an exact match of DisplayName.
-        let locationByDisplayName = locationsByDisplayName.find(
+        const locationByDisplayName = locationsByDisplayName.find(
             (x) => x.displayName == entity.displayName
         );
 
@@ -165,7 +165,10 @@ export class LocationService {
             logger.log(
                 'No displayName property provided! Requesting from OpenStreetMap ... '
             );
-            let openStreetMapResult = await this.reverseGeocodeAsync(longitude, latitude);
+            const openStreetMapResult = await this.reverseGeocodeAsync(
+                longitude,
+                latitude
+            );
 
             if (!openStreetMapResult) {
                 throw 'Could not get reverse geocode result.';
@@ -187,7 +190,7 @@ export class LocationService {
             } catch (error) {
                 logger.log('error:', error);
                 this.debug.error('error:', error);
-                let message = HandleFirebaseError(error);
+                const message = HandleFirebaseError(error);
                 throw message;
             }
         }
@@ -200,7 +203,7 @@ export class LocationService {
             } catch (error) {
                 logger.log('error:', error);
                 this.debug.error('error:', error);
-                let message = HandleFirebaseError(error);
+                const message = HandleFirebaseError(error);
                 throw message;
             }
         }
@@ -228,8 +231,12 @@ export class LocationService {
         logger.log('cachedDocSnap:', cachedDocSnap);
         this.debug.info('cachedDocSnap:', cachedDocSnap);
 
-        if (!cachedDocSnap) return null;
-        if (!cachedDocSnap.exists()) return null;
+        if (!cachedDocSnap) {
+            return null;
+        }
+        if (!cachedDocSnap.exists()) {
+            return null;
+        }
 
         logger.log('Exists in cache!');
         this.debug.info('Exists in cache!');

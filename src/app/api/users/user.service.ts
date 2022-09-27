@@ -171,8 +171,13 @@ export class UserService {
             throw message;
         }
 
-        if (!cachedDocSnap) return null;
-        if (!cachedDocSnap.exists()) return null;
+        if (!cachedDocSnap) {
+            return null;
+        }
+
+        if (!cachedDocSnap.exists()) {
+            return null;
+        }
 
         logger.log('Exists in cache!');
         return cachedDocSnap;
@@ -214,9 +219,9 @@ export class UserService {
         }
 
         logger.log('Entities found!');
-        return querySnap.docs.map((document: QueryDocumentSnapshot<DocumentData>) => {
-            return document.data() as User;
-        });
+        return querySnap.docs.map(
+            (document: QueryDocumentSnapshot<DocumentData>) => document.data() as User
+        );
     }
 
     deleteAsync(entityId: string): Promise<void> {
@@ -241,11 +246,11 @@ export class UserService {
         entities: T[]
     ) {
         const userDocRef = doc(this.afStore, COLLECTION_NAME, entityId);
-        const firebaseEntities = entities.map((entity) => {
-            return FirebaseEntityConverter<T>().toFirestore(entity);
-        });
+        const firebaseEntities = entities.map((entity) =>
+            FirebaseEntityConverter<T>().toFirestore(entity)
+        );
 
-        let genericObj = {};
+        const genericObj = {};
         genericObj[property] = firebaseEntities;
 
         await updateDoc(userDocRef, genericObj);
@@ -262,7 +267,7 @@ export class UserService {
 
         const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
 
-        let genericObj = {};
+        const genericObj = {};
         genericObj[entityKey] = arrayUnion(firebaseEntity);
 
         await updateDoc(userDocRef, genericObj);
@@ -279,7 +284,7 @@ export class UserService {
 
         const firebaseEntity = FirebaseEntityConverter<T>().toFirestore(entity);
 
-        let genericObj = {};
+        const genericObj = {};
         genericObj[entityKey] = arrayRemove(firebaseEntity);
 
         await updateDoc(userDocRef, genericObj);

@@ -41,14 +41,14 @@ export class FormControlErrorComponent implements OnInit {
             return null;
         }
 
-        let { errors } = this.formControl;
+        const { errors } = this.formControl;
         logger.log('errors:', errors);
         if (!errors) {
             logger.log('no errors in formControl!');
             return null;
         }
 
-        for (let propertyName in errors) {
+        for (const propertyName in errors) {
             if (
                 this.formControl.errors.hasOwnProperty(propertyName) &&
                 this.formControl.touched
@@ -73,14 +73,14 @@ export class FormControlErrorComponent implements OnInit {
             return null;
         }
 
-        let { errors } = this.formGroup;
+        const { errors } = this.formGroup;
         logger.log('errors:', errors);
         if (!errors) {
             logger.log('no errors in formGroup!');
             return null;
         }
 
-        for (let propertyName in errors) {
+        for (const propertyName in errors) {
             if (
                 this.formGroup.errors.hasOwnProperty(propertyName) &&
                 this.formGroup.touched
