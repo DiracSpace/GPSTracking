@@ -9,6 +9,7 @@
         "build": "ng build",
         "test": "ng test",
         "e2e": "ng e2e",
+        "build:production": "ng build --configuration production",
         "res:android": "cordova-res android --skip-config --copy",
         "build:android": "ionic capacitor build android",
         "open:android": "ionic capacitor open android",
