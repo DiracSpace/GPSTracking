@@ -10,9 +10,7 @@ import { Debugger } from 'src/app/core/components/debug/debugger.service';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { formatToBlobName } from 'src/app/views/User/User';
 import { Logger, LogLevel } from 'src/app/logger';
-import {
-    LoadingController,
-    Platform} from '@ionic/angular';
+import { LoadingController, Platform } from '@ionic/angular';
 import { ApiService } from 'src/app/api';
 import { ContextService } from 'src/app/services/context.service';
 import { Subscription } from 'rxjs';
@@ -42,7 +40,7 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
 
     @Output() qrCodeSrcEmitter = new EventEmitter<Blob>();
 
-    hasPlatformFinishedLoading: boolean = false;
+    hasPlatformFinishedLoading = false;
 
     private platformName: string = null;
     private qrDownloadDetails: QrCodeDownloadDetails = null;
@@ -140,7 +138,9 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
         this.debug.info('this.platformName:', this.platformName);
         RequiredPropError.throwIfNull(this.platformName, 'platformName', caller);
 
-        const { error } = await handleAndDecodeAsync(this.setQrCodeDownloadDetailsAsync());
+        const { error } = await handleAndDecodeAsync(
+            this.setQrCodeDownloadDetailsAsync()
+        );
 
         if (error) {
             await this.alertUtils.error('No se pudo descargar', error);
@@ -174,8 +174,8 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
         }
 
         this.qrDownloadDetails = {
-            fileName: fileName,
-            blob: blob
+            fileName,
+            blob
         };
     }
 
@@ -248,7 +248,7 @@ export class QrCodeViewerComponent implements OnInit, OnDestroy {
 
     private getBlob(): Blob {
         // converts base 64 encoded image to blobData
-        let blobData = this.convertBase64ToBlob(this.imgSrc);
+        const blobData = this.convertBase64ToBlob(this.imgSrc);
         // saves as image
         return new Blob([blobData], { type: 'image/png' });
     }

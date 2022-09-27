@@ -55,6 +55,7 @@ export class ValidationService {
 
     /**
      * Validates email meets RFC 2822 compliance
+     *
      * @param control AbstractControl
      * @returns ValidationError | null
      */
@@ -111,7 +112,7 @@ export class ValidationService {
             return null;
         }
 
-        let { password, passwordConfirm } = formGroup.value;
+        const { password, passwordConfirm } = formGroup.value;
 
         if (!password || !passwordConfirm) {
             logger.log('no password values!');

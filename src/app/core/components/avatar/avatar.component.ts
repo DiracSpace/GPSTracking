@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Logger, LogLevel } from 'src/app/logger';
-import { Assets } from 'src/assets';
+import { ASSETS } from 'src/assets';
 
 const logger = new Logger({
     source: 'AvatarComponent',
@@ -23,7 +23,7 @@ const avatarSize = new Map<string, string>([
 })
 export class AvatarComponent implements OnInit {
     @Input() size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl' = 'sm';
-    @Input() imgSrc: string = Assets.avatar;
+    @Input() imgSrc: string = ASSETS.avatar;
     @Input() customClasses: any[];
     @Input() customStyle: any;
 
@@ -48,7 +48,7 @@ export class AvatarComponent implements OnInit {
     }
 
     get avatarClass() {
-        let classes = [];
+        const classes = [];
 
         if (this.customClasses) {
             classes.push(this.customClasses);

@@ -1,4 +1,4 @@
-import { empty } from "src/app/utils/strings";
+import { empty } from 'src/app/utils/strings';
 
 export class UserStorageDetail {
     photoUrl: string;

@@ -81,7 +81,7 @@ export class StorageService {
             try {
                 deleteObject(storageRef);
             } catch (error) {
-                let message = HandleFirebaseError(error);
+                const message = HandleFirebaseError(error);
                 reject(message);
             }
 

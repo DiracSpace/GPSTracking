@@ -6,8 +6,8 @@ import { Component, Input, OnInit } from '@angular/core';
     styleUrls: ['./information-display.component.scss']
 })
 export class InformationDisplayComponent implements OnInit {
-    @Input() title: string = 'Título';
-    @Input() content: string = 'Contenido';
+    @Input() title = 'Título';
+    @Input() content = 'Contenido';
     @Input() classes: string[] = [];
 
     constructor() {}
@@ -15,7 +15,7 @@ export class InformationDisplayComponent implements OnInit {
     ngOnInit() {}
 
     get displayClasses() {
-        let classes = [];
+        const classes = [];
 
         if (this.classes && this.classes.length > 0) {
             classes.push(...this.classes);

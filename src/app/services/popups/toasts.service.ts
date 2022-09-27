@@ -8,8 +8,8 @@ export type AlertDefaultConfirmations = 'yes' | 'no';
 
 @Injectable({ providedIn: 'root' })
 export class ToastsService {
-    private alertHandlerMessage: string = '';
-    private alertRoleMessage: string = '';
+    private alertHandlerMessage = '';
+    private alertRoleMessage = '';
     private DefaultConfirmationButtons: AlertButton[] = [
         {
             text: 'Cancelar',
@@ -43,8 +43,8 @@ export class ToastsService {
         }
 
         const toast = await this.toastsController.create({
-            message: message,
-            duration: duration,
+            message,
+            duration,
             color: colorCode
         });
         await toast.present();
@@ -104,10 +104,10 @@ export class ToastsService {
         }
 
         const alert = await this.alertController.create({
-            header: header,
-            subHeader: subHeader,
-            message: message,
-            buttons: buttons
+            header,
+            subHeader,
+            message,
+            buttons
         });
 
         await alert.present();

@@ -22,7 +22,7 @@ import { disposeSubscription } from 'src/app/utils/angular';
 import { decodeErrorDetails } from 'src/app/utils/errors';
 import { User } from 'src/app/views';
 import { getUserAddressDescription } from 'src/app/views/User/UserAddress';
-import { Assets } from 'src/assets';
+import { ASSETS } from 'src/assets';
 import {
     UserAddressInformationCardItem,
     UserAlergyInformationCardItem,
@@ -211,7 +211,7 @@ export class UserPage implements OnInit, OnDestroy {
 
     /* #region cardItemStatuses */
     get userBasicInformationStatus(): CardItemStatusTypes {
-        let basicInformationIsIncomplete =
+        const basicInformationIsIncomplete =
             !this.user.firstName ||
             !this.user.middleName ||
             !this.user.lastNameFather ||
@@ -221,7 +221,7 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     get userAddressInformationStatus(): CardItemStatusTypes {
-        let addressInformationIsIncomplete =
+        const addressInformationIsIncomplete =
             !this.user.addresses ||
             this.user.addresses.length == 0 ||
             !this.defaultAddress;
@@ -229,7 +229,7 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     get userPhoneNumberInformationStatus(): CardItemStatusTypes {
-        let phoneNumberInformationIsIncomplete =
+        const phoneNumberInformationIsIncomplete =
             !this.user.phoneNumbers ||
             this.user.phoneNumbers.length == 0 ||
             !this.defaultPhoneNumber;
@@ -237,13 +237,13 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     get userDiseaseInformationStatus(): CardItemStatusTypes {
-        let diseaseInformationIsIncomplete =
+        const diseaseInformationIsIncomplete =
             !this.user.diseases || this.user.diseases.length == 0;
         return diseaseInformationIsIncomplete ? 'incompleto' : 'completado';
     }
 
     get userAlergyInformationStatus(): CardItemStatusTypes {
-        let alergyInformationIsIncomplete =
+        const alergyInformationIsIncomplete =
             !this.user.alergies || this.user.alergies.length == 0;
         return alergyInformationIsIncomplete ? 'incompleto' : 'completado';
     }
@@ -257,7 +257,7 @@ export class UserPage implements OnInit, OnDestroy {
     get userAvatarImg() {
         if (!this.context.selectedProfilePicture.get()) {
             // logger.log('No profile picture!');
-            return Assets.avatar;
+            return ASSETS.avatar;
         }
 
         return this.context.selectedProfilePicture.get();
@@ -272,7 +272,7 @@ export class UserPage implements OnInit, OnDestroy {
             return this.user.email;
         }
 
-        let display = `${this.user.firstName} ${this.user.lastNameFather}`;
+        const display = `${this.user.firstName} ${this.user.lastNameFather}`;
         return display ?? 'Usuario';
     }
 
@@ -319,7 +319,7 @@ export class UserPage implements OnInit, OnDestroy {
 
     onUserProfileImgError() {
         logger.log('Error getting users picture!');
-        this.context.selectedProfilePicture.set(Assets.avatar);
+        this.context.selectedProfilePicture.set(ASSETS.avatar);
     }
 
     async onClickOpenActions() {
@@ -333,7 +333,7 @@ export class UserPage implements OnInit, OnDestroy {
     }
 
     private async updateUserProfilePhotoUrlAsync(allowNull: boolean = false) {
-        let profilePictureUrl = this.context.selectedProfilePicture.get();
+        const profilePictureUrl = this.context.selectedProfilePicture.get();
         logger.log('profilePictureUrl:', profilePictureUrl);
 
         if (!profilePictureUrl && !allowNull) {
@@ -390,7 +390,7 @@ export class UserPage implements OnInit, OnDestroy {
         await loadingDialog.present();
 
         try {
-            let authUser = await this.api.auth.getCurrentUserAsync();
+            const authUser = await this.api.auth.getCurrentUserAsync();
             if (authUser.uid != this.userId) {
                 this.isReadonly = true;
             }

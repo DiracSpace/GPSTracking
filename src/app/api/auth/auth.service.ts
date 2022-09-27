@@ -130,7 +130,7 @@ export class AuthService {
         try {
             await signInAnonymously(this.afAuth);
         } catch (error) {
-            let message = HandleFirebaseError(error);
+            const message = HandleFirebaseError(error);
             throw message;
         }
     }

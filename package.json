@@ -19,7 +19,7 @@
         "lint-staged": "lint-staged",
         "format:check": "prettier --check .",
         "format:fix": "prettier --write .",
-        "lint": "eslint --ext .ts .",
+        "lint": "eslint --fix --ext .ts,.html,.scss,.css .",
         "no-browser": "ionic serve --no-open",
         "audit": "better-npm-audit audit",
         "check-upgrades": "ncu --peer --format group --color",

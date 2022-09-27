@@ -1,0 +1,9 @@
+.angular/*
+.github/*
+.husky/*
+android/*
+e2e/*
+keystore/*
+node_modules/*
+resources/*
+www/*

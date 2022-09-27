@@ -12,17 +12,17 @@
 
                 <h5 class="ion-text-center ion-margin-bottom">
                     <ion-text color="primary">
-                        <ng-container *ngIf="showForm == 'email'">
+                        <ng-container *ngIf="showForm === 'email'">
                             Agrega un correo para tu cuenta
                         </ng-container>
-                        <ng-container *ngIf="showForm == 'password'">
+                        <ng-container *ngIf="showForm === 'password'">
                             Crea una contraseña para tu cuenta
                         </ng-container>
                     </ion-text>
                 </h5>
 
                 <form
-                    *ngIf="showForm == 'email'"
+                    *ngIf="showForm === 'email'"
                     [formGroup]="emailForm"
                     (ngSubmit)="onEmailFormSubmit()"
                 >
@@ -64,7 +64,7 @@
                 </form>
 
                 <form
-                    *ngIf="showForm == 'password'"
+                    *ngIf="showForm === 'password'"
                     [formGroup]="passwordForm"
                     (ngSubmit)="onPasswordFormSubmit()"
                 >

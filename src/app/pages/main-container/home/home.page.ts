@@ -34,9 +34,9 @@ export class HomePage implements OnInit, OnDestroy {
      * It needs to start as false, so as to not check
      * cache in loadAsync function. We then set it to true.
      */
-    isFirstLoad: boolean = false;
+    isFirstLoad = false;
 
-    viewCode: boolean = true;
+    viewCode = true;
     loading = false;
     scanning = false;
     user = new User();
@@ -259,7 +259,7 @@ export class HomePage implements OnInit, OnDestroy {
     }
 
     private async throwToastAndSignoutAsync() {
-        let message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
+        const message = 'No se pudo autenticar. Por favor vuelva a iniciar sesión';
         await this.toasts.presentToastAsync(message, 'danger');
         await this.api.auth.signOut();
         this.nav.login.go();

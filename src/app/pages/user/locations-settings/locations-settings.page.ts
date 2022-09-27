@@ -23,7 +23,7 @@ const LocationsLimit = 10; // TODO Add this to environment or user preference?
 export class LocationsSettingsPage implements OnInit {
     geolocations: Geolocation[] = [];
     user = new User();
-    loading: boolean = false;
+    loading = false;
     canEdit = true;
 
     constructor(
@@ -125,13 +125,13 @@ export class LocationsSettingsPage implements OnInit {
         const loadingDialog = await this.popups.loaders.showAsync('Cargando...');
 
         try {
-            let authUser = await this.api.auth.getCurrentUserAsync();
+            const authUser = await this.api.auth.getCurrentUserAsync();
 
             if (this.userId && authUser.uid != this.userId) {
                 this.canEdit = false;
             }
 
-            let uid = this.userId ?? authUser.uid;
+            const uid = this.userId ?? authUser.uid;
             this.geolocations = await this.api.geolocations.getAsync({
                 query: [
                     where('userId', '==', uid),

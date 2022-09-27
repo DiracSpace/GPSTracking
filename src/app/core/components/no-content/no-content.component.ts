@@ -1,16 +1,14 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-no-content',
-  templateUrl: './no-content.component.html',
-  styleUrls: ['./no-content.component.scss'],
+    selector: 'app-no-content',
+    templateUrl: './no-content.component.html',
+    styleUrls: ['./no-content.component.scss']
 })
 export class NoContentComponent implements OnInit {
+    @Input() message = 'No tienes información registrada';
 
-  @Input() message: string = "No tienes información registrada";
+    constructor() {}
 
-  constructor() { }
-
-  ngOnInit() {}
-
+    ngOnInit() {}
 }

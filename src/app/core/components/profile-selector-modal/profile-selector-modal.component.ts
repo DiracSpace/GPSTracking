@@ -38,7 +38,7 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
         }
     }
 
-    isLoading: boolean = false;
+    isLoading = false;
 
     constructor(
         private storageService: StorageService,
@@ -57,7 +57,7 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
                 this.debug.info('value:', value);
                 this.debug.info('this.modal.isOpen:', this.modal.isOpen);
                 if (value) {
-                    let { uid } = await this.authService.currentUser;
+                    const { uid } = await this.authService.currentUser;
                     await this.photoService.loadSaved(uid);
                 }
 
@@ -88,7 +88,7 @@ export class ProfileSelectorModalComponent implements OnInit, OnDestroy {
 
         try {
             this.debug.info('photo:', photo);
-            let blob = await this.photoService.getBlob(photo.webViewPath);
+            const blob = await this.photoService.getBlob(photo.webViewPath);
             this.debug.info('blob:', blob);
 
             this.debug.info('uploading to firebase!');

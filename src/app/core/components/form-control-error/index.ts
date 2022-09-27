@@ -1,1 +1,1 @@
-export { ValidationErrorMessage } from './ValidationErrorMessage'
+export { ValidationErrorMessage } from './ValidationErrorMessage';

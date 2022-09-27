@@ -26,10 +26,10 @@ export class LoadingImgComponent implements OnInit, OnDestroy {
         this.qrImgSrcSubscription = this.context.qrImgSrc.watch().subscribe(
             (value: string) => {
                 logger.log('value:', value);
-                let downloadingImg = new Image();
+                const downloadingImg = new Image();
                 downloadingImg.onload = () => {
                     logger.log('onloaded!');
-                    let { nativeElement } = this.loadingImg;
+                    const { nativeElement } = this.loadingImg;
                     if (nativeElement) {
                         nativeElement.src = value;
                     }

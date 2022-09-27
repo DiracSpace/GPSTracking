@@ -19,7 +19,7 @@ export class TokenGuard implements CanActivate {
     ): Promise<boolean> {
         this.debug.info("Checking user's token...");
         const isAuthenticated = await this.auth.initAuthDetection();
-        this.debug.info('isAuthenticated: ', isAuthenticated)
+        this.debug.info('isAuthenticated: ', isAuthenticated);
         return isAuthenticated;
     }
 }

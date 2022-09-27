@@ -49,9 +49,8 @@ const Months = {
     }
 };
 
-const padZeros = (num: number, length: number): string => {
-    return String(num).padStart(length, '0');
-};
+const padZeros = (num: number, length: number): string =>
+    String(num).padStart(length, '0');
 
 export function DDMMYYYYHHmmssLong(
     date: Date | string,
